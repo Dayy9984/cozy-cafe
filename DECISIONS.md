@@ -28,3 +28,22 @@ SUPERSEDED: DEVELOPMENT.md의 "새 프로젝트 기본값은 Godot4"는 MVP 제�
 
 UNCHANGED: CASE<TAB>key<TAB>JSON 계약, gates.json 전체 기대값, 측정 모드, 비주얼 증거 요구.
 UNITY_BIN 환경변수 또는 표준 Hub 경로에서 에디터를 찾는다.
+
+## v0.8.2 — 2026-09-27 — CASE contract host: .NET 8 GameCli (dual-host with Unity)
+
+Decision: the gate CASE contract is hosted by a .NET 8 console app
+(`game/GameCli`) that compiles the same pure-C# core sources Unity compiles.
+The Unity `-executeMethod` host remains supported when a licensed editor is
+present, and remains required for native player builds and captures.
+
+Reason: Unity editor licensing was not yet installed on the build host; gates
+must exercise real game code, not fabricated JSON, and must not sit blocked on
+a license. A UnityEngine-free core + CLI host satisfies both: identical logic
+in both hosts, gates run anywhere `dotnet` exists.
+
+Constraints kept: no gate expectations changed; no CASE strings emitted from
+Python; Unity remains the ship engine; `game/GameCli` may never reference
+UnityEngine APIs the core lacks.
+
+Record: DEVELOPMENT.md v0.8.2 section; adapter dispatch in
+`tools/game_adapter.py`.

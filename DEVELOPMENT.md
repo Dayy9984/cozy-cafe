@@ -86,3 +86,28 @@ art-pipeline은 art/approved/qa_contact.png와 sprite-sheet-alpha.png를 commit�
 - 첫 실행은 Library 임포트+컴파일로 수 분 걸릴 수 있다 — 어댑터는 30분 타임아웃.
 - 한글 IME·투명·항상위·DPI·복귀는 네이티브 빌드 검증(native-release)에서 다룬다.
 - Windows 빌드는 macOS 에디터의 Windows Standalone 모듈로 cross-build 후 Windows에서 실행 검증.
+
+
+## Engine direction v0.8.2 — dual-host C# core (Unity + .NET CLI)
+
+Unity stays the ship engine (v0.8.1 decision). To keep every gate verifiable on
+machines without a Unity license, the game is structured as ONE shared core
+compiled by two hosts:
+
+- `game/Assets/CozyCafe/Core/` — pure C# game logic. **No `UnityEngine`
+  references allowed.** Grid math, layout rules, economy, research, staff,
+  save/offline, rig descriptors, tool logic live here. Target .NET Standard 2.1
+  APIs only so the same files compile under Unity 6 and .NET 8.
+- `game/GameCli/` — .NET 8 console host (`GameCli.csproj`) that includes the
+  core sources via `<Compile Include="../Assets/CozyCafe/Core/**/*.cs"/>` and
+  implements the stage→CASE dispatcher. Invocation contract:
+  `dotnet run -c Release --project game/GameCli -- case <stage>` prints
+  `CASE\t<key>\t<json>` lines (one per case, values computed by real core code)
+  and exits 0; nonzero on internal error.
+- `game/Assets/CozyCafe/Unity/` — UnityEngine-dependent layer (MonoBehaviours,
+  scenes, rendering, uGUI). `CozyCafe.Editor.GauntletEntry.Run` remains an
+  accepted CASE host for machines with a licensed editor.
+
+`tools/game_adapter.py` tries GameCli first, then the Unity host, else fails
+NOT_IMPLEMENTED/BLOCKED. Never emit CASE text from Python — values must come
+from the compiled game core.
