@@ -138,6 +138,18 @@ namespace CozyCafe.Core.Scene
         public readonly List<Agent> Agents = new List<Agent>();
         public bool IsLoaded;
 
+        // Render hints for stage captures. These only steer the painter —
+        // logical cells, collisions, paths and depth keys never read them.
+        public bool FixedViewport;
+        public int ViewportW;
+        public int ViewportH;
+        public double AnchorX;      // device px where grid corner (0,0) lands
+        public double AnchorY;
+        public int HighlightCellX = -1;
+        public int HighlightCellY = -1;
+        public bool ShowOriginCaret;
+        public bool TileCanvasView;
+
         public bool Validate()
         {
             if (Room == null || Room.Width <= 0 || Room.Height <= 0) return false;

@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using CozyCafe.Core.Gauntlet;
+using CozyCafe.Core.Render;
+using CozyCafe.Core.Scene;
 using CozyCafe.Unity;
 using UnityEditor;
 using UnityEngine;
@@ -38,6 +40,11 @@ namespace CozyCafe.Editor
                     {
                         Debug.LogError("CaptureShot: stage '" + stage + "' produced no scene");
                     }
+                    else if (scene.TileCanvasView || scene.FixedViewport)
+                    {
+                        exitCode = CaptureCoreRaster(scene, output,
+                            ref view, ref camGo, ref rt);
+                    }
                     else
                     {
                         view = StageViewBuilder.Build(scene);
@@ -72,6 +79,56 @@ namespace CozyCafe.Editor
                 if (view != null) UnityEngine.Object.DestroyImmediate(view);
             }
             EditorApplication.Exit(exitCode);
+        }
+
+        /// Stages with an explicit view contract (fixed viewport, tile canvas)
+        /// are drawn by the shared core rasterizer; the editor presents those
+        /// exact pixels through the real Camera -> RenderTexture -> ReadPixels
+        /// pipeline at native resolution, so both hosts emit the same render.
+        private static int CaptureCoreRaster(GameScene scene, string output,
+            ref GameObject view, ref GameObject camGo, ref RenderTexture rt)
+        {
+            int pw, ph;
+            byte[] rgba = SceneRenderer.RenderPixels(scene, 1, out pw, out ph);
+            var src = new Texture2D(pw, ph, TextureFormat.RGBA32, false);
+            src.filterMode = FilterMode.Point;
+            int stride = pw * 4;
+            var flipped = new byte[rgba.Length];
+            for (int r = 0; r < ph; r++)
+            {
+                Buffer.BlockCopy(rgba, (ph - 1 - r) * stride, flipped, r * stride, stride);
+            }
+            src.LoadRawTextureData(flipped);
+            src.Apply();
+
+            view = new GameObject("SharedCoreRaster");
+            var sr = view.AddComponent<SpriteRenderer>();
+            var sp = Sprite.Create(src, new Rect(0, 0, pw, ph), new Vector2(0.5f, 0.5f), 1f);
+            sr.sprite = sp;
+
+            camGo = new GameObject("GauntletCaptureCamera");
+            var cam = camGo.AddComponent<Camera>();
+            cam.orthographic = true;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.078f, 0.078f, 0.094f, 1f);
+            cam.transform.position = new Vector3(0f, 0f, -10f);
+            cam.orthographicSize = ph * 0.5f;
+            cam.aspect = pw / (float)ph;
+            cam.nearClipPlane = 0.1f;
+            cam.farClipPlane = 200f;
+
+            rt = new RenderTexture(pw, ph, 24);
+            cam.targetTexture = rt;
+            cam.Render();
+            RenderTexture.active = rt;
+            var tex = new Texture2D(pw, ph, TextureFormat.RGBA32, false);
+            tex.ReadPixels(new Rect(0, 0, pw, ph), 0, 0);
+            tex.Apply();
+            File.WriteAllBytes(output, tex.EncodeToPNG());
+            UnityEngine.Object.DestroyImmediate(tex);
+            UnityEngine.Object.DestroyImmediate(sp);
+            UnityEngine.Object.DestroyImmediate(src);
+            return 0;
         }
 
         private static void FrameOn(Camera cam, GameObject root, int w, int h)

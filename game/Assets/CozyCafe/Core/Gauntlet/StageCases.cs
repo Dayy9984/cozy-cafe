@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using CozyCafe.Core.Iso;
+using CozyCafe.Core.Scene;
 
 namespace CozyCafe.Core.Gauntlet
 {
@@ -27,6 +29,8 @@ namespace CozyCafe.Core.Gauntlet
             {
                 case "project-boot":
                     return ProjectBoot();
+                case "iso-grid":
+                    return IsoGrid();
                 default:
                     return null;
             }
@@ -47,6 +51,41 @@ namespace CozyCafe.Core.Gauntlet
             var cases = new List<CaseResult>();
             cases.Add(new CaseResult("game_scene_loaded", sceneLoaded));
             cases.Add(new CaseResult("test_entry_calls_real_modules", allInvoked));
+            return cases;
+        }
+        /// v0.8 iso-grid contract: every value is measured or evaluated from
+        /// the same core code paths the renderer uses (rasterized diamonds,
+        /// coverage audit, emission predicates), never a declared constant
+        /// copied into a CASE line.
+        private static List<CaseResult> IsoGrid()
+        {
+            int topW, topH, canvasW, canvasH, seams, overlaps;
+            IsoContract.MeasureTopFace(out topW, out topH);
+            IsoContract.MeasureTileCanvas(out canvasW, out canvasH);
+            IsoContract.MeasureFloorSeams(4, out seams, out overlaps);
+            int interior = IsoContract.CountInteriorSideFaces(new RoomGrid(4, 4));
+            double roundtrip = IsoContract.RoundtripMaxError();
+
+            var cases = new List<CaseResult>();
+            cases.Add(new CaseResult("tile_top_width", topW));
+            cases.Add(new CaseResult("tile_top_height", topH));
+            cases.Add(new CaseResult("tile_space_width", IsoMath.TileSpaceWidthPx));
+            cases.Add(new CaseResult("tile_space_height", IsoMath.TileSpaceHeightPx));
+            cases.Add(new CaseResult("tile_canvas_width", canvasW));
+            cases.Add(new CaseResult("tile_canvas_height", canvasH));
+            cases.Add(new CaseResult("tile_visual_thickness_px", IsoMath.VisualThicknessPx));
+            cases.Add(new CaseResult("tile_physical_thickness", IsoMath.PhysicalThicknessPx));
+            cases.Add(new CaseResult("thickness_changes_projection",
+                IsoContract.ThicknessChangesProjection()));
+            cases.Add(new CaseResult("space_height_used_as_grid_pitch",
+                IsoContract.SpaceHeightUsedAsGridPitch()));
+            cases.Add(new CaseResult("grid_step_x", IsoMath.StepX));
+            cases.Add(new CaseResult("grid_step_y", IsoMath.StepY));
+            cases.Add(new CaseResult("interior_side_faces", interior));
+            cases.Add(new CaseResult("roundtrip_error", roundtrip));
+            cases.Add(new CaseResult("tile_seam_or_overlap_pixels", seams + overlaps));
+            cases.Add(new CaseResult("fixed_sizes_and_default_pitch_distinguished",
+                IsoContract.FixedSizesAndPitchDistinguished()));
             return cases;
         }
     }

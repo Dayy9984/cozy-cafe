@@ -7,10 +7,10 @@ namespace CozyCafe.Core.Render
 {
     /// <summary>
     /// Software rasterizer of real game state used by the GameCli host's
-    /// "render" command. Draws the iso floor (64x31 top faces), the 4 px
-    /// visual-only side skirts on exterior edges only, furniture lifted by
-    /// its screen-space render offset, and agents. Logical geometry is never
-    /// modified — this only paints.
+    /// "render" command. Draws the iso floor (64x31 top faces with dark seam
+    /// outlines), the 4 px visual-only side skirts on exterior edges only,
+    /// furniture lifted by its screen-space render offset, and agents.
+    /// Logical geometry is never modified — this only paints.
     /// </summary>
     public static class SceneRenderer
     {
@@ -23,11 +23,16 @@ namespace CozyCafe.Core.Render
             public double Depth;
         }
 
-        private static readonly Rgba Background = Rgba.Opaque(27, 23, 31);
-        private static readonly Rgba WoodA = Rgba.Opaque(202, 152, 96);
-        private static readonly Rgba WoodB = Rgba.Opaque(188, 139, 86);
-        private static readonly Rgba SideRight = Rgba.Opaque(122, 82, 52);
-        private static readonly Rgba SideLeft = Rgba.Opaque(102, 68, 44);
+        private static readonly Rgba Background = Rgba.Opaque(28, 26, 32);
+        private static readonly Rgba CanvasBg = Rgba.Opaque(20, 20, 24);
+        private static readonly Rgba WoodA = Rgba.Opaque(176, 124, 78);
+        private static readonly Rgba WoodB = Rgba.Opaque(160, 112, 70);
+        private static readonly Rgba SeamLine = Rgba.Opaque(44, 44, 50);
+        private static readonly Rgba SideRight = Rgba.Opaque(140, 96, 58);
+        private static readonly Rgba SideLeft = Rgba.Opaque(120, 82, 48);
+        private static readonly Rgba MarkRed = Rgba.Opaque(220, 60, 50);
+        private static readonly Rgba GuideYellow = Rgba.Opaque(230, 200, 80);
+        private static readonly Rgba GridDot = Rgba.Opaque(72, 72, 90);
         private static readonly Rgba TableTop = Rgba.Opaque(160, 102, 64);
         private static readonly Rgba TableSkirt = Rgba.Opaque(112, 72, 46);
         private static readonly Rgba ChairTop = Rgba.Opaque(176, 116, 74);
@@ -42,8 +47,20 @@ namespace CozyCafe.Core.Render
 
         public static byte[] RenderPng(GameScene scene, int zoom)
         {
+            int w, h;
+            byte[] rgba = RenderPixels(scene, zoom, out w, out h);
+            return PngWriter.Encode(w, h, rgba);
+        }
+
+        /// RGBA pixel buffer of the composed view. The editor capture host
+        /// presents these same pixels through its real camera pipeline, so
+        /// both hosts emit the identical render.
+        public static byte[] RenderPixels(GameScene scene, int zoom, out int width, out int height)
+        {
             if (scene == null || scene.Room == null)
                 throw new ArgumentNullException("scene");
+            if (scene.TileCanvasView)
+                return RenderTileCanvasPixels(out width, out height);
             if (zoom < 1) zoom = 1;
 
             var fills = new List<Fill>();
@@ -54,19 +71,21 @@ namespace CozyCafe.Core.Render
                 for (int x = 0; x < room.Width; x++)
                 {
                     if (!room.HasCell(x, y)) continue;
-                    double[] xs, ys;
+                    double[] xs, ys, ixs, iys;
                     Diamond(x, y, zoom, out xs, out ys);
+                    fills.Add(Make(xs, ys, SeamLine, 0, 0));
+                    Inset(xs, ys, 0.92, out ixs, out iys);
                     bool odd = ((x + y) & 1) == 1;
-                    fills.Add(Make(xs, ys, odd ? WoodB : WoodA, 0, 0));
+                    fills.Add(Make(ixs, iys, odd ? WoodB : WoodA, 1, 0));
 
                     // Side faces paint the outer boundary only; interior
                     // edges between present cells get none (contract).
-                    if (!room.HasCell(x + 1, y))
+                    if (IsoContract.EmitsSideFace(room, x, y, 1, 0))
                         fills.Add(Make(SkirtX(xs[1], xs[2]),
-                            SkirtY(ys[1], ys[2], zoom), SideRight, 1, 0));
-                    if (!room.HasCell(x, y + 1))
+                            SkirtY(ys[1], ys[2], zoom), SideRight, 2, 0));
+                    if (IsoContract.EmitsSideFace(room, x, y, 0, 1))
                         fills.Add(Make(SkirtX(xs[3], xs[2]),
-                            SkirtY(ys[3], ys[2], zoom), SideLeft, 1, 0));
+                            SkirtY(ys[3], ys[2], zoom), SideLeft, 2, 0));
                 }
             }
 
@@ -76,40 +95,123 @@ namespace CozyCafe.Core.Render
 
             foreach (var a in scene.Agents) AddAgent(fills, a, zoom);
 
-            double minX = double.MaxValue, minY = double.MaxValue;
-            double maxX = double.MinValue, maxY = double.MinValue;
-            foreach (var f in fills)
-            {
-                for (int i = 0; i < f.Xs.Length; i++)
-                {
-                    if (f.Xs[i] < minX) minX = f.Xs[i];
-                    if (f.Xs[i] > maxX) maxX = f.Xs[i];
-                    if (f.Ys[i] < minY) minY = f.Ys[i];
-                    if (f.Ys[i] > maxY) maxY = f.Ys[i];
-                }
-            }
-            int pad = 10;
-            int w = (int)Math.Ceiling(maxX - minX) + pad * 2;
-            int h = (int)Math.Ceiling(maxY - minY) + pad * 2;
-            var canvas = new SoftwareCanvas(w, h);
-            canvas.Clear(Background);
             fills.Sort(delegate (Fill a, Fill b)
             {
                 int c = a.Order.CompareTo(b.Order);
                 return c != 0 ? c : a.Depth.CompareTo(b.Depth);
             });
+
+            int w, h;
+            double tx, ty;
+            if (scene.FixedViewport)
+            {
+                // Real viewport with a camera anchor: grid corner (0,0) lands
+                // at (AnchorX, AnchorY); snap happens once at composite.
+                w = scene.ViewportW;
+                h = scene.ViewportH;
+                tx = scene.AnchorX;
+                ty = scene.AnchorY;
+            }
+            else
+            {
+                double minX = double.MaxValue, minY = double.MaxValue;
+                double maxX = double.MinValue, maxY = double.MinValue;
+                foreach (var f in fills)
+                {
+                    for (int i = 0; i < f.Xs.Length; i++)
+                    {
+                        if (f.Xs[i] < minX) minX = f.Xs[i];
+                        if (f.Xs[i] > maxX) maxX = f.Xs[i];
+                        if (f.Ys[i] < minY) minY = f.Ys[i];
+                        if (f.Ys[i] > maxY) maxY = f.Ys[i];
+                    }
+                }
+                int pad = 10;
+                w = (int)Math.Ceiling(maxX - minX) + pad * 2;
+                h = (int)Math.Ceiling(maxY - minY) + pad * 2;
+                tx = pad - minX;
+                ty = pad - minY;
+            }
+
+            var canvas = new SoftwareCanvas(w, h);
+            canvas.Clear(Background);
             foreach (var f in fills)
             {
                 var txs = new double[f.Xs.Length];
                 var tys = new double[f.Ys.Length];
                 for (int i = 0; i < f.Xs.Length; i++)
                 {
-                    txs[i] = f.Xs[i] - minX + pad;
-                    tys[i] = f.Ys[i] - minY + pad;
+                    txs[i] = f.Xs[i] + tx;
+                    tys[i] = f.Ys[i] + ty;
                 }
                 canvas.FillPolygon(txs, tys, f.Color);
             }
-            return PngWriter.Encode(w, h, canvas.Pixels);
+
+            // Stage overlays: red outline on the highlighted cell and the
+            // yellow origin caret at grid corner (0,0) — paint only.
+            if (scene.HighlightCellX >= 0 && scene.HighlightCellY >= 0)
+            {
+                double[] hxs, hys;
+                Diamond(scene.HighlightCellX, scene.HighlightCellY, zoom, out hxs, out hys);
+                for (int i = 0; i < 4; i++)
+                {
+                    int j = (i + 1) % 4;
+                    canvas.DrawLine(hxs[i] + tx, hys[i] + ty,
+                        hxs[j] + tx, hys[j] + ty, MarkRed, 2);
+                }
+            }
+            if (scene.ShowOriginCaret)
+            {
+                double ax = tx, ay = ty;
+                canvas.DrawLine(ax - 8, ay - 18, ax - 32, ay - 3, GuideYellow, 2);
+                canvas.DrawLine(ax + 8, ay - 18, ax + 32, ay - 3, GuideYellow, 2);
+            }
+            width = w;
+            height = h;
+            return canvas.Pixels;
+        }
+
+        /// The tile-authoring view: the real 64x62 canvas raster magnified
+        /// 4x on a dark viewport, with a pixel-grid dot lattice, a separator
+        /// at the top-face band bottom, and the canvas bounds outlined.
+        private static byte[] RenderTileCanvasPixels(out int width, out int height)
+        {
+            const int zoom = 4;
+            var src = TileArt.RasterizeFloorTile();
+            int cw = TileCanvasContract.WidthPx;
+            int ch = TileCanvasContract.HeightPx;
+            const int w = 320, h = 310, ox = 10, oy = 10;
+            var dev = new SoftwareCanvas(w, h);
+            dev.Clear(CanvasBg);
+
+            // Pixel-grid dots inside the canvas (tile pixels cover their own).
+            for (int y = oy; y < oy + ch * zoom; y++)
+            {
+                for (int x = ox; x < ox + cw * zoom; x++)
+                {
+                    if ((x & 3) == 3 && (y & 3) == 3) dev.SetPixel(x, y, GridDot);
+                }
+            }
+            // Magnified tile pixels.
+            for (int sy = 0; sy < ch; sy++)
+            {
+                for (int sx = 0; sx < cw; sx++)
+                {
+                    Rgba c = src.GetPixel(sx, sy);
+                    if (c.A == 0) continue;
+                    dev.FillRect(ox + sx * zoom, oy + sy * zoom, zoom, zoom, c);
+                }
+            }
+            // Guide at the bottom edge of the 64x31 top-face band.
+            dev.FillRect(ox, oy + IsoMath.TileTopHeightPx * zoom, cw * zoom, 2, GuideYellow);
+            // Canvas bounds.
+            dev.FillRect(ox, oy, cw * zoom, 2, MarkRed);
+            dev.FillRect(ox, oy + ch * zoom - 2, cw * zoom, 2, MarkRed);
+            dev.FillRect(ox, oy, 2, ch * zoom, MarkRed);
+            dev.FillRect(ox + cw * zoom - 2, oy, 2, ch * zoom, MarkRed);
+            width = w;
+            height = h;
+            return dev.Pixels;
         }
 
         private static Fill Make(double[] xs, double[] ys, Rgba c, int order, double depth)
@@ -129,6 +231,22 @@ namespace CozyCafe.Core.Render
             IsoMath.Project(x, y + 1, out dx, out dy);
             xs = new[] { ax * zoom, bx * zoom, cx * zoom, dx * zoom };
             ys = new[] { ay * zoom, by * zoom, cy * zoom, dy * zoom };
+        }
+
+        /// Diamond shrunk toward its centroid — draws the tile's seam outline.
+        private static void Inset(double[] xs, double[] ys, double keep,
+            out double[] ixs, out double[] iys)
+        {
+            double cx = 0, cy = 0;
+            for (int i = 0; i < xs.Length; i++) { cx += xs[i]; cy += ys[i]; }
+            cx /= xs.Length; cy /= xs.Length;
+            ixs = new double[xs.Length];
+            iys = new double[ys.Length];
+            for (int i = 0; i < xs.Length; i++)
+            {
+                ixs[i] = cx + (xs[i] - cx) * keep;
+                iys[i] = cy + (ys[i] - cy) * keep;
+            }
         }
 
         private static void DiamondAt(double cx, double cy, double hw, double hh,
@@ -184,40 +302,40 @@ namespace CozyCafe.Core.Render
 
             double[] xs, ys;
             Ellipse(gx, gy, 13 * zoom, 4.5 * zoom, out xs, out ys);
-            fills.Add(Make(xs, ys, Shadow, 2, depth - 0.5));
+            fills.Add(Make(xs, ys, Shadow, 3, depth - 0.5));
 
             switch (f.Kind)
             {
                 case FurnitureKind.Table:
                     Ellipse(dx, dy + 8 * zoom, 3 * zoom, 6 * zoom, out xs, out ys);
-                    fills.Add(Make(xs, ys, TableSkirt, 3, depth));
+                    fills.Add(Make(xs, ys, TableSkirt, 4, depth));
                     DiamondAt(dx, dy, 20 * zoom, 9 * zoom, out xs, out ys);
                     fills.Add(Make(SkirtX(xs[3], xs[2]), SkirtY(ys[3], ys[2], zoom),
-                        TableSkirt, 3, depth + 0.1));
-                    fills.Add(Make(xs, ys, TableTop, 3, depth));
+                        TableSkirt, 4, depth + 0.1));
+                    fills.Add(Make(xs, ys, TableTop, 4, depth));
                     break;
                 case FurnitureKind.Chair:
                 case FurnitureKind.Stool:
                     DiamondAt(dx, dy, 11 * zoom, 5 * zoom, out xs, out ys);
                     fills.Add(Make(SkirtX(xs[3], xs[2]), SkirtY(ys[3], ys[2], zoom),
-                        ChairSkirt, 3, depth + 0.1));
-                    fills.Add(Make(xs, ys, ChairTop, 3, depth));
+                        ChairSkirt, 4, depth + 0.1));
+                    fills.Add(Make(xs, ys, ChairTop, 4, depth));
                     Rect(dx - 9 * zoom, dy - 14 * zoom, dx - 5 * zoom, dy, out xs, out ys);
-                    fills.Add(Make(xs, ys, ChairSkirt, 3, depth - 0.1));
+                    fills.Add(Make(xs, ys, ChairSkirt, 4, depth - 0.1));
                     break;
                 case FurnitureKind.Counter:
                     Rect(dx - 15 * zoom, dy - 10 * zoom, dx + 15 * zoom, dy + 2 * zoom,
                         out xs, out ys);
-                    fills.Add(Make(xs, ys, CounterBody, 3, depth));
+                    fills.Add(Make(xs, ys, CounterBody, 4, depth));
                     DiamondAt(dx, dy - 10 * zoom, 15 * zoom, 6 * zoom, out xs, out ys);
-                    fills.Add(Make(xs, ys, CounterTop, 3, depth + 0.1));
+                    fills.Add(Make(xs, ys, CounterTop, 4, depth + 0.1));
                     break;
                 default: // machines: grounded box, no lift
                     Rect(dx - 13 * zoom, dy - 12 * zoom, dx + 13 * zoom, dy + 2 * zoom,
                         out xs, out ys);
-                    fills.Add(Make(xs, ys, MachineBody, 3, depth));
+                    fills.Add(Make(xs, ys, MachineBody, 4, depth));
                     DiamondAt(dx, dy - 12 * zoom, 13 * zoom, 5 * zoom, out xs, out ys);
-                    fills.Add(Make(xs, ys, MachineTop, 3, depth + 0.1));
+                    fills.Add(Make(xs, ys, MachineTop, 4, depth + 0.1));
                     break;
             }
         }
@@ -231,9 +349,9 @@ namespace CozyCafe.Core.Render
             double depth = a.GridX + a.GridY;
             double[] xs, ys;
             Ellipse(gx, gy, 7 * zoom, 3 * zoom, out xs, out ys);
-            fills.Add(Make(xs, ys, Shadow, 2, depth - 0.5));
+            fills.Add(Make(xs, ys, Shadow, 3, depth - 0.5));
             Ellipse(gx, gy - 8 * zoom, 6 * zoom, 9 * zoom, out xs, out ys);
-            fills.Add(Make(xs, ys, a.IsStaff ? StaffColor : CustomerColor, 4, depth));
+            fills.Add(Make(xs, ys, a.IsStaff ? StaffColor : CustomerColor, 5, depth));
         }
     }
 }
