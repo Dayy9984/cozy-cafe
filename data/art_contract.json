@@ -4,15 +4,15 @@
   "tile": {
     "top_size": [
       64,
-      31
+      32
     ],
     "space_size": [
       64,
-      62
+      64
     ],
     "canvas": [
       64,
-      62
+      64
     ],
     "canvas_policy": "space_reference_canvas_no_thickness_addition",
     "visual_thickness_px": 4,
@@ -21,7 +21,7 @@
     "logical_elevation": 0,
     "anchor": [
       32,
-      15.5
+      16
     ],
     "anchor_space": "top_face_local_continuous_coordinates",
     "top_origin_in_canvas": [
@@ -31,14 +31,14 @@
     "top_origin_policy": "MVP_AUTHORING_DEFAULT; record actual shared top bounds and pivot, do not infer from canvas bottom",
     "grid_x_step": [
       32,
-      15.5
+      16
     ],
     "grid_y_step": [
       -32,
-      15.5
+      16
     ],
     "grid_basis_status": "DERIVED_MVP_CONVENTION_NOT_USER_SPECIFIED_PITCH",
-    "grid_basis_note": "Use half of the specified 64x31 top for continuous projection; confirm raster alignment in the first visual gate.",
+    "grid_basis_note": "Use half of the specified 64x32 top for continuous projection; confirm raster alignment in the first visual gate.",
     "rounding": "keep_subpixel_coordinates_until_final_render_snap",
     "side_faces": "visual_overlay_on_visible_outer_boundary_only",
     "side_faces_affect_collision": false,

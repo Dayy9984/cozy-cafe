@@ -21,10 +21,10 @@ OS sandbox가 계정 전체의 읽기까지 격리한다고 보장하지 않는�
 수치는 데이터 원본에서만 바꾸고 변경 사유·전후 결과를 결정 기록에 남긴다.
 
 ## v0.8 필수 정렬 규칙
-64×31 top / 64×62 space. 4px는 visual-only, physics height0. 탁자·의자 effective render offset(0,-8) once.
+64×32 top / 64×64 space. 4px는 visual-only, physics height0. 탁자·의자 effective render offset(0,-8) once.
 logical root/collider/pathfinding/경제는 변하지 않는다. 캔버스에 두께를 추가하거나 z로 쓰지 않는다.
 원화 baked_offset과 runtime_offset을 합한 결과만 -8이어야 한다. 회전 후에도 화면 위 방향, 줌 전 보정이다.
-현재 피치32/15.5는 구현 기본값으로 명시되어 있다. 사용자 확정 피치나 원작 실측으로 오인하지 마라.
+현재 피치32/16는 구현 기본값으로 명시되어 있다. 사용자 확정 피치나 원작 실측으로 오인하지 마라.
 이전 판의 PASS/PLAN_READY를 현재 실행 검증으로 가져오지 않는다. 변경된 외부 gates로 재검증한다.
 
 ## v0.8.1 ENGINE — Unity

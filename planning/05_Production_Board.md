@@ -6,7 +6,7 @@
 |---|---|---|---|
 |reference-audit|첨부 원본 분석·샘플 확인|없음|READY|
 |project-boot|실행 가능한 게임·테스트 진입점|reference-audit|READY|
-|iso-grid|64×31/공간64×62/시각4·탁자의자-8|project-boot|READY|
+|iso-grid|64×32/공간64×64/시각4·탁자의자-8|project-boot|READY|
 |layout-editor|가구·타일·문·의자·머신받침|iso-grid|READY|
 |desktop-tools|미니창·메모·할일·타이머·음악|layout-editor|READY|
 |idle-economy|자동판매·강화|project-boot|READY|
