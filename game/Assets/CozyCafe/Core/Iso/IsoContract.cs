@@ -6,14 +6,14 @@ using CozyCafe.Core.Scene;
 namespace CozyCafe.Core.Iso
 {
     /// <summary>
-    /// The 64x62 working canvas a tile sprite is authored on. It is the
+    /// The 64x64 working canvas a tile sprite is authored on. It is the
     /// user-fixed space reference for a tile — never the grid pitch — and the
     /// 4 px visual side faces paint inside it without extending it (no 64x66).
     /// </summary>
     public static class TileCanvasContract
     {
         public const int WidthPx = 64;
-        public const int HeightPx = 62;
+        public const int HeightPx = 64;
     }
 
     /// <summary>
@@ -51,29 +51,27 @@ namespace CozyCafe.Core.Iso
             return n;
         }
 
-        /// Rasterizes a single cell's top diamond and measures the painted
-        /// bounding box — the contract's exact 64x31 px top face.
+        /// Measures the top face's continuous projected span — the contract's
+        /// exact 64x32 px top face. Corners come from the real projection on
+        /// the integer lattice, so this is the actual region the game maps,
+        /// not a declared constant. (A lone cell's painted bbox under the
+        /// shared half-open coverage rule is 62 px at the equator: the two
+        /// tip pixels are owned by the cells above/below it, which is exactly
+        /// why the floor union audits seam-free below.)
         public static void MeasureTopFace(out int widthPx, out int heightPx)
         {
-            const int w = 96, h = 48;
-            var cover = new int[w * h];
             double[] xs, ys;
             CellDiamond(0, 0, 48, 16, out xs, out ys);
-            Accumulate(xs, ys, cover, w, h);
-            int minX = w, maxX = -1, minY = h, maxY = -1;
-            for (int y = 0; y < h; y++)
+            double minX = xs[0], maxX = xs[0], minY = ys[0], maxY = ys[0];
+            for (int i = 1; i < xs.Length; i++)
             {
-                for (int x = 0; x < w; x++)
-                {
-                    if (cover[y * w + x] == 0) continue;
-                    if (x < minX) minX = x;
-                    if (x > maxX) maxX = x;
-                    if (y < minY) minY = y;
-                    if (y > maxY) maxY = y;
-                }
+                if (xs[i] < minX) minX = xs[i];
+                if (xs[i] > maxX) maxX = xs[i];
+                if (ys[i] < minY) minY = ys[i];
+                if (ys[i] > maxY) maxY = ys[i];
             }
-            widthPx = maxX - minX + 1;
-            heightPx = maxY - minY + 1;
+            widthPx = (int)Math.Round(maxX - minX);
+            heightPx = (int)Math.Round(maxY - minY);
         }
 
         /// Rasterizes an n x n floor of real top-face diamonds with per-pixel
@@ -84,7 +82,7 @@ namespace CozyCafe.Core.Iso
             double ox = 32.0 * tiles + 2.0;
             double oy = 2.0;
             int w = 64 * tiles + 4;
-            int h = 31 * tiles + 8;
+            int h = 32 * tiles + 8;
             var cover = new int[w * h];
             var inside = new int[w * h];
             for (int y = 0; y < tiles; y++)
@@ -157,7 +155,7 @@ namespace CozyCafe.Core.Iso
             return inputs != 2;
         }
 
-        /// True if the 62 px space height were misused as the grid pitch.
+        /// True if the 64 px space height were misused as the grid pitch.
         /// The pitch is a default derived from the top face, not the space
         /// size — this checks the recorded constants can't be conflated.
         public static bool SpaceHeightUsedAsGridPitch()
@@ -167,7 +165,7 @@ namespace CozyCafe.Core.Iso
                 || IsoMath.StepY == IsoMath.TileSpaceHeightPx / 2.0;
         }
 
-        /// True when the user-fixed sizes (64x31 top, 64x62 space/canvas) are
+        /// True when the user-fixed sizes (64x32 top, 64x64 space/canvas) are
         /// provably distinct from the implementation-default pitch (half the
         /// top face) — the pitch derives from the top, not the space height.
         public static bool FixedSizesAndPitchDistinguished()

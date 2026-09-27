@@ -4,8 +4,8 @@ using CozyCafe.Core.Iso;
 namespace CozyCafe.Core.Render
 {
     /// <summary>
-    /// Authored floor-tile art rasterized onto its 64x62 working canvas.
-    /// The 64x31 top face is anchored at canvas (0,0) so the painted slab
+    /// Authored floor-tile art rasterized onto its 64x64 working canvas.
+    /// The 64x32 top face is anchored at canvas (0,0) so the painted slab
     /// occupies canvas rows 0-31 exactly: apex flush at the top edge, bottom
     /// vertex on the midline. The 4 px thickness is painted as thin side
     /// faces straddling the two lower (outer-contour) edges inside that band
@@ -27,7 +27,7 @@ namespace CozyCafe.Core.Render
                 for (int x = 0; x < TileCanvasContract.WidthPx; x++)
                 {
                     double nx = Math.Abs(x + 0.5 - 32.0) / 32.0;
-                    double ny = Math.Abs(y + 0.5 - 15.5) / 15.5;
+                    double ny = Math.Abs(y + 0.5 - 16.0) / 16.0;
                     if (nx + ny > 1.0) continue;
                     src.SetPixel(x, y, ((x + y) % 7 == 0) ? WoodGrain : WoodTop);
                 }
@@ -36,8 +36,8 @@ namespace CozyCafe.Core.Render
             // (~0.8 px inside the diamond plus ~0.5 px below the edge) reads
             // as the slab's 4 px edge thickness while the silhouette stays
             // inside canvas rows 0-31.
-            SideBand(src, 0, 15.5, 32, 31, SideLeft);
-            SideBand(src, 32, 31, 64, 15.5, SideRight);
+            SideBand(src, 0, 16, 32, 32, SideLeft);
+            SideBand(src, 32, 32, 64, 16, SideRight);
             return src;
         }
 

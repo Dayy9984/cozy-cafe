@@ -1,3 +1,4 @@
+using CozyCafe.Core.Character;
 using CozyCafe.Core.Scene;
 
 namespace CozyCafe.Core.Gauntlet
@@ -16,6 +17,8 @@ namespace CozyCafe.Core.Gauntlet
                     return IsoGridFloor();
                 case "iso-grid-tile":
                     return IsoTileCanvas();
+                case "character-rig":
+                    return CharacterRigSheet();
                 default:
                     return DefaultBoot();
             }
@@ -49,7 +52,7 @@ namespace CozyCafe.Core.Gauntlet
             return s;
         }
 
-        /// Single tile on its 64x62 authoring canvas.
+        /// Single tile on its 64x64 authoring canvas.
         private static GameScene IsoTileCanvas()
         {
             var s = new GameScene();
@@ -57,6 +60,66 @@ namespace CozyCafe.Core.Gauntlet
             s.IsLoaded = s.Validate();
             s.TileCanvasView = true;
             return s;
+        }
+
+        /// <summary>
+        /// Four assembled characters on a real floor, one per contract
+        /// direction: presets and a seeded customer are composited by the
+        /// actual Character module at capture time — the PNG shows the
+        /// layered parts (body/hair/outfit/apron/glasses) and the rear views'
+        /// glasses-under-hair occlusion for real.
+        /// </summary>
+        private static GameScene CharacterRigSheet()
+        {
+            var module = new CharacterModule();
+            var s = new GameScene();
+            s.Room = new RoomGrid(4, 4);
+            s.IsLoaded = s.Validate();
+            s.FixedViewport = true;
+            s.ViewportW = 400;
+            s.ViewportH = 340;
+            s.AnchorX = 200;
+            s.AnchorY = 56;
+
+            // casual_02 wears glasses (front view keeps them visible);
+            // staff_01 wears the apron; casual_01 shows a rear view; and a
+            // seeded customer who rolled glasses takes the other rear view,
+            // where the hair layer must occlude them.
+            Place(s, module, module.ComboForPreset(1), Facing.SW, 0.9, 0.9);
+            Place(s, module, module.ComboForPreset(2), Facing.SE, 3.1, 0.9);
+            Place(s, module, module.ComboForPreset(0), Facing.NW, 0.9, 3.1);
+            Place(s, module, module.RollAppearance(
+                GlassesSeed(module), false), Facing.NE, 3.1, 3.1);
+            return s;
+        }
+
+        /// First seed whose customer roll includes glasses — deterministic.
+        private static int GlassesSeed(CharacterModule module)
+        {
+            for (int seed = 1; seed < 1000; seed++)
+            {
+                if (module.RollAppearance(seed, false).GlassesIndex >= 0)
+                {
+                    return seed;
+                }
+            }
+            return 1;
+        }
+
+        private static void Place(GameScene s, CharacterModule module,
+            AppearanceCombo combo, Facing dir, double gx, double gy)
+        {
+            int vis;
+            var sprite = module.Composite(combo, dir, "idle", 0, out vis);
+            s.Characters.Add(new CharacterPlacement
+            {
+                Direction = dir.ToString(),
+                GridX = gx,
+                GridY = gy,
+                Sprite = sprite,
+                AnchorX = module.Rig.FootAnchorX,
+                AnchorY = module.Rig.FootAnchorY
+            });
         }
     }
 }

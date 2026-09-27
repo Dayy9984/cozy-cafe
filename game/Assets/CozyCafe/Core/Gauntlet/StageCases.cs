@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CozyCafe.Core.Character;
 using CozyCafe.Core.Economy;
 using CozyCafe.Core.Iso;
 using CozyCafe.Core.Research;
@@ -39,6 +40,8 @@ namespace CozyCafe.Core.Gauntlet
                     return IdleEconomy();
                 case "research-staff":
                     return ResearchStaff();
+                case "character-rig":
+                    return CharacterRig();
                 default:
                     return null;
             }
@@ -250,6 +253,142 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("missing_steam_blocks_M05", missingSteamBlocksM05));
             cases.Add(new CaseResult("reopen_rerolls_staff", reopenRerolls));
             cases.Add(new CaseResult("stat_appearance_independent", statAppearanceIndependent));
+            return cases;
+        }
+
+        /// <summary>
+        /// Shared character rig against data/art_contract.json and
+        /// data/character_presets.json: the rig and preset counts are read
+        /// from the loaded files; palette swaps are verified on real
+        /// composited pixels (alpha + coverage byte-compared); phase sync is
+        /// measured on every layer's recorded anchor/phase and on painted
+        /// bbox motion between walk frames; rear occlusion is measured on
+        /// the composited raster; and customer collection is measured by
+        /// spawning, despawning and scanning the real persistent snapshot.
+        /// </summary>
+        private static List<CaseResult> CharacterRig()
+        {
+            var module = new CharacterModule();
+            var data = module.Data;
+
+            // --- palette geometry invariance on real composited pixels ---
+            bool paletteMoved = false;
+            int recoloredPx = 0;
+            var states = new[] { "idle", "walk" };
+            for (int p = 0; p < module.PresetCount && !paletteMoved; p++)
+            {
+                var c0 = module.ComboForPreset(p);
+                var c1 = c0;
+                c1.SkinPalette = data.PaletteSkin - 1;
+                c1.HairPalette = data.PaletteHair - 1;
+                c1.OutfitPalette = data.PaletteOutfit - 1;
+                foreach (Facing dir in Enum.GetValues(typeof(Facing)))
+                {
+                    foreach (var st in states)
+                    {
+                        int frames = data.States[st];
+                        for (int f = 0; f < frames; f++)
+                        {
+                            int g;
+                            var a = module.Composite(c0, dir, st, f, out g);
+                            var b = module.Composite(c1, dir, st, f, out g);
+                            byte[] pa = a.Pixels, pb = b.Pixels;
+                            for (int i = 0; i + 3 < pa.Length; i += 4)
+                            {
+                                if (pa[i + 3] != pb[i + 3]) paletteMoved = true;
+                                if ((pa[i] != pb[i] || pa[i + 1] != pb[i + 1]
+                                        || pa[i + 2] != pb[i + 2])
+                                    && pa[i + 3] != 0)
+                                {
+                                    recoloredPx++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // Recolor must actually repaint (nonzero) while moving nothing.
+            if (recoloredPx == 0) paletteMoved = true;
+
+            // --- phase/anchor sync on every layer, plus painted motion ---
+            bool synced = true;
+            var kinds = new[] { PartKind.Body, PartKind.Hair, PartKind.Outfit,
+                PartKind.Apron, PartKind.Glasses };
+            foreach (Facing dir in Enum.GetValues(typeof(Facing)))
+            {
+                foreach (var st in states)
+                {
+                    int frames = data.States[st];
+                    for (int f = 0; f < frames; f++)
+                    {
+                        int phase = CharacterArt.PhaseDy(data, st, f);
+                        int baseDx = int.MinValue, baseDy = int.MinValue;
+                        foreach (var kind in kinds)
+                        {
+                            var l0 = CharacterArt.PaintLayer(data, kind, 0, dir, st, f);
+                            if (l0.AnchorX != module.Rig.FootAnchorX
+                                || l0.AnchorY != module.Rig.FootAnchorY
+                                || l0.PhaseDy != phase)
+                            {
+                                synced = false;
+                            }
+                            // Painted motion vs the previous frame must be
+                            // identical for every layer (shared clock).
+                            if (f > 0)
+                            {
+                                var lp = CharacterArt.PaintLayer(data, kind, 0, dir, st, f - 1);
+                                int x0, y0, x1, y1, px0, py0, px1, py1;
+                                if (!CharacterArt.OpaqueBounds(l0.Pixels, out x0, out y0, out x1, out y1)
+                                    || !CharacterArt.OpaqueBounds(lp.Pixels, out px0, out py0, out px1, out py1))
+                                {
+                                    continue;
+                                }
+                                int ddx = x0 - px0, ddy = y0 - py0;
+                                if (baseDx == int.MinValue) { baseDx = ddx; baseDy = ddy; }
+                                else if (ddx != baseDx || ddy != baseDy) synced = false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- seeded customers: spawn -> despawn -> snapshot scan ---
+            var live = new CharacterModule();
+            for (int i = 0; i < 24; i++) live.Spawn(5000 + i, false);
+            int liveCustomers = live.CustomerCount;
+            // Seeds must replay deterministically and stay distinct.
+            bool replay = live.RollAppearance(4242, false).Key()
+                == live.RollAppearance(4242, false).Key()
+                && live.RollAppearance(1, false).Key()
+                != live.RollAppearance(2, false).Key();
+            live.DespawnAll();
+            bool collectionAdded = live.PersistedCustomerRecords() != 0
+                || liveCustomers != 24;
+
+            // --- occlusion evidence on the real composite ---
+            var glassed = module.ComboForPreset(1); // casual_02 wears glasses_01
+            int frontVis, rearVis;
+            module.Composite(glassed, Facing.SW, "idle", 0, out frontVis);
+            module.Composite(glassed, Facing.NW, "idle", 0, out rearVis);
+
+            var cases = new List<CaseResult>();
+            cases.Add(new CaseResult("rig_count", module.RigCount));
+            cases.Add(new CaseResult("starter_presets", module.PresetCount));
+            cases.Add(new CaseResult("palette_moves_geometry", paletteMoved));
+            cases.Add(new CaseResult("layer_phase_synced", synced));
+            cases.Add(new CaseResult("customer_collection_added", collectionAdded));
+            cases.Add(new CaseResult("part_hair_count", data.PartHair));
+            cases.Add(new CaseResult("part_outfit_count", data.PartOutfit));
+            cases.Add(new CaseResult("part_apron_count", data.PartApron));
+            cases.Add(new CaseResult("part_glasses_count", data.PartGlasses));
+            cases.Add(new CaseResult("palette_skin_count", data.PaletteSkin));
+            cases.Add(new CaseResult("palette_hair_count", data.PaletteHair));
+            cases.Add(new CaseResult("palette_outfit_count", data.PaletteOutfit));
+            cases.Add(new CaseResult("front_glasses_visible_px", frontVis));
+            cases.Add(new CaseResult("rear_glasses_visible_px", rearVis));
+            cases.Add(new CaseResult("recolored_pixel_count", recoloredPx));
+            cases.Add(new CaseResult("variant_png_assets", module.VariantAssetCount));
+            cases.Add(new CaseResult("appearance_seed_replay", replay));
             return cases;
         }
 

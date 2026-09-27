@@ -21,3 +21,5 @@
 원본 runner는 운영 오류 시 BLOCKED로 멈춘다. 인증/특정OS 없는 경우 이미 통합된 변경을 보존한 뒤 가능한 독립작업은 별도 세션에서 계속한다. 같은 run의 평가 기준을 낮춰 통과시키지 않는다.
 
 v0.8: iso-grid/layout-editor/art-pipeline/integration의 변경된 수용 기준으로 다시 검사한다. 이전 PASS를 승계하지 않는다.
+
+v0.8.2 run 메모: character-rig 실구현 완료(Core/Character·StageCases 케이스·4방향 장면·실스폰 근거) 및 iso-grid를 SPEC_CHANGE 상수(64×32/64×64/피치32·16)로 재검증 — 상세는 progress.md "character-rig"·"iso-grid v0.8 신규격" 절. Unity 캡처는 6000.6.3f1 에디터 실카메라로 생성.

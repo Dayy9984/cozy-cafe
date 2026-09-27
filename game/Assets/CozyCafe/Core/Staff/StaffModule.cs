@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CozyCafe.Core.Character;
 using CozyCafe.Core.Modules;
 
 namespace CozyCafe.Core.Staff
@@ -16,14 +17,22 @@ namespace CozyCafe.Core.Staff
         public int StatSeed;
         public int HairIndex;
         public int TopIndex;
+        public int ApronIndex;
         public int GlassesIndex;
         public int PaletteIndex;
+        public int SkinPaletteIndex;
+        public int HairPaletteIndex;
         public int SalesBonusPct;
         public int ResearchBonusPct;
 
         public string AppearanceKey
         {
-            get { return "h" + HairIndex + "t" + TopIndex + "g" + GlassesIndex + "p" + PaletteIndex; }
+            get
+            {
+                return "h" + HairIndex + "t" + TopIndex + "a" + ApronIndex
+                    + "g" + GlassesIndex + "p" + PaletteIndex
+                    + "s" + SkinPaletteIndex + "q" + HairPaletteIndex;
+            }
         }
 
         public string StatKey
@@ -74,11 +83,17 @@ namespace CozyCafe.Core.Staff
             var c = new StaffCandidate();
             c.AppearanceSeed = appSeed;
             c.StatSeed = statSeed;
-            var app = new Random(appSeed);
-            c.HairIndex = app.Next(4);
-            c.TopIndex = app.Next(3);
-            c.GlassesIndex = app.Next(2);
-            c.PaletteIndex = app.Next(4);
+            // Appearance comes from the shared rig's seed roll: the stream
+            // consumes appSeed only, indices stay inside the data-sourced
+            // part/palette ranges, and staff draw the apron part.
+            var combo = CharacterModule.Shared.RollAppearance(appSeed, true);
+            c.HairIndex = combo.HairIndex;
+            c.TopIndex = combo.OutfitIndex;
+            c.ApronIndex = combo.ApronIndex;
+            c.GlassesIndex = combo.GlassesIndex;
+            c.PaletteIndex = combo.OutfitPalette;
+            c.SkinPaletteIndex = combo.SkinPalette;
+            c.HairPaletteIndex = combo.HairPalette;
             var stat = new Random(statSeed);
             int min = (int)Econ.Data.StaffStatPctMin;
             int max = (int)Econ.Data.StaffStatPctMax;
