@@ -5,6 +5,9 @@ Host order:
   1. Unity editor host `CozyCafe.Editor.CaptureShot.Run` (real camera ->
      RenderTexture -> ReadPixels) when a licensed editor is installed and the
      project entry exists. Env: GAUNTLET_CAPTURE_STAGE / GAUNTLET_CAPTURE_OUTPUT.
+     The Unity host is skipped when the found editor's version differs from
+     ProjectSettings/ProjectVersion.txt m_EditorVersion: a mismatched editor
+     silently rewrites tracked project files on open.
   2. GameCli `render <stage> <abs.png>` which software-rasterizes the same
      shared game state — for machines without an editor license.
 
@@ -20,7 +23,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from game_adapter import find_dotnet, find_unity  # noqa: E402
+from game_adapter import (find_dotnet, find_unity,  # noqa: E402
+                          project_editor_version, unity_editor_version,
+                          unity_matches_project)
 
 CAPTURE_METHOD = "CozyCafe.Editor.CaptureShot.Run"
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
@@ -39,6 +44,13 @@ def try_unity(stage, output):
     engine = find_unity()
     if not engine:
         print("capture: Unity editor not found; skipping Unity host")
+        return False
+    if not unity_matches_project(engine):
+        print("capture: Unity %s (version %s) does not match project "
+              "m_EditorVersion=%s; skipping Unity host (it would rewrite "
+              "tracked project files)"
+              % (engine, unity_editor_version(engine),
+                 project_editor_version()))
         return False
     if not list((ROOT / "game").glob("Assets/**/Editor/CaptureShot.cs")):
         print("capture: Editor/CaptureShot.cs not present; skipping Unity host")

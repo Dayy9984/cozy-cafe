@@ -67,7 +67,9 @@ art-pipeline은 art/approved/qa_contact.png와 sprite-sheet-alpha.png를 commit�
 
 ## v0.8.1 엔진 — Unity (사용자 지시가 Godot 기본값을 대체)
 
-게임은 `game/` 아래 Unity 프로젝트로 만든다(Unity 6000.0.51f1 기준 — 원작과 동일 계열).
+게임은 `game/` 아래 Unity 프로젝트로 만든다(Unity 6000.6.3f1 기준 — 원작과 동일
+Unity 6 계열이며 호스트 실제 설치본과 동일 버전; 6000.0.51f1 기본값에서 상향,
+사유는 DECISIONS.md 2026-09-28 항목 참조).
 `game/ProjectSettings/ProjectVersion.txt`와 `game/Assets/`가 있어야 하며,
 `Packages/manifest.json`에 필요 모듈만 둔다. URP/HDRP 미사용 — Built-in 2D.
 

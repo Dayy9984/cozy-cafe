@@ -96,3 +96,25 @@ capture_game.py --stage layout-editor → Unity 6000.6.3f1 CaptureShot.Run
 핀(6000.0.51f1)과 다르므로 복원 처리, 캡처 실행 자체는 정상.
 남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 — 코어
 API와 StageView 그리기만 구현.
+
+## layout-editor — capture/check 추적 소스 변형 수정 (critic 지적 반영)
+문제: 설치된 Unity 6000.6.3f1이 6000.0.51f1 핀 프로젝트를 열 때마다
+manifest·packages-lock·ProjectSettings·ProjectVersion을 덮어써 capture
+실행이 추적 소스를 변경했다. 이전에는 업그레이드 산출물을 되돌려 매 실행이
+다시 변형을 일으키는 상태였다.
+조치: (1) 프로젝트를 실제 설치본 버전 6000.6.3f1로 상향해 에디터 재생성
+산출물(manifest·lock·ProjectSettings·PhysicsCore2D·ProjectAuditor 신규
+에셋)을 제품 상태로 수용 — 동일 버전 재실행에서 추적 파일 변경 0 실측.
+(2) tools/game_adapter.py에 unity_matches_project(에디터 경로 버전과
+ProjectVersion.txt m_EditorVersion 일치 확인) 추가, run_unity는 불일치
+시 BLOCKED. tools/capture_game.py의 try_unity는 불일치 시 Unity 호스트를
+건너뛰고 GameCli render 폴백(동일 GameScene의 실제 래스터 PNG).
+검증: capture_game.py --stage layout-editor → Unity 6000.6.3f1
+CaptureShot.Run으로 실제 카메라 PNG 생성 후 git diff/status 신규 변경 0.
+UNITY_BIN을 버전 없는 바이너리로 지정한 불일치 시험에서 가드가 Unity를
+건너뛰고 GameCli가 실제 PNG를 생성. check_stage 5종 재검사:
+layout-editor 22/22·iso-grid 16/16·project-boot 2/2·idle-economy 8/8·
+research-staff 8/8 전부 실제 코어 계산값 일치. dotnet build Release
+경고0·오류0.
+남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 —
+코어 API와 StageView 그리기만 구현. 이전 항목과 동일.

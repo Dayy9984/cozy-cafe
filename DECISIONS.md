@@ -54,3 +54,17 @@ Record: DEVELOPMENT.md v0.8.2 section; adapter dispatch in
 후: top 64×32 / space·canvas 64×64 / pitch 32·16 / 두께 금지 조합 64×68.
 유지: visual_thickness 4px(물리0), 탁자·의자 (0,-8) 한 번, 캐릭터 셀/앵커.
 전파: art_contract.json(데이터 원본)·gates.json·문서를 갱신하고 코드 상수는 새 건틀릿 런의 빌더가 게이트에 맞춰 변경한다.
+
+## SPEC_CHANGE 2026-09-28 — Unity 에디터 버전 6000.0.51f1→6000.6.3f1 (호스트 설치본 일치)
+사유: 빌드 호스트에 설치된 유일한 에디터가 6000.6.3f1이다. 다른 버전으로 프로젝트를
+여는 실행(capture/case host)이 Packages·ProjectSettings·ProjectVersion.txt를 매번
+덮어써 추적 소스를 변경했다(독립 critic 지적: "capture/check 명령이 추적 소스를 변경").
+전: m_EditorVersion 6000.0.51f1 — 패키지 기본값(원작과 동일 계열), 호스트 미설치.
+후: m_EditorVersion 6000.6.3f1 — 실제 설치본과 동일. 에디터가 재생성한
+manifest.json·packages-lock.json·ProjectSettings.asset 및 신규
+PhysicsCoreProjectSettings2D.asset·ProjectAuditorSettings.asset을 제품 상태로 수용.
+결과: 동일 버전 재실행에서 추적 파일 변경 0을 실측. tools/game_adapter.py와
+tools/capture_game.py에 버전 불일치 에디터 실행 금지 가드 추가 — 불일치 시 캡처는
+GameCli 폴백(동일 장면 상태의 실제 래스터 PNG), 케이스 호스트는 BLOCKED로 보고해
+향후 불일치 에디터의 추적 소스 무단 변경을 차단한다.
+불변: Unity 6 엔진 결정, gates.json 기대값, CASE<TAB>key<TAB>json 계약.

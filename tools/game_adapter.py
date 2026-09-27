@@ -27,7 +27,7 @@ Host contract (whichever runs must satisfy it):
     internal error via EditorApplication.Exit.
 """
 from pathlib import Path
-import argparse, glob, os, shutil, subprocess, sys, tempfile
+import argparse, glob, os, re, shutil, subprocess, sys, tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ENTRY_METHOD = "CozyCafe.Editor.GauntletEntry.Run"
@@ -78,6 +78,37 @@ def find_unity():
     return shutil.which("unity") or shutil.which("Unity")
 
 
+_EDITOR_VERSION_RE = re.compile(r"(\d+\.\d+\.\d+[a-z]+\d+)")
+
+
+def project_editor_version():
+    """The m_EditorVersion the tracked Unity project is authored for."""
+    pv = ROOT / "game" / "ProjectSettings" / "ProjectVersion.txt"
+    try:
+        m = _EDITOR_VERSION_RE.search(
+            pv.read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return None
+    return m.group(1) if m else None
+
+
+def unity_editor_version(engine):
+    """Editor version embedded in a Hub-style install path, e.g.
+    .../Unity/Hub/Editor/6000.6.3f1/Editor/Unity.exe."""
+    hits = _EDITOR_VERSION_RE.findall(str(engine))
+    return hits[-1] if hits else None
+
+
+def unity_matches_project(engine):
+    """True only when the found editor provably equals the project's
+    m_EditorVersion. Launching any other version silently upgrades or
+    downgrades tracked files under game/Packages and game/ProjectSettings
+    in place, so callers must skip the Unity host instead of running it."""
+    ev = unity_editor_version(engine)
+    pv = project_editor_version()
+    return bool(ev) and bool(pv) and ev == pv
+
+
 def run_gamecli(stage):
     """Preferred host: real C# core executed by dotnet. Streams CASE stdout."""
     dotnet = find_dotnet()
@@ -101,6 +132,13 @@ def run_unity(stage):
     engine = find_unity()
     if not engine:
         print("BLOCKED: Unity editor not installed; install Unity or set UNITY_BIN")
+        return 2
+    if not unity_matches_project(engine):
+        print("BLOCKED: Unity editor %s (version %s) does not match the "
+              "project's m_EditorVersion=%s; launching it would rewrite "
+              "tracked project files in place"
+              % (engine, unity_editor_version(engine),
+                 project_editor_version()))
         return 2
     game = ROOT / "game"
     fd, results_path = tempfile.mkstemp(prefix="gauntlet-cases-", suffix=".txt")
