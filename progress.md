@@ -28,3 +28,21 @@ CASE 8키를 실제 코어 호출로 방출: base_rate44·coins_25m1100·
 espresso_lv10_bonus5_rate420·cost_lv1 80·cost_lv9 199·cost_lv10 222·
 negative_wallet false·npc_pays_coins_again false — 8/8 일치.
 project-boot 재검사 2/2 유지. 수치 변경 없음(DECISIONS 기록 대상 없음).
+
+## research-staff — 연구·메뉴·직원 실구현
+구축: Core/Research 신규(ResearchModule)·Core/Staff 신규(StaffModule·StaffCandidate).
+MvpData에 staff.candidates 파싱 추가. 연구는 진행1+대기3, 사용자 예약 순서,
+조건(선행AND)+코인 충족 시 자동 시작, 앞 막히면 뒤 건너뛰지 않음, 시작 시 비용
+1회 충전, 대기 취소/순서변경·시작 후 취소 불가. 완료는 이벤트 경계: 연구ID는
+CompletedResearch 영구 플래그, 머신류 해금(ice/steam/blender)은 OwnedMachines,
+재료류 해금(milk/chocolate)은 UnlockedFlags, InventoryItems는 MVP 범위상 항상
+비어 있어 재고 항목이 되지 않음. 메뉴는 머신+연구 AND게이트로 자동 Lv1 해금.
+직원은 세대시드로 후보3 영구 생성, 창 열기/재시작으로 재추첨 없음, 채용 후 해당
+슬롯만 보충, 무료1+최대3·추가 고용2000을 실제 지갑으로 청구, 외형(헤어/옷/안경/
+팔레트)과 판매·연구 보너스(각0~10%)는 독립 시드 스트림으로 추첨. 두 모듈을
+GameBootstrap 레지스트리에 등록(실제 Probe가 프로젝트 부트 게이트에 포함).
+검증: dotnet build Release 경고0·오류0. check_stage research-staff → GameCli가
+CASE 8키를 실제 코어 호출로 방출: machines5·menus8·research5·
+milk_is_inventory false·ice_milk_unlocks_M04 true·missing_steam_blocks_M05 true·
+reopen_rerolls_staff false·stat_appearance_independent true — 8/8 일치.
+project-boot 재검사 2/2 유지, idle-economy 재검사 8/8 유지. 수치 변경 없음.

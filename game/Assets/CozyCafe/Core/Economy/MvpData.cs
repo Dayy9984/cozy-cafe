@@ -62,6 +62,7 @@ namespace CozyCafe.Core.Economy
         public long ResearchQueue;
         public long StaffFree;
         public long StaffMax;
+        public long StaffCandidates;
         public long StaffCost;
         public long StaffStatPctMin;
         public long StaffStatPctMax;
@@ -149,6 +150,7 @@ namespace CozyCafe.Core.Economy
             var staff = AsDict(Get(root, "staff"));
             d.StaffFree = AsLong(Get(staff, "free"));
             d.StaffMax = AsLong(Get(staff, "max"));
+            d.StaffCandidates = AsLong(Get(staff, "candidates"));
             d.StaffCost = AsLong(Get(staff, "cost"));
             var pct = AsList(Get(staff, "stat_percent"));
             d.StaffStatPctMin = AsLong(pct[0]);
