@@ -33,9 +33,19 @@ ROOT = Path(__file__).resolve().parents[1]
 ENTRY_METHOD = "CozyCafe.Editor.GauntletEntry.Run"
 
 
+def _execable_path(p):
+    """Normalize a possibly Windows-form env path for POSIX subprocess
+    exec under msys/cygwin hosts (drive-letter paths get forward
+    slashes, which native Windows also accepts)."""
+    if p and len(p) > 2 and p[1] == ":":
+        return p.replace(chr(92), "/")
+    return p
+
+
 def find_dotnet():
     cand = os.environ.get("DOTNET_BIN")
     if cand:
+        cand = _execable_path(cand)
         return cand if Path(cand).is_file() else None
     w = shutil.which("dotnet")
     if w:
@@ -52,6 +62,7 @@ def find_dotnet():
 def find_unity():
     cand = os.environ.get("UNITY_BIN")
     if cand:
+        cand = _execable_path(cand)
         return cand if Path(cand).is_file() else None
     hits = []
     for pat in (

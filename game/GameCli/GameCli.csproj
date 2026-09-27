@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    .NET 8 host for the shared pure-C# game core. It compiles the exact same
+    sources under Assets/CozyCafe/Core that the Unity project compiles, so
+    gate CASE values are produced by identical logic on machines without an
+    editor license. Do not add engine references here.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>GameCli</AssemblyName>
+    <RootNamespace>CozyCafe.Cli</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <LangVersion>9</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="../Assets/CozyCafe/Core/**/*.cs" />
+  </ItemGroup>
+
+</Project>

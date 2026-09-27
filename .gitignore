@@ -11,3 +11,10 @@ __pycache__/
 *auth.json
 *.p12
 *.pfx
+game/Library/
+game/Temp/
+game/Logs/
+game/UserSettings/
+game/obj/
+game/GameCli/bin/
+game/GameCli/obj/

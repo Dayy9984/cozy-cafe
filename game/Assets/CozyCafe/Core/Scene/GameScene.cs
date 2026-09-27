@@ -1,0 +1,152 @@
+using System.Collections.Generic;
+
+namespace CozyCafe.Core.Scene
+{
+    public enum FurnitureKind
+    {
+        Table,
+        Chair,
+        Stool,
+        EspressoMachine,
+        Grinder,
+        Steamer,
+        IceMaker,
+        Blender,
+        Counter,
+        Door
+    }
+
+    /// <summary>
+    /// v0.8 render-offset contract in source-art pixels: tables, chairs and
+    /// stools draw once at (0,-8) from their floor placement anchor; every
+    /// other kind uses (0,0). The offset is screen-space: applied at render
+    /// time, scaled by zoom, never rotated with the furniture, never fed back
+    /// into logical cells, collision, pathing or depth keys.
+    /// </summary>
+    public static class RenderOffsetTable
+    {
+        public static void For(FurnitureKind kind, out int dx, out int dy)
+        {
+            switch (kind)
+            {
+                case FurnitureKind.Table:
+                case FurnitureKind.Chair:
+                case FurnitureKind.Stool:
+                    dx = 0;
+                    dy = -8;
+                    return;
+                default:
+                    dx = 0;
+                    dy = 0;
+                    return;
+            }
+        }
+    }
+
+    public sealed class Furniture
+    {
+        public FurnitureKind Kind;
+        public int CellX;
+        public int CellY;
+        public int QuarterTurns;
+
+        public Furniture(FurnitureKind kind, int cellX, int cellY)
+        {
+            Kind = kind;
+            CellX = cellX;
+            CellY = cellY;
+            QuarterTurns = 0;
+        }
+
+        /// Depth ordering uses the logical cell only.
+        public int DepthKey
+        {
+            get { return CellX + CellY; }
+        }
+
+        /// Screen-space render offset in pixels (pre-zoom).
+        public void RenderOffset(out double dx, out double dy)
+        {
+            int ox, oy;
+            RenderOffsetTable.For(Kind, out ox, out oy);
+            dx = ox;
+            dy = oy;
+        }
+    }
+}
+
+namespace CozyCafe.Core.Scene
+{
+    public sealed class RoomGrid
+    {
+        public readonly int Width;
+        public readonly int Height;
+        private readonly bool[] cells;
+
+        public RoomGrid(int width, int height)
+        {
+            Width = width;
+            Height = height;
+            cells = new bool[width * height];
+            for (int i = 0; i < cells.Length; i++) cells[i] = true;
+        }
+
+        public int CellCount
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < cells.Length; i++) if (cells[i]) n++;
+                return n;
+            }
+        }
+
+        public bool InBounds(int x, int y)
+        {
+            return x >= 0 && y >= 0 && x < Width && y < Height;
+        }
+
+        public bool HasCell(int x, int y)
+        {
+            return InBounds(x, y) && cells[y * Width + x];
+        }
+
+        public void SetCell(int x, int y, bool present)
+        {
+            if (InBounds(x, y)) cells[y * Width + x] = present;
+        }
+    }
+
+    public sealed class Agent
+    {
+        public string Name;
+        public int PresetId;
+        public double GridX;
+        public double GridY;
+        public bool IsStaff;
+    }
+
+    /// <summary>
+    /// The loaded game scene: the logical room grid plus placed furniture and
+    /// agents. IsLoaded is set by GameBootstrap.LoadDefaultScene only after
+    /// the scene validates — CASE reporters read it, they never set it.
+    /// </summary>
+    public sealed class GameScene
+    {
+        public RoomGrid Room;
+        public readonly List<Furniture> Furniture = new List<Furniture>();
+        public readonly List<Agent> Agents = new List<Agent>();
+        public bool IsLoaded;
+
+        public bool Validate()
+        {
+            if (Room == null || Room.Width <= 0 || Room.Height <= 0) return false;
+            if (Room.CellCount != Room.Width * Room.Height) return false;
+            foreach (var f in Furniture)
+            {
+                if (!Room.HasCell(f.CellX, f.CellY)) return false;
+            }
+            return true;
+        }
+    }
+}
