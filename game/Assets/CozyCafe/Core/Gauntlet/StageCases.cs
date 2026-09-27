@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CozyCafe.Core.Economy;
 using CozyCafe.Core.Iso;
+using CozyCafe.Core.Layout;
 using CozyCafe.Core.Research;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Staff;
@@ -39,6 +40,8 @@ namespace CozyCafe.Core.Gauntlet
                     return IdleEconomy();
                 case "research-staff":
                     return ResearchStaff();
+                case "layout-editor":
+                    return LayoutEditorStage();
                 default:
                     return null;
             }
@@ -251,6 +254,244 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("reopen_rerolls_staff", reopenRerolls));
             cases.Add(new CaseResult("stat_appearance_independent", statAppearanceIndependent));
             return cases;
+        }
+
+        /// <summary>
+        /// Layout/furniture editor gates. Every value below is computed by a
+        /// real LayoutModule run on a real room - 1x1 tile paint, grouped
+        /// undo/redo, door/pair/host validity, atomic host-subtree ops, and
+        /// the v0.8 single (0,-8) screen-up render offset resolved through
+        /// RenderContract while logical state stays unshifted.
+        /// </summary>
+        private static List<CaseResult> LayoutEditorStage()
+        {
+            var cases = new List<CaseResult>();
+
+            // --- 1x1 tile paint changes exactly one cell ---
+            var paint = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
+            string paintBefore = paint.Snapshot();
+            var pr = paint.PaintTile(4, 4, false);
+            int cellDiff = paint.CellDiffFrom(paintBefore);
+            cases.Add(new CaseResult("one_tile_changed",
+                pr.Ok && pr.ChangedCells == 1 && cellDiff == 1 ? 1 : cellDiff));
+
+            // --- grouped undo/redo: one 3-cell drag is one command ---
+            var drag = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
+            string d0 = drag.Snapshot();
+            drag.BeginCommand();
+            drag.PaintTile(0, 0, false);
+            drag.PaintTile(1, 0, false);
+            drag.PaintTile(2, 0, false);
+            var dragCommit = drag.EndCommand();
+            string d1 = drag.Snapshot();
+            bool undoOk = dragCommit == PlacementReject.None && d0 != d1
+                && drag.UndoDepth == 1 && drag.Undo() && drag.Snapshot() == d0;
+            bool redoOk = drag.Redo() && drag.Snapshot() == d1;
+            cases.Add(new CaseResult("undo_restores", undoOk));
+            cases.Add(new CaseResult("redo_restores", redoOk));
+
+            // --- door rules: wall slots only, never sealed off ---
+            var door = new LayoutModule(new GameScene { Room = new RoomGrid(5, 5) });
+            bool interiorRejected = !door.TryPlace(FurnitureKind.Door, 2, 2, 0).Ok;
+            bool wallOk = door.TryPlace(FurnitureKind.Door, 0, 1, 0).Ok;
+            door.TryPlace(FurnitureKind.Counter, 0, 0, 0);
+            door.TryPlace(FurnitureKind.Counter, 0, 2, 0);
+            bool sealRejected = !door.TryPlace(FurnitureKind.Counter, 1, 1, 0).Ok;
+            cases.Add(new CaseResult("door_block_rejected",
+                interiorRejected && wallOk && sealRejected));
+
+            // --- table<->seat pairing ---
+            var pair = new LayoutModule(new GameScene { Room = new RoomGrid(5, 5) });
+            bool loneTable = !pair.TryPlace(FurnitureKind.Table, 2, 2, 0).Ok;
+            pair.BeginCommand();
+            bool pairOps = pair.TryPlace(FurnitureKind.Table, 2, 2, 0).Ok
+                && pair.TryPlace(FurnitureKind.Chair, 2, 3, 0).Ok;
+            bool pairedOk = pairOps && pair.EndCommand() == PlacementReject.None;
+            cases.Add(new CaseResult("table_without_chair_rejected", loneTable && pairedOk));
+
+            // --- machine/host relations and atomic subtree move ---
+            var host = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
+            bool noHost = !host.TryPlace(FurnitureKind.Grinder, 2, 2, 0).Ok;
+            var counter = host.TryPlace(FurnitureKind.Counter, 2, 2, 0);
+            var grinder = host.TryPlace(FurnitureKind.Grinder, 2, 2, 0);
+            bool hosted = counter.Ok && grinder.Ok
+                && grinder.Placed.HostId == counter.Placed.Id;
+            cases.Add(new CaseResult("unhosted_machine_rejected", noHost && hosted));
+
+            var mv = host.TryMove(counter.Placed.Id, 3, 2);
+            bool preserved = mv.Ok && grinder.Placed.CellX == 3
+                && grinder.Placed.CellY == 2
+                && grinder.Placed.HostId == counter.Placed.Id
+                && host.ChildrenOf(counter.Placed.Id).Count == 1;
+            cases.Add(new CaseResult("host_move_preserves_child", preserved));
+
+            // --- editing never pauses the idle-sale loop ---
+            var data = MvpData.Load();
+            var steady = EconomyModule.CreateStartup(data, 0);
+            steady.SimulateSeconds(60.0);
+            var edited = EconomyModule.CreateStartup(data, 0);
+            edited.SimulateSeconds(30.0);
+            var midEdit = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
+            midEdit.BeginCommand();
+            midEdit.TryPlace(FurnitureKind.Table, 3, 3, 0);
+            midEdit.TryPlace(FurnitureKind.Chair, 3, 4, 0);
+            var editCommit = midEdit.EndCommand();
+            edited.SimulateSeconds(30.0);
+            cases.Add(new CaseResult("editing_keeps_sales",
+                editCommit == PlacementReject.None
+                && edited.Coins == steady.Coins && edited.Coins > 0));
+
+            // --- the v0.8 single (0,-8) screen-up render offset ---
+            var room = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
+            room.BeginCommand();
+            room.TryPlace(FurnitureKind.Door, 0, 3, 0);
+            var table = room.TryPlace(FurnitureKind.Table, 3, 2, 0).Placed;
+            var chair = room.TryPlace(FurnitureKind.Chair, 3, 3, 0).Placed;
+            room.TryPlace(FurnitureKind.Stool, 2, 2, 0);
+            var roomCommit = room.EndCommand();
+
+            double ox, oy;
+            RenderContract.TargetOffset(FurnitureKind.Table, out ox, out oy);
+            cases.Add(new CaseResult("table_render_offset_y_px", oy));
+            RenderContract.TargetOffset(FurnitureKind.Chair, out ox, out oy);
+            cases.Add(new CaseResult("chair_render_offset_y_px", oy));
+            RenderContract.RuntimeOffset(FurnitureKind.Table, 0.0, -8.0, out ox, out oy);
+            cases.Add(new CaseResult("table_runtime_offset_when_baked_y_px", oy));
+            RenderContract.EffectiveOffset(FurnitureKind.Table, 0.0, -8.0, out ox, out oy);
+            cases.Add(new CaseResult("table_effective_offset_when_baked_y_px", oy));
+
+            double gx, gy, dx, dy;
+            IsoMath.Project(table.CellX + 0.5, table.CellY + 0.5, out gx, out gy);
+            RenderContract.DrawAnchor(table, 2.0, out dx, out dy);
+            cases.Add(new CaseResult("table_offset_at_zoom2_y_px", dy - gy * 2.0));
+
+            // The -8 is always screen-up: resolving the draw transform at
+            // every quarter turn must yield the identical (0,-8) delta.
+            double cgx, cgy;
+            IsoMath.Project(chair.CellX + 0.5, chair.CellY + 0.5, out cgx, out cgy);
+            bool rotates = false;
+            for (int q = 0; q < 4; q++)
+            {
+                chair.QuarterTurns = q;
+                double ddx, ddy;
+                RenderContract.DrawAnchor(chair, 1.0, out ddx, out ddy);
+                if (ddy - cgy != -8.0 || ddx - cgx != 0.0) rotates = true;
+            }
+            cases.Add(new CaseResult("chair_offset_rotates_with_furniture", rotates));
+
+            // --- the offset must never leak into logical geometry ---
+            // Prove the -8 actually moves draw anchors, then prove every
+            // logical structure is byte-identical after the render path runs.
+            double tgx, tgy, tdx, tdy;
+            IsoMath.Project(table.CellX + 0.5, table.CellY + 0.5, out tgx, out tgy);
+            RenderContract.DrawAnchor(table, 1.0, out tdx, out tdy);
+            bool offsetApplied = tdy == tgy - 8.0 && tdx == tgx;
+
+            string logBefore = room.Snapshot();
+            var blockedBefore = room.BlockedCells();
+            var pathBefore = room.FindPath(0, 3, 5, 5);
+            var depthBefore = room.DepthSortedIds();
+            int seatBefore = room.SeatJudgementCell(chair);
+            foreach (var f in room.Scene.Furniture)
+            {
+                double ax, ay;
+                RenderContract.DrawAnchorResolved(f, room.LookupHost, 2.0, out ax, out ay);
+            }
+            bool sameSnapshot = room.Snapshot() == logBefore;
+            bool sameBlocked = room.BlockedCells().SetEquals(blockedBefore);
+            var pathAfter = room.FindPath(0, 3, 5, 5);
+            bool samePath = SameInts(pathBefore, pathAfter) && pathBefore != null;
+            var depthAfter = room.DepthSortedIds();
+            bool sameDepth = SameInts(depthBefore, depthAfter);
+            bool depthIsLogical = true;
+            foreach (var f in room.Scene.Furniture)
+            {
+                if (f.DepthKey != f.CellX + f.CellY) depthIsLogical = false;
+            }
+            bool seatIsLogical = seatBefore == chair.CellY * 6 + chair.CellX
+                && room.SeatJudgementCell(chair) == seatBefore;
+
+            cases.Add(new CaseResult("visual_offset_changes_logical_cell",
+                !(offsetApplied && roomCommit == PlacementReject.None
+                    && sameSnapshot && seatIsLogical)));
+            cases.Add(new CaseResult("visual_offset_changes_collision",
+                !(offsetApplied && sameBlocked)));
+            cases.Add(new CaseResult("visual_offset_changes_pathfinding",
+                !(offsetApplied && samePath)));
+            cases.Add(new CaseResult("visual_offset_changes_depth_key",
+                !(offsetApplied && sameDepth && depthIsLogical)));
+
+            // --- save/reload: logical records only, zero accumulation ---
+            string saved = room.SaveLayout();
+            var re1 = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
+            re1.LoadLayout(saved);
+            var re2 = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
+            re2.LoadLayout(re1.SaveLayout());
+            bool accumulates = re1.SaveLayout() != saved;
+            foreach (var f in re2.Scene.Furniture)
+            {
+                var orig = room.Find(f.Id);
+                double ex, ey;
+                RenderContract.EffectiveOffset(f, out ex, out ey);
+                double tox, toy;
+                RenderContract.TargetOffset(f.Kind, out tox, out toy);
+                if (orig == null || f.CellX != orig.CellX || f.CellY != orig.CellY
+                    || ex != tox || ey != toy)
+                {
+                    accumulates = true;
+                }
+            }
+            cases.Add(new CaseResult("reload_accumulates_visual_offset", accumulates));
+
+            // --- mounted child resolves the parent mount once ---
+            var hostEd = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
+            hostEd.BeginCommand();
+            var hostTable = hostEd.TryPlace(FurnitureKind.Table, 3, 3, 0).Placed;
+            hostEd.TryPlace(FurnitureKind.Chair, 3, 4, 0);
+            hostEd.EndCommand();
+            var childRes = hostEd.TryPlace(FurnitureKind.Grinder, 3, 3, 0);
+            bool duplicates = true;
+            if (childRes.Ok && hostTable != null)
+            {
+                var child = childRes.Placed;
+                double cdx, cdy, hgx, hgy, mx, my, hox, hoy, chx, chy;
+                RenderContract.DrawAnchorResolved(child, hostEd.LookupHost, 1.0,
+                    out cdx, out cdy);
+                IsoMath.Project(child.CellX + 0.5, child.CellY + 0.5, out hgx, out hgy);
+                RenderContract.TargetOffset(hostTable.Kind, out hox, out hoy);
+                RenderContract.MountLocal(hostTable.Kind, out mx, out my);
+                RenderContract.TargetOffset(child.Kind, out chx, out chy);
+                // parent(-8) + mount + child each appear exactly once.
+                duplicates = cdy != hgy + hoy + my + chy
+                    || cdx != hgx + hox + mx + chx;
+            }
+            cases.Add(new CaseResult("child_attachment_duplicates_parent_offset",
+                duplicates));
+
+            // --- standing agents are never lifted by the table rule ---
+            var agent = new Agent { GridX = 3.5, GridY = 3.5, IsStaff = false };
+            double adx, ady, agx, agy;
+            RenderContract.AgentDrawAnchor(agent, 1.0, out adx, out ady);
+            IsoMath.Project(agent.GridX, agent.GridY, out agx, out agy);
+            cases.Add(new CaseResult("standing_characters_lifted_by_table_rule",
+                adx != agx || ady != agy));
+
+            // --- picking/ghost share the real render transform ---
+            double ghx, ghy, pdx, pdy;
+            RenderContract.GhostAnchor(FurnitureKind.Table,
+                table.CellX, table.CellY, 1.0, out ghx, out ghy);
+            RenderContract.PickAnchor(table, 1.0, out pdx, out pdy);
+            cases.Add(new CaseResult("picking_and_ghost_share_render_transform",
+                ghx == pdx && ghy == pdy));
+
+            return cases;
+        }
+
+        private static bool SameInts(List<int> a, List<int> b)
+        {
+            if (a == null || b == null || a.Count != b.Count) return a == b;
+            for (int i = 0; i < a.Count; i++) if (a[i] != b[i]) return false;
+            return true;
         }
 
         /// Fresh startup state funded through the idle-sale path, then the

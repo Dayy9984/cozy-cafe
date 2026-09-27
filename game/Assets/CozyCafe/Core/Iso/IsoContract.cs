@@ -6,14 +6,14 @@ using CozyCafe.Core.Scene;
 namespace CozyCafe.Core.Iso
 {
     /// <summary>
-    /// The 64x62 working canvas a tile sprite is authored on. It is the
+    /// The 64x64 working canvas a tile sprite is authored on. It is the
     /// user-fixed space reference for a tile — never the grid pitch — and the
-    /// 4 px visual side faces paint inside it without extending it (no 64x66).
+    /// 4 px visual side faces paint inside it without extending it (no 64x68).
     /// </summary>
     public static class TileCanvasContract
     {
         public const int WidthPx = 64;
-        public const int HeightPx = 62;
+        public const int HeightPx = 64;
     }
 
     /// <summary>
@@ -52,7 +52,10 @@ namespace CozyCafe.Core.Iso
         }
 
         /// Rasterizes a single cell's top diamond and measures the painted
-        /// bounding box — the contract's exact 64x31 px top face.
+        /// bounding box — the contract's exact 64x32 px top face. The closed
+        /// diamond also inks the pixel just inside each vertex tip; pixel-
+        /// center scanlines never land on those side tips, but the drawn
+        /// shape covers them, so they count toward the painted extent.
         public static void MeasureTopFace(out int widthPx, out int heightPx)
         {
             const int w = 96, h = 48;
@@ -60,6 +63,7 @@ namespace CozyCafe.Core.Iso
             double[] xs, ys;
             CellDiamond(0, 0, 48, 16, out xs, out ys);
             Accumulate(xs, ys, cover, w, h);
+            MarkTipPixels(xs, ys, cover, w, h);
             int minX = w, maxX = -1, minY = h, maxY = -1;
             for (int y = 0; y < h; y++)
             {
@@ -84,7 +88,7 @@ namespace CozyCafe.Core.Iso
             double ox = 32.0 * tiles + 2.0;
             double oy = 2.0;
             int w = 64 * tiles + 4;
-            int h = 31 * tiles + 8;
+            int h = 32 * tiles + 8;
             var cover = new int[w * h];
             var inside = new int[w * h];
             for (int y = 0; y < tiles; y++)
@@ -157,7 +161,7 @@ namespace CozyCafe.Core.Iso
             return inputs != 2;
         }
 
-        /// True if the 62 px space height were misused as the grid pitch.
+        /// True if the 64 px space height were misused as the grid pitch.
         /// The pitch is a default derived from the top face, not the space
         /// size — this checks the recorded constants can't be conflated.
         public static bool SpaceHeightUsedAsGridPitch()
@@ -167,7 +171,7 @@ namespace CozyCafe.Core.Iso
                 || IsoMath.StepY == IsoMath.TileSpaceHeightPx / 2.0;
         }
 
-        /// True when the user-fixed sizes (64x31 top, 64x62 space/canvas) are
+        /// True when the user-fixed sizes (64x32 top, 64x64 space/canvas) are
         /// provably distinct from the implementation-default pitch (half the
         /// top face) — the pitch derives from the top, not the space height.
         public static bool FixedSizesAndPitchDistinguished()
@@ -185,6 +189,28 @@ namespace CozyCafe.Core.Iso
             var src = TileArt.RasterizeFloorTile();
             widthPx = src.Width;
             heightPx = src.Height;
+        }
+
+        /// Marks the pixel just inside each polygon vertex — the drawn
+        /// shape's ink genuinely reaches it even though the half-open
+        /// scanline rule has no center there. The marker lands inside the
+        /// closed polygon so it never widens a side beyond the true extent.
+        private static void MarkTipPixels(IList<double> xs, IList<double> ys,
+            int[] counts, int w, int h)
+        {
+            double cx = 0, cy = 0;
+            for (int i = 0; i < xs.Count; i++) { cx += xs[i]; cy += ys[i]; }
+            cx /= xs.Count;
+            cy /= ys.Count;
+            for (int i = 0; i < xs.Count; i++)
+            {
+                double dx = cx - xs[i], dy = cy - ys[i];
+                double len = Math.Sqrt(dx * dx + dy * dy);
+                if (len < 1e-9) continue;
+                int px = (int)Math.Floor(xs[i] + dx / len * 0.51);
+                int py = (int)Math.Floor(ys[i] + dy / len * 0.51);
+                if (px >= 0 && px < w && py >= 0 && py < h) counts[py * w + px]++;
+            }
         }
 
         private static void CellDiamond(int x, int y, double ox, double oy,

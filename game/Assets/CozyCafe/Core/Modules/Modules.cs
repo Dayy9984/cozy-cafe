@@ -123,22 +123,6 @@ namespace CozyCafe.Core.Modules
         }
     }
 
-    /// <summary>Owns the room grid and placed furniture validity.</summary>
-    public sealed class LayoutModule : ModuleBase
-    {
-        public override string Name { get { return "layout"; } }
-        public GameScene Scene { get; private set; }
-
-        public LayoutModule(GameScene scene)
-        {
-            Scene = scene;
-        }
-
-        protected override bool OnProbe()
-        {
-            return Scene != null && Scene.Validate();
-        }
-    }
 
     /// <summary>
     /// Shared-body character catalog per the MVP defaults: one rig, three

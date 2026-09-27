@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CozyCafe.Core.Iso;
+using CozyCafe.Core.Layout;
 using CozyCafe.Core.Scene;
 using UnityEngine;
 
@@ -46,9 +47,12 @@ namespace CozyCafe.Unity
             var furn = new List<Furniture>(scene.Furniture);
             furn.Sort(delegate (Furniture a, Furniture b)
             {
-                return a.DepthKey.CompareTo(b.DepthKey);
+                int c = a.DepthKey.CompareTo(b.DepthKey);
+                return c != 0 ? c : a.HostId.CompareTo(b.HostId);
             });
-            foreach (var f in furn) AddFurniture(root, f);
+            var byId = new Dictionary<int, Furniture>();
+            foreach (var f in furn) if (f.Id != 0) byId[f.Id] = f;
+            foreach (var f in furn) AddFurniture(root, f, byId);
             foreach (var a in scene.Agents) AddAgent(root, a);
             return root;
         }
@@ -80,17 +84,25 @@ namespace CozyCafe.Unity
             sr.sortingOrder = 1;
         }
 
-        private static void AddFurniture(GameObject root, Furniture f)
+        private static void AddFurniture(GameObject root, Furniture f,
+            Dictionary<int, Furniture> byId)
         {
             var go = new GameObject("furn_" + f.Kind + "_" + f.CellX + "_" + f.CellY);
             go.transform.SetParent(root.transform, false);
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = DiamondSprite(40, 19, FurnitureColor(f.Kind));
-            double gx, gy, ox, oy;
-            IsoMath.Project(f.CellX + 0.5, f.CellY + 0.5, out gx, out gy);
-            f.RenderOffset(out ox, out oy);
-            go.transform.position = new Vector3((float)(gx + ox), (float)-(gy + oy), 0f);
-            sr.sortingOrder = 100 + f.DepthKey;
+            // Same render contract as the core rasterizer: (ground + target)
+            // once for floor pieces, host mount resolution for children.
+            double dx, dy;
+            RenderContract.DrawAnchorResolved(f,
+                delegate (int id)
+                {
+                    Furniture h;
+                    return byId.TryGetValue(id, out h) ? h : null;
+                },
+                1.0, out dx, out dy);
+            go.transform.position = new Vector3((float)dx, (float)-dy, 0f);
+            sr.sortingOrder = 100 + f.DepthKey + (f.HostId != 0 ? 1 : 0);
         }
 
         private static void AddAgent(GameObject root, Agent a)
@@ -114,6 +126,7 @@ namespace CozyCafe.Unity
                 case FurnitureKind.Chair:
                 case FurnitureKind.Stool: return new Color(0.69f, 0.45f, 0.29f);
                 case FurnitureKind.Counter: return new Color(0.77f, 0.58f, 0.39f);
+                case FurnitureKind.Door: return new Color(0.35f, 0.5f, 0.36f);
                 default: return new Color(0.33f, 0.34f, 0.38f);
             }
         }

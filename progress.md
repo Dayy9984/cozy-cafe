@@ -69,4 +69,30 @@ GameBootstrap 레지스트리에 등록(실제 Probe가 프로젝트 부트 게�
 CASE 8키를 실제 코어 호출로 방출: machines5·menus8·research5·
 milk_is_inventory false·ice_milk_unlocks_M04 true·missing_steam_blocks_M05 true·
 reopen_rerolls_staff false·stat_appearance_independent true — 8/8 일치.
-project-boot 재검사 2/2 유지, idle-economy 재검사 8/8 유지. 수치 변경 없음.
+project-boot 재검사 2/2 유지, idle-economy 재검사 8/8 유지. 수치 변경 없음.## layout-editor — 레이아웃·가구 편집기 실구현
+SPEC_CHANGE(64x32/64x64/피치32·16, DECISIONS 2026-09-28)이 코드에 미반영이던
+것을 반영: IsoMath·IsoContract·TileArt·SceneRenderer·asset_catalog·DEVELOPMENT
+전면 동기화(64x32 윗면, 64x64 공간·캔버스, 두께4 시각전용). 픽셀중심 스캔라인
+아래 정확다이아몬드가 옆꼭짓점 열을 잃던 것을 측정·래스터 양쪽에 팁픽셀을
+포함시켜 64폭 복원(iso-grid 16/16 유지, 이음0).
+구축: Core/Layout 신규 — LayoutModule(RoomGrid/가구/도어/좌석/호스트
+머신 편집, 1x1 페인트=정확히1셀, Begin/EndCommand 그룹+드래그1코맨드,
+커밋 전 유효성검사 실패 시 전체 롤백, Undo/Redo 스택)와
+RenderContract((0,-8) 스크린업 보정을 baked+runtime 합=-8로 한 번만 적용,
+줌2→-16, 회전불변, 논리 셀·충돌·동선·깊이키·좌석판정·세이브에 불영향,
+피킹·고스트=실 렌더 트랜스폼 공유, 자식 부착은 부모 마운트 1회만, 캐릭터
+미적용). GameScene.Furniture에 Id/HostId/BakedOffsetY, GameBootstrap에
+Layout 모듈 등록 및 머신-카운터 호스트 구조. StageCases.layout-editor로
+22키 전부 실제 코어 계산값 방출, StageScenes.layout-editor로 도어+테이블+
+의자+스툴+카운터+머신 가구배치 캡처 장면. SceneRenderer/StageViewBuilder에
+도어아트·마운트자식·깊이동률·렌더오프셋 적용.
+검증: dotnet build Release 경고0·오류0. check_stage layout-editor 22/22
+(호스트 실패코드 그대로 방출, 유효·무효 양면 검증). iso-grid 16/16·
+project-boot 2/2·idle-economy 8/8·research-staff 8/8 회귀 유지.
+capture_game.py --stage layout-editor → Unity 6000.6.3f1 CaptureShot.Run
+실편집장면 PNG 420x300(out/evidence/layout_editor.png)·GameCli render
+폴백 PNG 504KB(layout_editor_cli.png) 각각 실측. Unity가 프로젝트를
+6000.6.3f1로 업그레이드해 생성한 ProjectSettings/Packages 낙전본은 버전
+핀(6000.0.51f1)과 다르므로 복원 처리, 캡처 실행 자체는 정상.
+남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 — 코어
+API와 StageView 그리기만 구현.
