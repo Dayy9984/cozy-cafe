@@ -64,3 +64,25 @@ Mac 서명/공증과 인증서는 외부배포 단계. 패키지에 토큰·인�
 
 ## 실제 이미지 증거
 art-pipeline은 art/approved/qa_contact.png와 sprite-sheet-alpha.png를 commit해 critic이 실제 픽셀을 읽는다. UI/통합은 game의 --capture-stage <stage> --capture-output <absolute.png>를 처리하고 실제 viewport를 저장 후 종료한다. tools/capture_game.py가 이 경로를 직접 실행한다. headless 수학 시험으로 GUI 캡처를 꾸미지 않는다.
+
+## v0.8.1 엔진 — Unity (사용자 지시가 Godot 기본값을 대체)
+
+게임은 `game/` 아래 Unity 프로젝트로 만든다(Unity 6000.0.51f1 기준 — 원작과 동일 계열).
+`game/ProjectSettings/ProjectVersion.txt`와 `game/Assets/`가 있어야 하며,
+`Packages/manifest.json`에 필요 모듈만 둔다. URP/HDRP 미사용 — Built-in 2D.
+
+### 하네스 계약 (gates 값 불변)
+- `tools/game_adapter.py <stage>` → Unity `-batchmode -projectPath game -executeMethod CozyCafe.Editor.GauntletEntry.Run -quit`.
+- 진입점은 `static void Run()`으로, `GAUNTLET_STAGE` env로 스테이지 id를 읽고
+  `GAUNTLET_RESULTS`(절대경로)에 `CASE<TAB>key<TAB>json` 라인을 쓴다.
+  실패 시 `EditorApplication.Exit(2)`. CASE 값은 반드시 실제 게임 모듈 호출 결과.
+- 캡처 게이트(ui-local-ugc, integration)는 `CozyCafe.Editor.CaptureShot.Run`을 호출한다.
+  env `GAUNTLET_CAPTURE_STAGE`, `GAUNTLET_CAPTURE_OUTPUT`(절대경로 PNG).
+  실제 카메라→RenderTexture→ReadPixels로 viewport를 렌더해 PNG로 저장하고 종료.
+  headless 수학으로 캡처를 꾸미지 않는다.
+
+### Unity 배치 주의
+- 배치모드에서도 `-nographics`를 쓰지 않는다(렌더가 필요한 캡처 게이트 때문).
+- 첫 실행은 Library 임포트+컴파일로 수 분 걸릴 수 있다 — 어댑터는 30분 타임아웃.
+- 한글 IME·투명·항상위·DPI·복귀는 네이티브 빌드 검증(native-release)에서 다룬다.
+- Windows 빌드는 macOS 에디터의 Windows Standalone 모듈로 cross-build 후 Windows에서 실행 검증.

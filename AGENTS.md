@@ -26,3 +26,12 @@ logical root/collider/pathfinding/경제는 변하지 않는다. 캔버스에 �
 원화 baked_offset과 runtime_offset을 합한 결과만 -8이어야 한다. 회전 후에도 화면 위 방향, 줌 전 보정이다.
 현재 피치32/15.5는 구현 기본값으로 명시되어 있다. 사용자 확정 피치나 원작 실측으로 오인하지 마라.
 이전 판의 PASS/PLAN_READY를 현재 실행 검증으로 가져오지 않는다. 변경된 외부 gates로 재검증한다.
+
+## v0.8.1 ENGINE — Unity
+
+사용자 지시(2026-09-27)로 게임 엔진은 **Unity 6**다. plan goal 텍스트의
+"Godot 프로젝트" 언급은 패키지 기본값이며 DECISIONS.md의 사용자 확정이 우선한다.
+구현 계약은 DEVELOPMENT.md의 "v0.8.1 엔진" 절을 따른다: `game/` 아래 Unity
+프로젝트, `CozyCafe.Editor.GauntletEntry.Run`/`CaptureShot.Run` 진입점,
+`CASE<TAB>key<TAB>JSON` 출력. gates.json 기대값은 불변이며 CASE 값은 실제
+모듈 호출 결과여야 한다.
