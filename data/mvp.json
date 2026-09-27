@@ -1,0 +1,194 @@
+{
+  "status": "MVP_DEFAULT_NOT_RELEASE_APPROVED",
+  "machines": [
+    "grinder",
+    "espresso",
+    "steam",
+    "ice",
+    "blender"
+  ],
+  "initial": {
+    "coins": 0,
+    "owned_machines": [
+      "grinder",
+      "espresso"
+    ]
+  },
+  "offline_cap_seconds": 86400,
+  "research_slots": 1,
+  "research_queue": 3,
+  "staff": {
+    "free": 1,
+    "max": 3,
+    "candidates": 3,
+    "cost": 2000,
+    "stat_percent": [
+      0,
+      10
+    ]
+  },
+  "upgrade": {
+    "base_minutes": 4,
+    "ratio_numerator": 112,
+    "ratio_denominator": 100,
+    "cap": 100,
+    "milestones": {
+      "1": 1,
+      "10": 2,
+      "25": 4,
+      "50": 8
+    }
+  },
+  "research": [
+    {
+      "id": "R01",
+      "name": "얼음제빙기",
+      "cost": 300,
+      "seconds": 120,
+      "prerequisites": [],
+      "unlocks": "ice"
+    },
+    {
+      "id": "R02",
+      "name": "우유",
+      "cost": 2200,
+      "seconds": 300,
+      "prerequisites": [],
+      "unlocks": "milk"
+    },
+    {
+      "id": "R03",
+      "name": "스팀기",
+      "cost": 1000,
+      "seconds": 300,
+      "prerequisites": [],
+      "unlocks": "steam"
+    },
+    {
+      "id": "R04",
+      "name": "초콜릿",
+      "cost": 8000,
+      "seconds": 600,
+      "prerequisites": [
+        "R02"
+      ],
+      "unlocks": "chocolate"
+    },
+    {
+      "id": "R05",
+      "name": "믹서기",
+      "cost": 150000,
+      "seconds": 1800,
+      "prerequisites": [
+        "R01"
+      ],
+      "unlocks": "blender"
+    }
+  ],
+  "menus": [
+    {
+      "id": "M01",
+      "name": "에스프레소",
+      "price": 10,
+      "cycle_seconds": 30,
+      "machines": [
+        "grinder",
+        "espresso"
+      ],
+      "research": []
+    },
+    {
+      "id": "M02",
+      "name": "아메리카노",
+      "price": 12,
+      "cycle_seconds": 30,
+      "machines": [
+        "grinder",
+        "espresso"
+      ],
+      "research": []
+    },
+    {
+      "id": "M03",
+      "name": "아이스 아메리카노",
+      "price": 18,
+      "cycle_seconds": 30,
+      "machines": [
+        "grinder",
+        "espresso",
+        "ice"
+      ],
+      "research": []
+    },
+    {
+      "id": "M04",
+      "name": "아이스 카페라테",
+      "price": 25,
+      "cycle_seconds": 30,
+      "machines": [
+        "grinder",
+        "espresso",
+        "ice"
+      ],
+      "research": [
+        "R02"
+      ]
+    },
+    {
+      "id": "M05",
+      "name": "카페라테",
+      "price": 30,
+      "cycle_seconds": 30,
+      "machines": [
+        "grinder",
+        "espresso",
+        "steam"
+      ],
+      "research": [
+        "R02"
+      ]
+    },
+    {
+      "id": "M06",
+      "name": "카페모카",
+      "price": 45,
+      "cycle_seconds": 30,
+      "machines": [
+        "grinder",
+        "espresso",
+        "steam"
+      ],
+      "research": [
+        "R02",
+        "R04"
+      ]
+    },
+    {
+      "id": "M07",
+      "name": "핫초콜릿",
+      "price": 40,
+      "cycle_seconds": 30,
+      "machines": [
+        "steam"
+      ],
+      "research": [
+        "R02",
+        "R04"
+      ]
+    },
+    {
+      "id": "M08",
+      "name": "초콜릿 프라페",
+      "price": 85,
+      "cycle_seconds": 30,
+      "machines": [
+        "blender",
+        "ice"
+      ],
+      "research": [
+        "R02",
+        "R04"
+      ]
+    }
+  ]
+}

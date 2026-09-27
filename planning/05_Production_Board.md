@@ -1,0 +1,23 @@
+# 05 작업보드
+
+각 작업은 실제 빌드/검사/리뷰가 있어야 DONE. 날짜 약속 없이 의존순서로 진행.
+
+|Task|작업|선행|상태|
+|---|---|---|---|
+|reference-audit|첨부 원본 분석·샘플 확인|없음|READY|
+|project-boot|실행 가능한 게임·테스트 진입점|reference-audit|READY|
+|iso-grid|64×31/공간64×62/시각4·탁자의자-8|project-boot|READY|
+|layout-editor|가구·타일·문·의자·머신받침|iso-grid|READY|
+|desktop-tools|미니창·메모·할일·타이머·음악|layout-editor|READY|
+|idle-economy|자동판매·강화|project-boot|READY|
+|research-staff|연구·메뉴·직원|idle-economy|READY|
+|save-offline|저장·복귀·시간경계|research-staff,layout-editor|READY|
+|character-rig|소수 파츠·팔레트·랜덤 손님|iso-grid,research-staff|READY|
+|art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|READY|
+|ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|READY|
+|integration|무개입 카페 통합|ui-local-ugc|READY|
+|native-release|실제 Mac/Windows 빌드·검증|integration|READY|
+
+원본 runner는 운영 오류 시 BLOCKED로 멈춘다. 인증/특정OS 없는 경우 이미 통합된 변경을 보존한 뒤 가능한 독립작업은 별도 세션에서 계속한다. 같은 run의 평가 기준을 낮춰 통과시키지 않는다.
+
+v0.8: iso-grid/layout-editor/art-pipeline/integration의 변경된 수용 기준으로 다시 검사한다. 이전 PASS를 승계하지 않는다.

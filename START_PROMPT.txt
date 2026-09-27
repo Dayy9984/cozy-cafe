@@ -1,0 +1,17 @@
+[v0.8 — 두께는 시각 전용 / 탁자·의자 -8px 보정 반영]
+
+첨부 ZIP을 풀고 START_HERE.md, PLAN.md, AGENTS.md, project/planning의 문서 5개와 project/DEVELOPMENT.md를 읽고 실제 개발을 시작해라. 계획 설명만 반환하고 끝내지 마라.
+
+먼저 python3 tools/check_packet.py와 python3 -m unittest discover -s tests -v를 실행해라. vendor/gauntlet은 내가 첨부한 실제 Python 감독 실행기다. 없는 SKILL.md를 찾거나 다른 저장소의 프롬프트 스킬로 대체하지 마라. GAUNTLET_SETUP.md대로 설치된 Codex 또는 Devin을 확인하고 tools/gauntlet.py init으로 제공된 gauntlet/plan.json을 고정한 뒤, 승인된 개발 환경에서 run --allow-execution으로 제작자→독립 검토자→수정→회귀 검사를 반복해라. Windows 자동 감독은 WSL2 경로를 사용한다.
+
+Mini Cozy 자료의 전체 목록·원본 REPORT·선택 코드·이미지 증거가 project/references에 있다. 실제 자료를 읽고 우리 공간·미니모드·작업 도구에 적용하되 원작 코드를 이식하거나 이미지를 배포하지 마라. 숫자 대시보드만 만드는 것이 아니라, 꾸미는 작은 공간이 자동 영업 카페로 바뀌는 MVP다. Mac·Windows를 초기부터 검증해라.
+
+타일 윗면은 정확히64×31px, 공간 기준은64×62px다. 4px 두께는 옆면 그림으로만 표현하며 실제 높이·단차·collider·동선에 쓰지 마라. 공간 높이에4를 더한64×66을 만들지 마라. 탁자·의자는 바닥 배치 기준점에서 화면 위8px, 즉(0,-8)로 한 번만 보정한다. 두께4를 더 빼거나 원화·엔진에서 중복 보정하지 마라. 논리 셀·충돌·동선·깊이 정렬 키는 원래 배치를 유지한다. 줌에 따라 시각8px만 스케일한다. project/data/art_contract.json의 피치32/15.5는 윗면 규격에서 선택한 구현 기본값이며, 공간64×62가 격자 피치라는 뜻이 아니다. 첫 타일 이음·뒷선 검수에서 래스터 정렬을 확인해라. 캐릭터는 공통 몸체1개·소수 헤어/옷/안경과 팔레트를 재사용한다. UI/UX는 공통 컴포넌트·9-slice·실제 한글 텍스트·입력으로 구현한다.
+
+tools/assets.py와 project/art의 프롬프트·설정을 사용해 sprite-gen을 연결하라. 이미지 provider는 명시적으로 codex, 인증은 사용자의 Codex ChatGPT OAuth 세션, 요청 이미지 모델은 gpt-image-2.5-sunburst다. 이미지 모델과 Codex 추론 모델을 혼동해 --model을 넣지 마라. 실제 사용 모델과 PNG를 확인하기 전 Sunburst 생성 성공으로 보고하지 마라. 계정에 image_gen이 없으면 해당 생성만 BLOCKED로 기록하고 기능 개발은 계속해라. API 유료 결제나 다른 provider로 자동 전환하지 마라. 토큰·auth.json은 읽어 복사하거나 공유하지 마라.
+
+머신은 그라인더·에스프레소 머신·스팀기·얼음제빙기·믹서기 5종뿐이다. 재료는 연구이고 재고·구매·소모·원가는 없다. 손님은 외형 랜덤, 직원은 외형·색상·스탯 랜덤이며 도감·단골·의뢰·별도 소목표/장기목표 시스템은 만들지 마라. 배치 동선은 유효성 검사이고 매출 최적화 병목이 아니다.
+
+실제 산출물과 검증 로그를 독립 검토자가 확인하게 하고 가장 큰 문제부터 고쳐라. 고정 반복 횟수·자기 선언 PASS로 끝내지 마라. 권한·인증·실행 환경이 없으면 그 검증만 BLOCKED/NOT_RUN으로 남기고 가능한 독립 작업은 계속하라. 게임 통합·원격 OS 시험을 미실행한 채 완료 처리하지 마라. 기획/개발 문서를 분리하고 progress.md와 작업보드를 갱신해라. 결과물은 소스·재현 가능한 빌드 절차·실제 생성한 Mac/Windows 실행 파일·검증 증거·남은 문제다.
+
+이미 v0.7의 frozen run을 시작했다면 그것을 그대로 resume하지 마라. GAUNTLET_SETUP.md대로 기존 소스/저장을 보존하고 새 작업본에서 v0.8 기준으로 init·재검증한다.

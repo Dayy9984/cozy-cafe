@@ -1,0 +1,13 @@
+.godot/
+.venv/
+.external/
+art/generated/
+builds/
+.evidence/
+.gauntlet-runtime/
+__pycache__/
+*.pyc
+.env
+*auth.json
+*.p12
+*.pfx

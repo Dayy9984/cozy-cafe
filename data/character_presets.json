@@ -1,0 +1,25 @@
+{
+  "rig": "humanoid_01",
+  "presets": [
+    {
+      "id": "casual_01",
+      "hair": "hair_01",
+      "outfit": "outfit_01",
+      "glasses": null
+    },
+    {
+      "id": "casual_02",
+      "hair": "hair_02",
+      "outfit": "outfit_02",
+      "glasses": "glasses_01"
+    },
+    {
+      "id": "staff_01",
+      "hair": "hair_03",
+      "outfit": "outfit_03",
+      "apron": "apron_01",
+      "glasses": null
+    }
+  ],
+  "note": "All presets reuse one rig; palette and staff stats sampled independently. Starter set only."
+}

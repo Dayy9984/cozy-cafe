@@ -1,0 +1,51 @@
+[
+  {
+    "id": "tile_wood",
+    "category": "tile",
+    "prompt_file": "art/prompts/tile_wood.txt",
+    "raw_file": "art/generated/tile_wood/raw.png",
+    "approval": "PENDING"
+  },
+  {
+    "id": "body_anchor",
+    "category": "character",
+    "prompt_file": "art/prompts/body_anchor.txt",
+    "raw_file": "art/generated/body_anchor/raw.png",
+    "approval": "PENDING"
+  },
+  {
+    "id": "machine_espresso",
+    "category": "machine",
+    "prompt_file": "art/prompts/machine_espresso.txt",
+    "raw_file": "art/generated/machine_espresso/raw.png",
+    "approval": "PENDING"
+  },
+  {
+    "id": "ui_style",
+    "category": "ui",
+    "prompt_file": "art/prompts/ui_style.txt",
+    "raw_file": "art/generated/ui_style/raw.png",
+    "approval": "PENDING"
+  },
+  {
+    "id": "ui_icons",
+    "category": "ui",
+    "prompt_file": "art/prompts/ui_icons.txt",
+    "raw_file": "art/generated/ui_icons/raw.png",
+    "approval": "PENDING"
+  },
+  {
+    "id": "table_square",
+    "category": "furniture",
+    "prompt_file": "art/prompts/table_square.txt",
+    "raw_file": "art/generated/table_square/raw.png",
+    "approval": "PENDING"
+  },
+  {
+    "id": "chair",
+    "category": "furniture",
+    "prompt_file": "art/prompts/chair.txt",
+    "raw_file": "art/generated/chair/raw.png",
+    "approval": "PENDING"
+  }
+]

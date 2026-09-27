@@ -1,0 +1,127 @@
+{
+  "reference-audit": {
+    "reference_samples_intact": true,
+    "forbidden_fonts_bundled": false
+  },
+  "project-boot": {
+    "game_scene_loaded": true,
+    "test_entry_calls_real_modules": true
+  },
+  "iso-grid": {
+    "tile_top_width": 64,
+    "tile_top_height": 31,
+    "tile_space_width": 64,
+    "tile_space_height": 62,
+    "tile_canvas_width": 64,
+    "tile_canvas_height": 62,
+    "tile_visual_thickness_px": 4,
+    "tile_physical_thickness": 0,
+    "thickness_changes_projection": false,
+    "space_height_used_as_grid_pitch": false,
+    "grid_step_x": 32,
+    "grid_step_y": 15.5,
+    "interior_side_faces": 0,
+    "roundtrip_error": 0,
+    "tile_seam_or_overlap_pixels": 0,
+    "fixed_sizes_and_default_pitch_distinguished": true
+  },
+  "layout-editor": {
+    "one_tile_changed": 1,
+    "undo_restores": true,
+    "redo_restores": true,
+    "door_block_rejected": true,
+    "table_without_chair_rejected": true,
+    "unhosted_machine_rejected": true,
+    "host_move_preserves_child": true,
+    "editing_keeps_sales": true,
+    "table_render_offset_y_px": -8,
+    "chair_render_offset_y_px": -8,
+    "table_runtime_offset_when_baked_y_px": 0,
+    "table_effective_offset_when_baked_y_px": -8,
+    "table_offset_at_zoom2_y_px": -16,
+    "chair_offset_rotates_with_furniture": false,
+    "visual_offset_changes_logical_cell": false,
+    "visual_offset_changes_collision": false,
+    "visual_offset_changes_pathfinding": false,
+    "visual_offset_changes_depth_key": false,
+    "reload_accumulates_visual_offset": false,
+    "child_attachment_duplicates_parent_offset": false,
+    "standing_characters_lifted_by_table_rule": false,
+    "picking_and_ghost_share_render_transform": true
+  },
+  "desktop-tools": {
+    "mode_switch_keeps_state": true,
+    "memo_roundtrip": true,
+    "todo_roundtrip": true,
+    "pause_remaining_seconds": 900,
+    "sleep_focus_added": 0,
+    "music_controls_connected": true
+  },
+  "idle-economy": {
+    "base_rate": 44,
+    "coins_25m": 1100,
+    "espresso_lv10_bonus5_rate": 420,
+    "cost_lv1": 80,
+    "cost_lv9": 199,
+    "cost_lv10": 222,
+    "negative_wallet": false,
+    "npc_pays_coins_again": false
+  },
+  "research-staff": {
+    "machines": 5,
+    "menus": 8,
+    "research": 5,
+    "milk_is_inventory": false,
+    "ice_milk_unlocks_M04": true,
+    "missing_steam_blocks_M05": true,
+    "reopen_rerolls_staff": false,
+    "stat_appearance_independent": true
+  },
+  "save-offline": {
+    "offline_online_difference": 0,
+    "research_cost_charged_once": true,
+    "time_backwards_reward": 0,
+    "restored_layout_equal": true,
+    "duplicate_credit": 0,
+    "save_backup_recovers": true
+  },
+  "character-rig": {
+    "rig_count": 1,
+    "starter_presets": 3,
+    "palette_moves_geometry": false,
+    "layer_phase_synced": true,
+    "customer_collection_added": false
+  },
+  "art-pipeline": {
+    "provider": "codex",
+    "credentials_bundled": false,
+    "raw_png_exists": true,
+    "atlas_manifest_valid": true,
+    "generation_per_palette_variant": 0,
+    "tile_size_verified": true,
+    "effective_image_model": "gpt-image-2.5-sunburst",
+    "thickness_physical_geometry_generated": false,
+    "tile_canvas_height": 62,
+    "furniture_baked_offset_recorded": true,
+    "furniture_effective_offset_y_px": -8
+  },
+  "ui-local-ugc": {
+    "ui_text_baked": false,
+    "nine_slice_resizes": true,
+    "ugc_import_works": true,
+    "preset_contains_private_fields": false,
+    "missing_skin_preserves_owned_machine": true
+  },
+  "integration": {
+    "idle_session_25m_without_input": true,
+    "menu_research_chain_works": true,
+    "first_session_replay": true,
+    "visual_review_actual_build": true,
+    "table_chair_visual_alignment_reviewed": true,
+    "visual_offsets_leave_economy_unchanged": true
+  },
+  "native-release": {
+    "windows_native": true,
+    "macos_native": true
+  }
+}

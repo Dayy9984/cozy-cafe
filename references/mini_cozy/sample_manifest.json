@@ -1,0 +1,423 @@
+[
+  {
+    "original_path": "_UNPACKED/README.md",
+    "path": "references/mini_cozy/source_samples/README.md",
+    "sha256": "c4d91a54f60a181199d01e4631a5ad1419a9b93ecc929e6cfc981590b8e059eb",
+    "bytes": 2626,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/REPORT.md",
+    "path": "references/mini_cozy/source_samples/REPORT.md",
+    "sha256": "5dc48a8b92a0b2b5cc3dd0665defcba18c7fd1b9140c96651ab3d52103598099",
+    "bytes": 14142,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/MemoManager.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/MemoManager.cs",
+    "sha256": "8647eff27eb289c1b6cd7cb460bc2261652d8c726918ce75266f7fa0554a05ba",
+    "bytes": 16959,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/PlayerSkinHandler.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/PlayerSkinHandler.cs",
+    "sha256": "77227d68e77ceb2961eaa1839e3feec3257b838493b809b5166affbf785d24d5",
+    "bytes": 5638,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/TodoListManager.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/TodoListManager.cs",
+    "sha256": "5b9349a09d2eea5f53443a92c276dc9e3996fe16c07a83326cc410ce66632ac5",
+    "bytes": 18687,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/cozyhouse/DecoSkinInfoFields.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/cozyhouse/DecoSkinInfoFields.cs",
+    "sha256": "a9bcafc065b1ca3b05c663d2bc26a235b8a1e2c1cc1299db15816803593e84bf",
+    "bytes": 550,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/cozyhouse/EGameMode.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/cozyhouse/EGameMode.cs",
+    "sha256": "fe407d558673a62009426a816e1232f40cbdd9a7d18acb2902131836d3f038f8",
+    "bytes": 87,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/cozyhouse/PcSkinColorGroup.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/cozyhouse/PcSkinColorGroup.cs",
+    "sha256": "56c328e0dd5941b464453fc9b673ae3ec0d7e671e6ac6d4d6063b217b4f5dd8b",
+    "bytes": 267,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/cozyhouse/PcSkinInfo.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/cozyhouse/PcSkinInfo.cs",
+    "sha256": "b6712cb57e86428ee8e82570bbdbea58f9262dc2059245514d55c72f642ec6bb",
+    "bytes": 783,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/cozyhouse/PcSkinType.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/cozyhouse/PcSkinType.cs",
+    "sha256": "149e2c658cad8a5df9d57299458f034a09c80e6bfcd7fb34a64a400c6e7c44d4",
+    "bytes": 384,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/cozyhouse/UI_Minimode.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/cozyhouse/UI_Minimode.cs",
+    "sha256": "ad6aecc242c1d7336f7678e408d60d4342611359e20624a3516774b2797ba63e",
+    "bytes": 15934,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/cozyhouse.scriptableobjects/SkinColorData.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/cozyhouse.scriptableobjects/SkinColorData.cs",
+    "sha256": "0856d46ecec9356622359ff5d200123a07a0f062b95bcb9bd30481bd466a1dd8",
+    "bytes": 227,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/code/Assembly-CSharp/cozyhouse.tray/MiniModeTrayModule.cs",
+    "path": "references/mini_cozy/source_samples/code/Assembly-CSharp/cozyhouse.tray/MiniModeTrayModule.cs",
+    "sha256": "16fabf5b12482262a29a5a9d36a0c04b1cf5253bac01db9e402d63fdeda0317c",
+    "bytes": 5686,
+    "crc_read": "PASS"
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Decor_General_Floor_Category_Icon.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Decor_General_Floor_Category_Icon.png",
+    "sha256": "e6e6cb175cb32ade97660280483fd6a14241681bc57e5297b4030678434cc403",
+    "bytes": 1131,
+    "crc_read": "PASS",
+    "image_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Room2_Decor_General_Floor_Category_Icon.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Room2_Decor_General_Floor_Category_Icon.png",
+    "sha256": "b8af34fbb5acb0baea10de6ccd9141cb7f56e96011acc59aed7778873ce5808d",
+    "bytes": 515,
+    "crc_read": "PASS",
+    "image_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Room3_Decor_General_Floor_Category_Icon.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Room3_Decor_General_Floor_Category_Icon.png",
+    "sha256": "3c2a555a0a1190a71d267c0e634e8af8165c251b05de14e6e4204c1d1a00f86d",
+    "bytes": 1196,
+    "crc_read": "PASS",
+    "image_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Decor_Activity_Chair_Category_Icon.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Decor_Activity_Chair_Category_Icon.png",
+    "sha256": "bb13f3838a146bb425fbc66cb9792f1d86a78a80fb21343de3726878d40f1b55",
+    "bytes": 2641,
+    "crc_read": "PASS",
+    "image_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Room2_Decor_Activity_Chair_Category_Icon.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Room2_Decor_Activity_Chair_Category_Icon.png",
+    "sha256": "4a138a1fbfcafa501127a4ae5148c7fdd82bcf0e0ac7d44a9499b8f6673b330a",
+    "bytes": 1187,
+    "crc_read": "PASS",
+    "image_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Room3_Decor_Activity_Chair_Category_Icon.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Room3_Decor_Activity_Chair_Category_Icon.png",
+    "sha256": "4cf24aced8cfe1e6a11f9fe016109c28930514984a8b6d39d1c54f4b68a9a5de",
+    "bytes": 2148,
+    "crc_read": "PASS",
+    "image_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Accessory1_DrawingTablet_24001_0.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Accessory1_DrawingTablet_24001_0.png",
+    "sha256": "14234a82a7b733afae30c70a07d1429e3c4b3d5f656326d337e9c60a6859cec6",
+    "bytes": 117,
+    "crc_read": "PASS",
+    "image_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Accessory1_DrawingTablet_24001_1.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Accessory1_DrawingTablet_24001_1.png",
+    "sha256": "14234a82a7b733afae30c70a07d1429e3c4b3d5f656326d337e9c60a6859cec6",
+    "bytes": 117,
+    "crc_read": "PASS",
+    "image_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Accessory1_DrawingTablet_24001_10.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Accessory1_DrawingTablet_24001_10.png",
+    "sha256": "14234a82a7b733afae30c70a07d1429e3c4b3d5f656326d337e9c60a6859cec6",
+    "bytes": 117,
+    "crc_read": "PASS",
+    "image_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Accessory1_DrawingTablet_24001_11.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Accessory1_DrawingTablet_24001_11.png",
+    "sha256": "14234a82a7b733afae30c70a07d1429e3c4b3d5f656326d337e9c60a6859cec6",
+    "bytes": 117,
+    "crc_read": "PASS",
+    "image_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Body_10001.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Body_10001.png",
+    "sha256": "40e15aafff1fc93b12869a6fb0a1be71045db0053b4ae4ea6eb544cbbea3f943",
+    "bytes": 204,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Body_10002.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Body_10002.png",
+    "sha256": "34ff8d5b1dd71ff48e2e54f061ab35757570636c30c22e648c7833a02028cc26",
+    "bytes": 202,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Body_10003.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Body_10003.png",
+    "sha256": "12e302ed8b062ab23ee6d3fb4afbf68f24471097bbc5d2059b23b7a950236dd4",
+    "bytes": 208,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Body_10004.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Body_10004.png",
+    "sha256": "ea064cada7fb469b2cf4c21b5d6d14fc9726f0679b645202c6588e8e2b5957d0",
+    "bytes": 207,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Hair_11001.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Hair_11001.png",
+    "sha256": "a92921c77ffbe4a24a7c23d96676febdd27e563c5096d78a5dd732279d119ec4",
+    "bytes": 573,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Hair_11002.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Hair_11002.png",
+    "sha256": "1743b1f46caabb7db22079bcd7ff51f914f44faa1cbc685efb866054a66bfc59",
+    "bytes": 581,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Hair_11003.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Hair_11003.png",
+    "sha256": "c9642dccd800e6ff266c94efd177f8cd2ebb6da4845e6cde0771eae047e907a4",
+    "bytes": 580,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Sleep_Effect_Top_0.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Sleep_Effect_Top_0.png",
+    "sha256": "c5452901109eb0b0f2c219ad0e91442c5cf19a2821dc7b21c35eb4cf52e84bad",
+    "bytes": 129,
+    "crc_read": "PASS",
+    "image_size": [
+      9,
+      10
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Sleep_Effect_Top_1.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Sleep_Effect_Top_1.png",
+    "sha256": "c6beb3488dbedc940a96f6b769fbe658123da79b81ba07a2db4ade20f01c1523",
+    "bytes": 127,
+    "crc_read": "PASS",
+    "image_size": [
+      9,
+      10
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Sleep_Effect_Top_10.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Sleep_Effect_Top_10.png",
+    "sha256": "95c629eaa869c516cebe146237cbc76b4a4056c0f77676fcccc62776126db6e4",
+    "bytes": 115,
+    "crc_read": "PASS",
+    "image_size": [
+      7,
+      8
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Sleep_Effect_Top_11.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Sleep_Effect_Top_11.png",
+    "sha256": "4272d37dca3005ff534dbf71d015479562266363f4c51964c4e7299c44820581",
+    "bytes": 155,
+    "crc_read": "PASS",
+    "image_size": [
+      14,
+      16
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Bottom_22001.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Bottom_22001.png",
+    "sha256": "55db5925c1bef370165e654b98c819d194a7b856654164113bdbbc390913d21b",
+    "bytes": 1176,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Bottom_22002.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Bottom_22002.png",
+    "sha256": "578d6f5ea251ffc7130a2fe3cf32af3522dd863a37e2b4f52472c97c4d5be8be",
+    "bytes": 1213,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Bottom_22003.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Bottom_22003.png",
+    "sha256": "433e726d72f8ac947f106649a5a6489b2d8c220745a1ea52aa8de7b2bdf27be7",
+    "bytes": 1191,
+    "crc_read": "PASS",
+    "image_size": [
+      42,
+      42
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Accessory1_MiniMode_24001_0.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Accessory1_MiniMode_24001_0.png",
+    "sha256": "b0775cba09eadf2fde241b35daa28cdcd03af6d23e99e0decd32b42f13f6d220",
+    "bytes": 83,
+    "crc_read": "PASS",
+    "image_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Accessory1_MiniMode_24001_1.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Accessory1_MiniMode_24001_1.png",
+    "sha256": "b0775cba09eadf2fde241b35daa28cdcd03af6d23e99e0decd32b42f13f6d220",
+    "bytes": 83,
+    "crc_read": "PASS",
+    "image_size": [
+      32,
+      32
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Decor_Function_Memo_Category_Icon.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Decor_Function_Memo_Category_Icon.png",
+    "sha256": "b1441dad6942b3cfb56758c4ebcc69ff47eada66a11f1d20c32a20692e4ed04f",
+    "bytes": 2446,
+    "crc_read": "PASS",
+    "image_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/MiniMode_Player_Button_Memo_Active.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/MiniMode_Player_Button_Memo_Active.png",
+    "sha256": "bbd4761404f21ec5c3c950a04b10c40b8a49309237231daf03d899ac30d8987a",
+    "bytes": 158,
+    "crc_read": "PASS",
+    "image_size": [
+      22,
+      22
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/Decor_Function_Todo_Category_Icon.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/Decor_Function_Todo_Category_Icon.png",
+    "sha256": "deb8adfba354178a354bd36a12d41e0bfe9b89b4fc582c3b4e598f1699341c20",
+    "bytes": 2150,
+    "crc_read": "PASS",
+    "image_size": [
+      36,
+      36
+    ]
+  },
+  {
+    "original_path": "_UNPACKED/assets/sprites/MiniMode_Player_Button_TodoList_Active.png",
+    "path": "references/mini_cozy/source_samples/assets/sprites/MiniMode_Player_Button_TodoList_Active.png",
+    "sha256": "16973340cc8c82ca239db13cc0be454894d53dcb837a07e9546295b48aa02a3e",
+    "bytes": 161,
+    "crc_read": "PASS",
+    "image_size": [
+      22,
+      22
+    ]
+  }
+]

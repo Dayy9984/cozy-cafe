@@ -1,0 +1,147 @@
+{
+  "status": "USER_FIXED_VISUAL_SIZES_AND_OFFSETS_WITH_EXPLICIT_ENGINE_DEFAULTS",
+  "projection": "2.5D_pixel_isometric_user_dimensions",
+  "tile": {
+    "top_size": [
+      64,
+      31
+    ],
+    "space_size": [
+      64,
+      62
+    ],
+    "canvas": [
+      64,
+      62
+    ],
+    "canvas_policy": "space_reference_canvas_no_thickness_addition",
+    "visual_thickness_px": 4,
+    "thickness_mode": "visual_only",
+    "physical_thickness": 0,
+    "logical_elevation": 0,
+    "anchor": [
+      32,
+      15.5
+    ],
+    "anchor_space": "top_face_local_continuous_coordinates",
+    "top_origin_in_canvas": [
+      0,
+      0
+    ],
+    "top_origin_policy": "MVP_AUTHORING_DEFAULT; record actual shared top bounds and pivot, do not infer from canvas bottom",
+    "grid_x_step": [
+      32,
+      15.5
+    ],
+    "grid_y_step": [
+      -32,
+      15.5
+    ],
+    "grid_basis_status": "DERIVED_MVP_CONVENTION_NOT_USER_SPECIFIED_PITCH",
+    "grid_basis_note": "Use half of the specified 64x31 top for continuous projection; confirm raster alignment in the first visual gate.",
+    "rounding": "keep_subpixel_coordinates_until_final_render_snap",
+    "side_faces": "visual_overlay_on_visible_outer_boundary_only",
+    "side_faces_affect_collision": false,
+    "space_size_controls_grid_pitch": false,
+    "thickness_adds_canvas_height": false
+  },
+  "character": {
+    "rigs": 1,
+    "preset_count": 3,
+    "cell": [
+      64,
+      80
+    ],
+    "foot_anchor": [
+      32,
+      72
+    ],
+    "directions": [
+      "SW",
+      "SE",
+      "NW",
+      "NE"
+    ],
+    "states": {
+      "idle": 1,
+      "walk": 4,
+      "sit": 1,
+      "work": 2
+    },
+    "parts": {
+      "hair": 4,
+      "outfit": 3,
+      "apron": 1,
+      "glasses": 2
+    },
+    "palettes": {
+      "skin": 6,
+      "hair": 8,
+      "outfit": 8
+    },
+    "frame_sync": "shared",
+    "stats_independent": true
+  },
+  "ui": {
+    "text_baked": false,
+    "nine_slice": true,
+    "states": [
+      "normal",
+      "hover",
+      "pressed",
+      "disabled",
+      "focus"
+    ],
+    "typography": "runtime_text",
+    "iso_perspective": false
+  },
+  "version": "0.8",
+  "placement": {
+    "coordinate_system": "screen_x_right_y_down",
+    "units": "native_art_pixels_at_zoom_1",
+    "ground_anchor": "project(logical_cell_x, logical_cell_y)",
+    "default_render_offset_px": [
+      0,
+      0
+    ],
+    "asset_render_offsets_px": {
+      "table_square": [
+        0,
+        -8
+      ],
+      "table_round": [
+        0,
+        -8
+      ],
+      "chair": [
+        0,
+        -8
+      ],
+      "stool": [
+        0,
+        -8
+      ]
+    },
+    "offset_provenance": {
+      "table_square": "USER_FIXED_TABLE",
+      "table_round": "USER_FIXED_TABLE",
+      "chair": "USER_FIXED_CHAIR",
+      "stool": "MVP_SEATING_ALIAS_TO_CHAIR_RULE"
+    },
+    "offset_axis": "screen_up_independent_of_furniture_rotation",
+    "offset_application": "once_total_after_source_pivot_alignment_before_camera_zoom",
+    "default_offset_owner": "renderer",
+    "default_baked_alignment_offset_px": [
+      0,
+      0
+    ],
+    "already_baked_policy": "metadata must record the already baked offset; runtime remainder = target - baked, or normalize source to zero",
+    "physical_elevation_from_offset": false,
+    "moves_logical_cell": false,
+    "affects_collision": false,
+    "affects_pathfinding": false,
+    "depth_sort_anchor": "unshifted_logical_ground_anchor",
+    "saved_instance_policy": "save logical cell and orientation; resolve render offset from asset contract without cumulative writes",
+    "attachment_policy": "resolve child from parent visual mount once; do not repeat parent alignment offset on child"
+  }
+}

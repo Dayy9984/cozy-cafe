@@ -1,0 +1,13 @@
+{
+  "provider": "codex",
+  "auth": "existing_codex_chatgpt_oauth",
+  "requested_image_model": "gpt-image-2.5-sunburst",
+  "codex_reasoning_model": null,
+  "allow_provider_fallback": false,
+  "allow_api_key_fallback": false,
+  "require_model_verification_for_final_claim": true,
+  "sprite_gen_repo": "https://github.com/aldegad/sprite-gen.git",
+  "upstream_observed_skill_version": "1.58.0",
+  "installed_commit": null,
+  "status": "CONFIGURED_NOT_AUTHENTICATED_OR_GENERATED"
+}

@@ -1,0 +1,955 @@
+[
+  {
+    "id": "floor_wood",
+    "category": "tile",
+    "canvas_px": [
+      64,
+      62
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "User top64x31 / space64x62. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "top_size_px": [
+      64,
+      31
+    ],
+    "space_size_px": [
+      64,
+      62
+    ],
+    "visual_thickness_px": 4,
+    "physical_thickness": 0
+  },
+  {
+    "id": "floor_dark_wood",
+    "category": "tile",
+    "canvas_px": [
+      64,
+      62
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "User top64x31 / space64x62. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "top_size_px": [
+      64,
+      31
+    ],
+    "space_size_px": [
+      64,
+      62
+    ],
+    "visual_thickness_px": 4,
+    "physical_thickness": 0
+  },
+  {
+    "id": "floor_light_tile",
+    "category": "tile",
+    "canvas_px": [
+      64,
+      62
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "User top64x31 / space64x62. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "top_size_px": [
+      64,
+      31
+    ],
+    "space_size_px": [
+      64,
+      62
+    ],
+    "visual_thickness_px": 4,
+    "physical_thickness": 0
+  },
+  {
+    "id": "floor_dark_tile",
+    "category": "tile",
+    "canvas_px": [
+      64,
+      62
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "User top64x31 / space64x62. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "top_size_px": [
+      64,
+      31
+    ],
+    "space_size_px": [
+      64,
+      62
+    ],
+    "visual_thickness_px": 4,
+    "physical_thickness": 0
+  },
+  {
+    "id": "floor_checker",
+    "category": "tile",
+    "canvas_px": [
+      64,
+      62
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "User top64x31 / space64x62. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "top_size_px": [
+      64,
+      31
+    ],
+    "space_size_px": [
+      64,
+      62
+    ],
+    "visual_thickness_px": 4,
+    "physical_thickness": 0
+  },
+  {
+    "id": "floor_stone",
+    "category": "tile",
+    "canvas_px": [
+      64,
+      62
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "User top64x31 / space64x62. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "top_size_px": [
+      64,
+      31
+    ],
+    "space_size_px": [
+      64,
+      62
+    ],
+    "visual_thickness_px": 4,
+    "physical_thickness": 0
+  },
+  {
+    "id": "machine_grinder",
+    "category": "machine",
+    "canvas_px": [
+      128,
+      128
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "active": 4
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Canvas is provisional padded render size, NOT tile size. Counter mount required."
+  },
+  {
+    "id": "machine_espresso",
+    "category": "machine",
+    "canvas_px": [
+      128,
+      128
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "active": 4
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Canvas is provisional padded render size, NOT tile size. Counter mount required."
+  },
+  {
+    "id": "machine_steam",
+    "category": "machine",
+    "canvas_px": [
+      128,
+      128
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "active": 4
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Canvas is provisional padded render size, NOT tile size. Counter mount required."
+  },
+  {
+    "id": "machine_ice",
+    "category": "machine",
+    "canvas_px": [
+      128,
+      128
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "active": 4
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Canvas is provisional padded render size, NOT tile size. Counter mount required."
+  },
+  {
+    "id": "machine_blender",
+    "category": "machine",
+    "canvas_px": [
+      128,
+      128
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "active": 4
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Canvas is provisional padded render size, NOT tile size. Counter mount required."
+  },
+  {
+    "id": "counter_straight",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      2,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment."
+  },
+  {
+    "id": "counter_corner",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      2,
+      2
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment."
+  },
+  {
+    "id": "shelf",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      2,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment."
+  },
+  {
+    "id": "table_square",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. USER_FIXED_TABLE",
+    "render_offset_px": [
+      0,
+      -8
+    ],
+    "baked_alignment_offset_px": [
+      0,
+      0
+    ],
+    "render_offset_owner": "renderer",
+    "physical_elevation": 0
+  },
+  {
+    "id": "table_round",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. USER_FIXED_TABLE",
+    "render_offset_px": [
+      0,
+      -8
+    ],
+    "baked_alignment_offset_px": [
+      0,
+      0
+    ],
+    "render_offset_owner": "renderer",
+    "physical_elevation": 0
+  },
+  {
+    "id": "chair",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. USER_FIXED_CHAIR",
+    "render_offset_px": [
+      0,
+      -8
+    ],
+    "baked_alignment_offset_px": [
+      0,
+      0
+    ],
+    "render_offset_owner": "renderer",
+    "physical_elevation": 0
+  },
+  {
+    "id": "stool",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. MVP_SEATING_ALIAS_TO_CHAIR_RULE",
+    "render_offset_px": [
+      0,
+      -8
+    ],
+    "baked_alignment_offset_px": [
+      0,
+      0
+    ],
+    "render_offset_owner": "renderer",
+    "physical_elevation": 0
+  },
+  {
+    "id": "plant_small",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment."
+  },
+  {
+    "id": "plant_large",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment."
+  },
+  {
+    "id": "lamp",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment."
+  },
+  {
+    "id": "wall_picture",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment."
+  },
+  {
+    "id": "sign",
+    "category": "furniture",
+    "canvas_px": [
+      128,
+      160
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": [
+      1,
+      1
+    ],
+    "status": "NOT_CREATED",
+    "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment."
+  },
+  {
+    "id": "human_body_01",
+    "category": "character",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "walk": 4,
+      "sit": 1,
+      "work": 2
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "One shared rig; foot anchor32,72 provisional."
+  },
+  {
+    "id": "hair_01",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "attachment": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "hair_02",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "attachment": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "hair_03",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "attachment": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "hair_04",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "attachment": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "outfit_01",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "walk": 4,
+      "sit": 1,
+      "work": 2
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "outfit_02",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "walk": 4,
+      "sit": 1,
+      "work": 2
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "outfit_03",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "walk": 4,
+      "sit": 1,
+      "work": 2
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "apron_01",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "idle": 1,
+      "walk": 4,
+      "sit": 1,
+      "work": 2
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "glasses_01",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "attachment": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "glasses_02",
+    "category": "character_layer",
+    "canvas_px": [
+      64,
+      80
+    ],
+    "directions": 4,
+    "states_frames": {
+      "attachment": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Shared rig anchors; head accessories use per-frame attachments, not independent motion."
+  },
+  {
+    "id": "menu_M01",
+    "category": "menu_icon",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": ""
+  },
+  {
+    "id": "menu_M02",
+    "category": "menu_icon",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": ""
+  },
+  {
+    "id": "menu_M03",
+    "category": "menu_icon",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": ""
+  },
+  {
+    "id": "menu_M04",
+    "category": "menu_icon",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": ""
+  },
+  {
+    "id": "menu_M05",
+    "category": "menu_icon",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": ""
+  },
+  {
+    "id": "menu_M06",
+    "category": "menu_icon",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": ""
+  },
+  {
+    "id": "menu_M07",
+    "category": "menu_icon",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": ""
+  },
+  {
+    "id": "menu_M08",
+    "category": "menu_icon",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "idle": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": ""
+  },
+  {
+    "id": "ui_panel",
+    "category": "ui_skin",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "normal": 1,
+      "hover": 1,
+      "pressed": 1,
+      "disabled": 1,
+      "focus": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+  },
+  {
+    "id": "ui_button",
+    "category": "ui_skin",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "normal": 1,
+      "hover": 1,
+      "pressed": 1,
+      "disabled": 1,
+      "focus": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+  },
+  {
+    "id": "ui_tab",
+    "category": "ui_skin",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "normal": 1,
+      "hover": 1,
+      "pressed": 1,
+      "disabled": 1,
+      "focus": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+  },
+  {
+    "id": "ui_toggle",
+    "category": "ui_skin",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "normal": 1,
+      "hover": 1,
+      "pressed": 1,
+      "disabled": 1,
+      "focus": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+  },
+  {
+    "id": "ui_input",
+    "category": "ui_skin",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "normal": 1,
+      "hover": 1,
+      "pressed": 1,
+      "disabled": 1,
+      "focus": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+  },
+  {
+    "id": "ui_tooltip",
+    "category": "ui_skin",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "normal": 1,
+      "hover": 1,
+      "pressed": 1,
+      "disabled": 1,
+      "focus": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+  },
+  {
+    "id": "ui_card",
+    "category": "ui_skin",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "normal": 1,
+      "hover": 1,
+      "pressed": 1,
+      "disabled": 1,
+      "focus": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+  },
+  {
+    "id": "ui_slot",
+    "category": "ui_skin",
+    "canvas_px": [
+      32,
+      32
+    ],
+    "directions": 1,
+    "states_frames": {
+      "normal": 1,
+      "hover": 1,
+      "pressed": 1,
+      "disabled": 1,
+      "focus": 1
+    },
+    "footprint": null,
+    "status": "NOT_CREATED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+  }
+]
