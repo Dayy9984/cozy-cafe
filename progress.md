@@ -15,3 +15,16 @@ GameCli가 CASE game_scene_loaded=true·test_entry_calls_real_modules=true를
 실제 코어 호출로 방출, 2/2 일치. Unity 6000.0.51f1 에디터 실기동:
 GauntletEntry.Run이 동일 CASE 기록, CaptureShot.Run이 960×600 실제 뷰포트
 PNG(.evidence/boot.png) 저장. GameCli render fallback도 532×272 PNG 생성.
+
+## idle-economy — 자동판매·강화 실구현
+구축: Core/Economy 신규(MvpData·EconomyModule). mvp.json을 런타임 로드하는
+MiniJson.Parse 추가(외부패키지 없음, Unity/net8 공통컴파일). 메뉴별 독립
+판매타이머, 단계배수(1/10/25/50), 강화비=ceil(Lv1분당수익×base_minutes)×
+(112/100)^(L-1)을 decimal로 계산, 1/10/MAX는 단계별 올림 후 합산, 지갑은
+정수코인+소수 잔여분(1/100) 보존·음수 충전 거부, 판매 이벤트ID 해시셋으로
+중복정산 불가. GameBootstrap 레지스트리에 economy 모듈 등록(실제 Probe).
+검증: dotnet build Release 경고0·오류0. check_stage idle-economy → GameCli가
+CASE 8키를 실제 코어 호출로 방출: base_rate44·coins_25m1100·
+espresso_lv10_bonus5_rate420·cost_lv1 80·cost_lv9 199·cost_lv10 222·
+negative_wallet false·npc_pays_coins_again false — 8/8 일치.
+project-boot 재검사 2/2 유지. 수치 변경 없음(DECISIONS 기록 대상 없음).

@@ -1,3 +1,4 @@
+using CozyCafe.Core.Economy;
 using CozyCafe.Core.Modules;
 using CozyCafe.Core.Scene;
 
@@ -59,6 +60,10 @@ namespace CozyCafe.Core
             r.Register(new PlatformModule());
             r.Register(new SaveModule(scene));
             r.Register(new UgcModule());
+            var mvp = MvpData.TryLoad();
+            r.Register(mvp != null
+                ? EconomyModule.CreateStartup(mvp, 0)
+                : new EconomyModule(null));
             return r;
         }
     }
