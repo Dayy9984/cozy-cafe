@@ -5,9 +5,11 @@ namespace CozyCafe.Core.Render
 {
     /// <summary>
     /// Authored floor-tile art rasterized onto its 64x62 working canvas.
-    /// The 64x31 top face is anchored at canvas (0,0); the 4 px side faces
-    /// extend below the two lower (viewer-facing) edges inside the same
-    /// canvas — visual thickness only, physical thickness stays 0.
+    /// The 64x31 top face is anchored at canvas (0,0) so the painted slab
+    /// occupies canvas rows 0-31 exactly: apex flush at the top edge, bottom
+    /// vertex on the midline. The 4 px thickness is painted as thin side
+    /// faces straddling the two lower (outer-contour) edges inside that band
+    /// — visual only, physical thickness stays 0, no 64x66 canvas.
     /// </summary>
     public static class TileArt
     {
@@ -19,17 +21,6 @@ namespace CozyCafe.Core.Render
         public static SoftwareCanvas RasterizeFloorTile()
         {
             var src = new SoftwareCanvas(TileCanvasContract.WidthPx, TileCanvasContract.HeightPx);
-            double t = IsoMath.VisualThicknessPx;
-            // Side faces first (the top face overlaps their shared edge):
-            // a 4 px skirt hanging below each of the two lower edges.
-            src.FillPolygon(
-                new double[] { 0, 32, 32, 0 },
-                new double[] { 15.5, 31, 31 + t, 15.5 + t },
-                SideLeft);
-            src.FillPolygon(
-                new double[] { 32, 64, 64, 32 },
-                new double[] { 31, 15.5, 15.5 + t, 31 + t },
-                SideRight);
             // Top face: wood fill with diagonal grain stripes.
             for (int y = 0; y < TileCanvasContract.HeightPx; y++)
             {
@@ -41,7 +32,38 @@ namespace CozyCafe.Core.Render
                     src.SetPixel(x, y, ((x + y) % 7 == 0) ? WoodGrain : WoodTop);
                 }
             }
+            // Side faces over the top face: a band straddling each lower edge
+            // (~0.8 px inside the diamond plus ~0.5 px below the edge) reads
+            // as the slab's 4 px edge thickness while the silhouette stays
+            // inside canvas rows 0-31.
+            SideBand(src, 0, 15.5, 32, 31, SideLeft);
+            SideBand(src, 32, 31, 64, 15.5, SideRight);
             return src;
+        }
+
+        /// <summary>
+        /// Fills the side-face band straddling edge (ax,ay)->(bx,by). The edge
+        /// must be wound so the normal (uy,-ux) points into the diamond —
+        /// toward the centroid — for both lower edges.
+        /// </summary>
+        private static void SideBand(SoftwareCanvas cv,
+            double ax, double ay, double bx, double by, Rgba color)
+        {
+            double dx = bx - ax, dy = by - ay;
+            double len = Math.Sqrt(dx * dx + dy * dy);
+            double nx = dy / len, ny = -dx / len;
+            double wi = IsoMath.VisualThicknessPx * 0.2;
+            double wo = IsoMath.VisualThicknessPx * 0.125;
+            cv.FillPolygon(
+                new double[]
+                {
+                    ax + nx * wi, bx + nx * wi, bx - nx * wo, ax - nx * wo
+                },
+                new double[]
+                {
+                    ay + ny * wi, by + ny * wi, by - ny * wo, ay - ny * wo
+                },
+                color);
         }
     }
 }

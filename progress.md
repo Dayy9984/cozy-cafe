@@ -45,3 +45,28 @@ tile_canvas.png 320×310(64×62 캔버스 4배율·윗면띠 구분선) 생성,
 PNG 구조검사 통과·frozen ref 형상 일치. 병합충돌 해소: StageCases에
 iso-grid+idle-economy 양쪽 케이스 유지, project-boot 2/2·idle-economy
 8/8 재검사 유지. 수치 변경 없음.
+수정(critic gap): artifact-002 타일이 캔버스 아래로 ~4px 치우쳐 보이던
+문제 — TileArt가 옆면 스커트를 윗면 밖으로 4px 내리 그려 도형 하단 꼭짓점이
+가이드선(31행) 아래로 넘어감. 이제 윗면 마름모를 먼저 채우고 두 아래 변에
+걸치는 얇은 옆면 띠(법선 방향 안쪽 ~0.8px·바깥 ~0.5px, 실측 게이트의 4px
+두께를 띠 폭으로 표현)를 칠해 도색 슬래브가 캔버스 0~31행에 정확히 들어감:
+꼭짓점 상단 접합·하단 꼭짓점 미드라인. Unity CaptureShot로 두 PNG 재캡처,
+check_stage iso-grid 16/16·project-boot 2/2·idle-economy 8/8·
+research-staff 8/8 재검사 유지. 바닥 스커트·측면판출 규칙·수치 불변.
+## research-staff — 연구·메뉴·직원 실구현
+구축: Core/Research 신규(ResearchModule)·Core/Staff 신규(StaffModule·StaffCandidate).
+MvpData에 staff.candidates 파싱 추가. 연구는 진행1+대기3, 사용자 예약 순서,
+조건(선행AND)+코인 충족 시 자동 시작, 앞 막히면 뒤 건너뛰지 않음, 시작 시 비용
+1회 충전, 대기 취소/순서변경·시작 후 취소 불가. 완료는 이벤트 경계: 연구ID는
+CompletedResearch 영구 플래그, 머신류 해금(ice/steam/blender)은 OwnedMachines,
+재료류 해금(milk/chocolate)은 UnlockedFlags, InventoryItems는 MVP 범위상 항상
+비어 있어 재고 항목이 되지 않음. 메뉴는 머신+연구 AND게이트로 자동 Lv1 해금.
+직원은 세대시드로 후보3 영구 생성, 창 열기/재시작으로 재추첨 없음, 채용 후 해당
+슬롯만 보충, 무료1+최대3·추가 고용2000을 실제 지갑으로 청구, 외형(헤어/옷/안경/
+팔레트)과 판매·연구 보너스(각0~10%)는 독립 시드 스트림으로 추첨. 두 모듈을
+GameBootstrap 레지스트리에 등록(실제 Probe가 프로젝트 부트 게이트에 포함).
+검증: dotnet build Release 경고0·오류0. check_stage research-staff → GameCli가
+CASE 8키를 실제 코어 호출로 방출: machines5·menus8·research5·
+milk_is_inventory false·ice_milk_unlocks_M04 true·missing_steam_blocks_M05 true·
+reopen_rerolls_staff false·stat_appearance_independent true — 8/8 일치.
+project-boot 재검사 2/2 유지, idle-economy 재검사 8/8 유지. 수치 변경 없음.

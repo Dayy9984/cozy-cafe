@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using CozyCafe.Core.Economy;
 using CozyCafe.Core.Iso;
+using CozyCafe.Core.Research;
 using CozyCafe.Core.Scene;
+using CozyCafe.Core.Staff;
 
 namespace CozyCafe.Core.Gauntlet
 {
@@ -35,6 +37,8 @@ namespace CozyCafe.Core.Gauntlet
                     return IsoGrid();
                 case "idle-economy":
                     return IdleEconomy();
+                case "research-staff":
+                    return ResearchStaff();
                 default:
                     return null;
             }
@@ -153,6 +157,120 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("negative_wallet", negativeWallet));
             cases.Add(new CaseResult("npc_pays_coins_again", paysAgain));
             return cases;
+        }
+
+        /// <summary>
+        /// Research lab + hire office against data/mvp.json: the 5 machines /
+        /// 8 menus / 5 research counts come straight from the loaded data
+        /// file; menu availability is AND-gated by owned machines plus
+        /// completed research (ice+milk opens M04, a missing steam machine
+        /// keeps M05 closed); milk/ice/chocolate resolve to permanent
+        /// research flags, never an inventory item; and the hire office
+        /// persists its three candidates across panel opens while each
+        /// candidate's stats and appearance roll on independent seeds.
+        /// </summary>
+        private static List<CaseResult> ResearchStaff()
+        {
+            var data = MvpData.Load();
+            var m04 = data.FindMenu("M04");
+            var m05 = data.FindMenu("M05");
+            if (m04 == null || m05 == null)
+            {
+                throw new InvalidOperationException("mvp.json missing menu M04/M05");
+            }
+
+            // Each scenario is a fresh startup economy funded through the
+            // real idle-sale path with its own lab instance, so the AND-gate
+            // checks never share state.
+            var full = RunResearchScenario(data, 250.0 * 60.0, "R01", "R02", "R04");
+            var both = RunResearchScenario(data, 60.0 * 60.0, "R01", "R02");
+            var onlyIce = RunResearchScenario(data, 10.0 * 60.0, "R01");
+            var onlyMilk = RunResearchScenario(data, 60.0 * 60.0, "R02");
+            var steamMilk = RunResearchScenario(data, 90.0 * 60.0, "R02", "R03");
+
+            // milk/ice/chocolate must land on permanent research flags and
+            // machine ownership — the consumable item store stays empty.
+            bool milkIsInventory =
+                full.Research.InventoryItems.Contains("milk")
+                || full.Research.InventoryItems.Contains("ice")
+                || full.Research.InventoryItems.Contains("chocolate")
+                || !full.Econ.OwnedMachines.Contains("ice")
+                || !full.Research.UnlockedFlags.Contains("milk")
+                || !full.Research.UnlockedFlags.Contains("chocolate");
+
+            // AND-gate both directions: ice alone and milk alone each keep
+            // M04 closed; only ice+milk together open it.
+            bool iceMilkUnlocksM04 =
+                onlyIce.Econ.OwnedMachines.Contains("ice")
+                && !onlyIce.Econ.Owns(m04)
+                && !onlyMilk.Econ.OwnedMachines.Contains("ice")
+                && !onlyMilk.Econ.Owns(m04)
+                && both.Econ.OwnedMachines.Contains("ice")
+                && both.Econ.CompletedResearch.Contains("R02")
+                && both.Econ.Owns(m04);
+
+            // M05 needs steam+R02: without the steam machine the menu stays
+            // closed even with milk done; adding steam opens it.
+            bool missingSteamBlocksM05 =
+                !onlyMilk.Econ.Owns(m05)
+                && steamMilk.Econ.OwnedMachines.Contains("steam")
+                && steamMilk.Econ.Owns(m05);
+
+            // The hire panel persists its candidates: reopening returns the
+            // identical offers rather than re-rolling.
+            var staff = new StaffModule(EconomyModule.CreateStartup(data, 0), 20260927);
+            var open1 = new List<string>();
+            foreach (var c in staff.OpenHirePanel()) open1.Add(c.Serialize());
+            staff.CloseHirePanel();
+            var open2 = new List<string>();
+            foreach (var c in staff.OpenHirePanel()) open2.Add(c.Serialize());
+            bool reopenRerolls = open1.Count != open2.Count;
+            for (int i = 0; !reopenRerolls && i < open1.Count; i++)
+            {
+                if (open1[i] != open2[i]) reopenRerolls = true;
+            }
+
+            // Independent seeds: the stat stream alone decides stats and the
+            // appearance stream alone decides the look.
+            var candA = staff.RollCandidate(1111, 5);
+            var candB = staff.RollCandidate(2222, 5);
+            var candC = staff.RollCandidate(1111, 6);
+            bool statAppearanceIndependent =
+                candA.StatKey == candB.StatKey
+                && candA.AppearanceKey == candC.AppearanceKey
+                && candA.SalesBonusPct >= data.StaffStatPctMin
+                && candA.SalesBonusPct <= data.StaffStatPctMax;
+
+            var cases = new List<CaseResult>();
+            cases.Add(new CaseResult("machines", data.Machines.Count));
+            cases.Add(new CaseResult("menus", data.Menus.Count));
+            cases.Add(new CaseResult("research", data.Research.Count));
+            cases.Add(new CaseResult("milk_is_inventory", milkIsInventory));
+            cases.Add(new CaseResult("ice_milk_unlocks_M04", iceMilkUnlocksM04));
+            cases.Add(new CaseResult("missing_steam_blocks_M05", missingSteamBlocksM05));
+            cases.Add(new CaseResult("reopen_rerolls_staff", reopenRerolls));
+            cases.Add(new CaseResult("stat_appearance_independent", statAppearanceIndependent));
+            return cases;
+        }
+
+        /// Fresh startup state funded through the idle-sale path, then the
+        /// named research reserved in order and run to completion on the lab
+        /// clock. Returns the economy+lab pair for gate inspection.
+        private sealed class ResearchScenario
+        {
+            public EconomyModule Econ;
+            public ResearchModule Research;
+        }
+
+        private static ResearchScenario RunResearchScenario(
+            MvpData data, double earnSeconds, params string[] reserveIds)
+        {
+            var econ = EconomyModule.CreateStartup(data, 0);
+            var lab = new ResearchModule(econ);
+            econ.SimulateSeconds(earnSeconds);
+            foreach (var id in reserveIds) lab.Reserve(id);
+            lab.SimulateSeconds(7200.0);
+            return new ResearchScenario { Econ = econ, Research = lab };
         }
 
         private static object JsonNumber(Fraction f)
