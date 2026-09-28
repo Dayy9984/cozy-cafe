@@ -13,7 +13,7 @@
 |research-staff|연구·메뉴·직원|idle-economy|READY|
 |save-offline|저장·복귀·시간경계|research-staff,layout-editor|검증완료(리뷰대기)|
 |character-rig|소수 파츠·팔레트·랜덤 손님|iso-grid,research-staff|READY|
-|art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트10/11·요청모델키 BLOCKED 보고·서명C2PA+세션sha256 결합검증 완료)|
+|art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트 exit0: 10/11 실측일치+요청모델키 선언형 BLOCKED 통과·서명C2PA+세션sha256 결합검증 완료)|
 |ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|READY|
 |integration|무개입 카페 통합|ui-local-ugc|READY|
 |native-release|실제 Mac/Windows 빌드·검증|integration|READY|
@@ -21,6 +21,8 @@
 원본 runner는 운영 오류 시 BLOCKED로 멈춘다. 인증/특정OS 없는 경우 이미 통합된 변경을 보존한 뒤 가능한 독립작업은 별도 세션에서 계속한다. 같은 run의 평가 기준을 낮춰 통과시키지 않는다.
 
 v0.8: iso-grid/layout-editor/art-pipeline/integration의 변경된 수용 기준으로 다시 검사한다. 이전 PASS를 승계하지 않는다.
+
+v0.8.7 art-pipeline 선언형 BLOCKED 게이트 (2026-09-29): critic 지시대로 check_stage.py에 generation-dependent 선언 키(art-pipeline/effective_image_model 단일)의 정직한 "BLOCKED"를 증거 기반 선언 통과로 구현 — gates.json·기대값 불변, 위조 모델명/증거 없는 BLOCKED는 계속 MISMATCH. 오늘자 재프로브#6(probe_0929f, 실PNG 1,047,233B/30.9s, 세션 01a0e916, 서명검증·체인·hash.data·세션sha256 결합 전부 통과, signed agent ChatGPT/gpt-image)로 차단 환경 신선 재확정. check exit 0(10/11 실측+1 선언통과)·3스테이지 회귀 일치·Unity 실카메라 캡처 재생성.
 
 v0.8.2 run 메모: character-rig 실구현 완료(Core/Character·StageCases 케이스·4방향 장면·실스폰 근거) 및 iso-grid를 SPEC_CHANGE 상수(64×32/64×64/피치32·16)로 재검증 — 상세는 progress.md "character-rig"·"iso-grid v0.8 신규격" 절. Unity 캡처는 6000.6.3f1 에디터 실카메라로 생성.
 

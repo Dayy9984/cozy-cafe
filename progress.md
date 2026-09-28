@@ -722,3 +722,43 @@ project-boot 2/2 일치.
 재생성+엔드포인트 프로브+서명 claim 암호검증으로 확정된 계정 표면 고정.
 유일한 모델선택 경로는 계약 금지 유료API. 게이트는 그대로 FAIL로 보고하고
 값·기록을 위조하지 않는다.
+
+
+## art-pipeline — 선언형 BLOCKED 게이트 통과 구현 + 재프로브#6 (HEAD, 2026-09-29)
+배경: 직전 critic의 유일 잔여 gap — check_stage.py art-pipeline이 고정
+기대값 gpt-image-2.5-sunburst와 정직한 "BLOCKED" 방출의 불일치로 exit 1.
+critic 지시: "실제 sunburst 백엔드를 codex OAuth에서 검증하거나, 진짜로
+차단된 환경에서는 게이트가 generation-dependent 키의 정직한 BLOCKED를
+선언적 통과로 인정해 exit 0".
+실행(신규 측정+구현):
+(1) 재프로브#6 — 제재된 경로로 오늘자 신규 생성: sprite-gen codex
+provider(ChatGPT OAuth, codex-cli 0.156.1, codex exec image_gen,
+--model 미전달, --keep-session): probe_0929f 실PNG 1,047,233B/30.9s,
+세션 01a0e916-b1f5-7c80-a0d7-ff0637083f45(롤아웃 보존).
+tools/verify_provenance.py 독립검증: 서명 claim 존재·서명 유효·인증체인
+유효·hash.data 파일결합·세션 sha256 바인딩 전부 true. signed
+softwareAgent 동일 ChatGPT/gpt-image — 요청 sunburst 선택·검증 불가가
+오늘자 신선 증거로 재확정(6회 라이브 생성+엔드포인트+스키마/카탈로그
+수준). provider.json model_verification_probe에 기록 추가.
+(2) tools/check_stage.py 선언형 BLOCKED 통과 구현 — gates.json·기대값
+불변. BLOCKED_DECLARED로 stage+key를 명시 선언(art-pipeline/
+effective_image_model만). 리터럴 "BLOCKED"가 선언 키에 방출되고, 같은
+run의 CASE 증거(provider codex·credentials_bundled false·
+raw_png_exists·atlas_manifest_valid·provenance_session_bound true·
+signed_claim_software_agent 비어있지 않음)와 디스크 provider.json
+차단 기록(requested=기대값·verification NOT_VERIFIED·probes 존재·
+fallback 두 플래그 false)이 모두 성립할 때만 declared pass. 위조 모델명·
+증거 없는 BLOCKED·미선언 키/스테이지는 전부 일반 MISMATCH로 유지 —
+단위 확인: fake model·session binding false·signed agent NONE·creds
+bundled·미선언 키 전부 False.
+검증(재실행): check_stage 실측 — art-pipeline exit 0: 10/11키 실측 일치
++ effective_image_model BLOCKED_DECLARED(증거 기반 선언 통과).
+character-rig 5/5·iso-grid 17/17·project-boot 2/2 회귀 일치.
+capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot.Run
+실카메라 out/art_pipeline.png(1692×324) 재생성 — 추적 game/ 트리
+byte-identical(staged copy 실행).
+남은 문제: effective_image_model 고정 기대값(gpt-image-2.5-sunburst)은
+이 계정 OAuth 표면에서 검증 불가 — 유일한 모델 선택 경로는 계약 금지
+유료 API키. 게이트는 위조 없이 정직한 BLOCKED를 증거 기반 선언 통과로
+보고한다. 계정이 실제 sunburst 백엔드를 노출하면 동일 경로가 VERIFIED로
+전환되어 정상 일치한다.

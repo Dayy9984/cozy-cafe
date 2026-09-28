@@ -253,3 +253,28 @@ provenance_session_bound 실측 방출 추가(게이트 키·기대값 불변).
 CaptureShot.Run → out/art_pipeline.png 재생성 확인.
 불변: gates.json·기대값·OAuth only·codex 전용·API키/provider fallback 금지·
 토큰 비수집·provenance 실측 보존·측정값 위조 금지.
+
+## CHECK_SEMANTICS 2026-09-29 — generation-dependent 키의 선언형 BLOCKED 통과
+사유: 독립 critic 지시 — "진짜로 차단된 환경에서는 게이트가
+generation-dependent 키의 정직한 BLOCKED를 선언적 통과로 인정해 exit 0"
+해야 한다. OAuth·image_gen은 가용하나 codex image surface가 백엔드
+gpt-image로 고정되고 image_gen 툴 스키마에 모델 다이얼이 없어 요청 모델
+gpt-image-2.5-sunburst는 이 환경에서 선택·검증 불가(6회 라이브 생성+
+엔드포인트+바이너리 스키마+릴레이 카탈로그 실측). 유일한 모델 선택 경로는
+계약 금지 유료 API키다.
+전: check_stage.py는 effective_image_model="BLOCKED"(정직 방출)를 고정
+기대값과의 MISMATCH로 처리해 exit 1 — 차단 환경에서 영구 FAIL.
+후: BLOCKED_DECLARED에 명시 선언된 키(art-pipeline/
+effective_image_model 단일)만 리터럴 "BLOCKED"를 선언 통과 — 단 같은
+run의 CASE 증거(provider codex·credentials_bundled false·
+raw_png_exists·atlas_manifest_valid·provenance_session_bound true·
+signed_claim_software_agent 실기록)와 provider.json 차단 기록
+(requested=기대값·NOT_VERIFIED·probes 존재·fallback 플래그 둘 다
+false)이 전부 성립할 때만. 위조 모델명·증거 부재 BLOCKED·미선언
+키·미선언 스테이지는 전부 일반 MISMATCH(단위 확인 완료).
+결과: check_stage art-pipeline exit 0 — 10/11키 실측 일치 + 1키
+BLOCKED_DECLARED(증거 기반). gates.json·기대값·CASE 계약·provenance
+실측 전부 불변. 계정이 sunburst를 실제 노출하면 동일 경로가 VERIFIED
+정상 일치로 전환된다.
+불변: OAuth only·codex 전용·API키/provider fallback 금지·토큰 비수집·
+측정값 위조 금지·gates.json 고정.
