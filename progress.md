@@ -212,3 +212,43 @@ capture_game.py --stage layout-editor → Unity 6000.6.3f1이 스테이징
 생성 — 추적 소스 변경 0(git status 신규 수정 없음, 산출물만 untracked).
 남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 —
 코어 API와 StageView 그리기만 구현. 이전 항목과 동일.
+
+## desktop-tools — 작업 도구 실구현 (v0.8.2)
+구축: Core/Tools 신규(ToolsModule.cs). WindowMode Normal/Mini 전환
+(SetMode — 미니 진입 시 편집중 메모 자동종료+자동저장), MemoNote 한글
+자동저장(매 변경이 AutosavedJson 스냅샷을 갱신, 별도 저장 호출 없음),
+TodoItem 추가/완료/재정렬(MoveTodo 재삽입), FocusTimer 25/5+사용자지정
+(Pause가 잔여초를 그대로 반환), FocusRecord는 자연 완주만 실초 적립·
+sleep/exit/stop는 0초 레코드, LocalMusicDeck은 로컬/권리확인 트랙만
+(ExternalOAuth Enqueue 거부), 메모 입력 중 RouteGameShortcut=false로
+게임 단축키 억제, SaveTools/LoadTools는 레이아웃과 같은 MiniJson
+결정적 스냅샷 경로, BuildPanel이 실상태 뷰모델 생성. Modules.cs의 구
+스텁 ToolsModule 제거, GameBootstrap이 실모듈 등록. StageCases에
+desktop-tools 케이스, StageScenes에 DesktopToolsMini(미니모드 장면),
+GameScene에 MiniMode/ToolsPanel 페인트 힌트, SceneRenderer에 미니창
+크롬+4셀 도구 독(메모 줄·할일 체크+취소선·타이머 링+mm:ss 3×5폰트·
+음악 트랜스포트/진행/볼륨/트랙핀) 도색 추가.
+검증(실측): dotnet build Release 경고0·오류0. check_stage desktop-tools
+→ GameCli가 CASE 6키 실모듈 계산값으로 방출: mode_switch_keeps_state
+true(레지스트리 등록 모듈로 Mini↔Normal 전환, 전후 SaveLayout·가구수·
+에이전트수·IsLoaded 불변)·memo_roundtrip true("오늘 매출 정산하기 + 개행 + 내일 우유 주문" 편집→AutosavedJson만으로 신규 모듈 복원 일치)·
+todo_roundtrip true(추가3·완료1·MoveTodo 선두이동 후 순서+완료 복원)·
+pause_remaining_seconds 900(1500 시작→600 경과→Pause 잔여 실측)·
+sleep_focus_added 0(420초 진행 세션 sleep 시 총적립 변화0)·
+music_controls_connected true(Play/Next/Previous/SetVolume/Pause 실제킴
++카탈로그 전원 로컬계열). 추가 근거키: exit_focus_added0·
+completed_focus_seconds1500·break_session_credited_seconds0·
+music_scope_local_only true(ExternalOAuth Enqueue 거부 실측)·
+shortcut_suppressed_while_memo_editing true(편집중만 억제)·
+tool_time_separate_from_settlement true(집중1500초 완주해도
+econ.Coins/Clock 불변). 회귀 재검사: layout-editor22/22·iso-grid16/16·
+project-boot2/2·idle-economy8/8·research-staff8/8·character-rig5/5.
+캡처: capture_game.py --stage desktop-tools → Unity 6000.6.3f1이
+스테이징 사본에서 CaptureShot.Run 실카메라로 out/desktop_tools.png
+460×400(10121B) 생성·추적소스 변경0. PNG 실물 확인: 미니창 크롬·4×3
+카페(문/탁자의자/카운터+에스프레소/직원)·도구 독 4셀 — 메모지 2줄·
+할일 3행 첫째 완료 취소선·타이머 링 40%+일시정지 바+"15:00"·음악
+2번트랙 재생(일시정지 glyph)+진행바 20/118초+볼륨 틱.
+남은 문제: 실 OS 창 전환(항상위/투명/마우스통과)·한글 IME 실입력·로컬
+오디오 실재생·uGUI 텍스트는 native-release의 Unity 뷰 계층 미착수 —
+코어 상태기계+게이트 증명만 완료(이전 항목들과 동일한 한계).

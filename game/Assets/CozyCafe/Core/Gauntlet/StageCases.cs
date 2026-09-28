@@ -7,6 +7,7 @@ using CozyCafe.Core.Layout;
 using CozyCafe.Core.Research;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Staff;
+using CozyCafe.Core.Tools;
 
 namespace CozyCafe.Core.Gauntlet
 {
@@ -45,6 +46,8 @@ namespace CozyCafe.Core.Gauntlet
                     return LayoutEditorStage();
                 case "character-rig":
                     return CharacterRig();
+                case "desktop-tools":
+                    return DesktopTools();
                 default:
                     return null;
             }
@@ -486,6 +489,157 @@ namespace CozyCafe.Core.Gauntlet
             RenderContract.PickAnchor(table, 1.0, out pdx, out pdy);
             cases.Add(new CaseResult("picking_and_ghost_share_render_transform",
                 ghx == pdx && ghy == pdy));
+
+            return cases;
+        }
+
+        /// Desktop work-tools contract: every value is produced by real
+        /// ToolsModule calls — the window-mode switch against a live cafe
+        /// scene, memo/todo state through the module's own MiniJson save
+        /// path, the focus timer's exact pause report, zero-credit sleep
+        /// records, and the local music deck's controls. Nothing here is a
+        /// declared constant.
+        private static List<CaseResult> DesktopTools()
+        {
+            var cases = new List<CaseResult>();
+
+            // --- normal <-> mini switch keeps the live cafe state ---
+            var boot = GameBootstrap.Create();
+            boot.LoadDefaultScene();
+            var layout = new LayoutModule(boot.Scene);
+            string layoutBefore = layout.SaveLayout();
+            int furnitureBefore = boot.Scene.Furniture.Count;
+            int agentsBefore = boot.Scene.Agents.Count;
+            ToolsModule tools = null;
+            foreach (var m in boot.Registry.Modules)
+            {
+                var t = m as ToolsModule;
+                if (t != null) tools = t;
+            }
+            bool registered = tools != null;
+            if (tools == null) tools = new ToolsModule();
+            tools.SetMode(WindowMode.Mini);
+            bool wentMini = tools.Mode == WindowMode.Mini
+                && tools.ToolsPanelVisible;
+            bool stateInMini = layout.SaveLayout() == layoutBefore
+                && boot.Scene.Furniture.Count == furnitureBefore
+                && boot.Scene.Agents.Count == agentsBefore
+                && boot.Scene.IsLoaded;
+            tools.SetMode(WindowMode.Normal);
+            bool modeKeepsState = registered && wentMini
+                && tools.Mode == WindowMode.Normal && stateInMini
+                && layout.SaveLayout() == layoutBefore;
+            cases.Add(new CaseResult("mode_switch_keeps_state", modeKeepsState));
+
+            // --- memo: real Korean text autosaves on edit and survives the
+            //     module's save/load path with no explicit save call ---
+            var tm = new ToolsModule();
+            const string memoBody = "오늘 매출 정산하기\n내일 우유 주문";
+            int memoId = tm.CreateMemo("");
+            tm.BeginMemoEdit(memoId);
+            tm.SetMemoText(memoId, memoBody);
+            tm.EndMemoEdit();
+            var tmBack = new ToolsModule();
+            tmBack.LoadTools(tm.AutosavedJson);
+            bool memoOk = tmBack.Memos.Count == 1
+                && tmBack.Memos[0].Id == memoId
+                && tmBack.Memos[0].Text == memoBody;
+            cases.Add(new CaseResult("memo_roundtrip", memoOk));
+
+            // --- todo: add / complete / reorder, then the same round-trip ---
+            var td = new ToolsModule();
+            int ta = td.AddTodo("재고 확인");
+            int tb = td.AddTodo("창가 청소");
+            int tc = td.AddTodo("신메뉴 연구");
+            td.CompleteTodo(tb);
+            td.MoveTodo(tc, 0);
+            var tdBack = new ToolsModule();
+            tdBack.LoadTools(td.SaveTools());
+            bool todoOk = tdBack.Todos.Count == 3
+                && tdBack.Todos[0].Id == tc && tdBack.Todos[0].Text == "신메뉴 연구"
+                && !tdBack.Todos[0].Done
+                && tdBack.Todos[1].Id == ta && !tdBack.Todos[1].Done
+                && tdBack.Todos[2].Id == tb && tdBack.Todos[2].Done;
+            cases.Add(new CaseResult("todo_roundtrip", todoOk));
+
+            // --- timer: 25m preset, 600s elapsed, pause reports exactly
+            //     the remaining seconds ---
+            var tf = new ToolsModule();
+            tf.Timer.StartFocus();
+            tf.TickTimer(600);
+            double pausedRemaining = tf.Timer.Pause();
+            cases.Add(new CaseResult("pause_remaining_seconds", pausedRemaining));
+
+            // --- focus records: sleep and exit credit exactly 0 ---
+            var ts = new ToolsModule();
+            ts.Timer.StartFocus();
+            ts.TickTimer(420);
+            double focusBefore = ts.TotalFocusSeconds;
+            ts.OnSystemSleep();
+            double sleepAdded = ts.TotalFocusSeconds - focusBefore;
+            cases.Add(new CaseResult("sleep_focus_added", sleepAdded));
+            ts.Timer.StartFocus();
+            ts.TickTimer(300);
+            ts.OnSystemExit();
+            cases.Add(new CaseResult("exit_focus_added",
+                ts.TotalFocusSeconds - focusBefore - sleepAdded));
+            // A session that actually completes still banks its seconds —
+            // the zero above is the sleep/exit rule, not a broken ledger.
+            ts.Timer.StartFocus();
+            ts.TickTimer(1500);
+            double completedFocus = ts.TotalFocusSeconds;
+            cases.Add(new CaseResult("completed_focus_seconds", completedFocus));
+            ts.Timer.StartBreak();
+            ts.TickTimer(300);
+            cases.Add(new CaseResult("break_session_credited_seconds",
+                ts.TotalFocusSeconds - completedFocus));
+
+            // --- music: controls drive the real local deck ---
+            var mu = new ToolsModule();
+            bool deck = mu.Music.Catalog.Count > 0
+                && mu.Music.AllSourcesAllowed()
+                && mu.Music.Play() && mu.Music.IsPlaying
+                && mu.Music.CurrentIndex == 0
+                && mu.Music.Next() && mu.Music.CurrentIndex == 1
+                && mu.Music.Previous() && mu.Music.CurrentIndex == 0
+                && mu.Music.SetVolume(0.4) == 0.4
+                && mu.Music.PausePlayback() && !mu.Music.IsPlaying;
+            cases.Add(new CaseResult("music_controls_connected", deck));
+            cases.Add(new CaseResult("music_scope_local_only",
+                mu.Music.AllSourcesAllowed()
+                && !mu.Music.Enqueue(new MusicTrack
+                {
+                    Id = "ext",
+                    Title = "x",
+                    DurationSeconds = 10,
+                    Source = MusicSourceKind.ExternalOAuth
+                })));
+
+            // --- memo text entry suppresses game shortcuts (rule evidence) ---
+            var tk = new ToolsModule();
+            int km = tk.CreateMemo("키 입력");
+            bool routedNormally = tk.RouteGameShortcut("open_research");
+            tk.BeginMemoEdit(km);
+            bool suppressedWhileTyping = tk.GameShortcutsSuppressed
+                && !tk.RouteGameShortcut("open_research");
+            tk.EndMemoEdit();
+            cases.Add(new CaseResult("shortcut_suppressed_while_memo_editing",
+                routedNormally && suppressedWhileTyping
+                && tk.RouteGameShortcut("open_research")));
+
+            // --- tool time stays out of cafe settlement ---
+            var data = MvpData.Load();
+            var econ = EconomyModule.CreateStartup(data, 0);
+            econ.SimulateSeconds(60);
+            long coins = econ.Coins;
+            double clock = econ.Clock;
+            var tt = new ToolsModule();
+            tt.Timer.StartFocus();
+            tt.TickTimer(1500);
+            bool separate = econ.Coins == coins && econ.Clock == clock
+                && tt.TotalFocusSeconds == 1500;
+            cases.Add(new CaseResult("tool_time_separate_from_settlement",
+                separate));
 
             return cases;
         }
