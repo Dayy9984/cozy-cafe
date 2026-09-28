@@ -43,7 +43,8 @@
     "side_faces": "visual_overlay_on_visible_outer_boundary_only",
     "side_faces_affect_collision": false,
     "space_size_controls_grid_pitch": false,
-    "thickness_adds_canvas_height": false
+    "thickness_adds_canvas_height": false,
+    "stack_level_height_px": 16
   },
   "character": {
     "rigs": 1,
@@ -142,6 +143,8 @@
     "affects_pathfinding": false,
     "depth_sort_anchor": "unshifted_logical_ground_anchor",
     "saved_instance_policy": "save logical cell and orientation; resolve render offset from asset contract without cumulative writes",
-    "attachment_policy": "resolve child from parent visual mount once; do not repeat parent alignment offset on child"
+    "attachment_policy": "resolve child from parent visual mount once; do not repeat parent alignment offset on child",
+    "stack_level_height_px": 16,
+    "stack_anchor_rule": "anchor_y(level n) = 8 - 16*(n-1); each level up shifts anchor 16px screen-up; resolved once from parent top mount"
   }
 }
