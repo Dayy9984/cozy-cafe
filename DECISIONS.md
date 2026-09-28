@@ -288,3 +288,13 @@ StageCases는 manifest frames의 w/h 실측값에서 계산해야 한다(모든 
 단위 박스). ui-local-ugc의 회귀체크가 art-pipeline을 포함하므로 다음 평가에서
 즉시 재검증된다.
 불변: 기존 키 전부, expected 값 약화 없음(추가만).
+
+## GATE_ADD 2026-09-28 — 픽셀아트 품질 게이트 (사용자 지시)
+사유: 사용자 지적 — "사이즈만 줄여서 들어가면 통과" — 실제로 그랬다. 치수만
+검증하고 픽셀 품질은 미검증이라 블러 다운스케일이 통과됐다.
+추가: art-pipeline 게이트 pixel_art_quantized_cells=true — StageCases는 각
+아틀라스 셀의 불투명 고유색 수를 실측해 모두 ≤64색일 때만 true. 부드러운
+리샘플 결과는 그라데이션으로 셀당 수백 색이라 반드시 실패한다.
+계약: pixel_quality 정책 — 승인 전 sprite-gen pixel_snap_scale + 팔레트
+양자화/recolor 필수, 순수 LANCZOS 축소만으로는 REJECT.
+불변: 기존 키 전부(추가만), 색 상한 64는 스펙 변경 시 데이터 원본에서만 수정.

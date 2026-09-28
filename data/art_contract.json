@@ -153,5 +153,10 @@
     "static_jobs": "batch multiple 64x64 assets per sheet where practical",
     "animation_jobs": "one sheet per (asset,state): all 12 frames x required directions on a single uniform grid (existing 12-frame single-sheet policy)",
     "extraction": "grid-slice by declared rows/cols; reject sheets whose cells differ in size or whose subject scale varies beyond tolerance"
+  },
+  "pixel_quality": {
+    "rule": "final 32x32 cells must be real pixel art: palette-quantized and pixel-snapped. A smooth resampled render downscaled to fit is a defect.",
+    "max_unique_colors_per_cell": 64,
+    "required_steps": "sprite-gen pixel_snap_scale + palette quantize/recolor before approval; plain LANCZOS downscale alone is REJECTED"
   }
 }
