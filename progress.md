@@ -252,3 +252,20 @@ project-boot2/2·idle-economy8/8·research-staff8/8·character-rig5/5.
 남은 문제: 실 OS 창 전환(항상위/투명/마우스통과)·한글 IME 실입력·로컬
 오디오 실재생·uGUI 텍스트는 native-release의 Unity 뷰 계층 미착수 —
 코어 상태기계+게이트 증명만 완료(이전 항목들과 동일한 한계).
+
+### desktop-tools 보강 (2026-09-28 후속) — Unity .meta 누락 수정
+배경: Core/Tools/ 디렉터리와 ToolsModule.cs에 .meta가 없었다 — 에디터가
+스테이징 사본을 열 때마다 임의 GUID를 신규 생성해, 추후 GUID 참조가
+생기는 순간 깨지는 상태였고 리포지터리의 40개 자산 전량 meta 커밋
+관례에서도 벗어났다.
+변경: game/Assets/CozyCafe/Core/Tools.meta(폴더)·ToolsModule.cs.meta를
+고정 GUID로 추가(리포지터리의 최소 meta 형식 그대로). 코드·게이트·
+기대값 변경 없음.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+desktop-tools 6/6·layout-editor 22/22·project-boot 2/2 전부 GameCli
+실계산값 일치. capture_game.py --stage desktop-tools → Unity
+6000.6.3f1 스테이징 사본 CaptureShot.Run이 out/desktop_tools.png를
+커밋본과 byte-identical로 재생성(결정적 렌더 확인, 추적소스 변경0).
+GameCli render 폴백도 같은 장면 픽셀로 동작 확인 — 증거를
+out/evidence/desktop_tools_cli.png로 보관(미니창 크롬·메모지·할일
+취소선·타이머 링+"15:00"·음악 독 확인).
