@@ -104,7 +104,9 @@
     "thickness_physical_geometry_generated": false,
     "tile_canvas_height": 64,
     "furniture_baked_offset_recorded": true,
-    "furniture_effective_offset_y_px": -8
+    "furniture_effective_offset_y_px": -8,
+    "atlas_all_frames_32x32": true,
+    "atlas_frames_present": true
   },
   "ui-local-ugc": {
     "ui_text_baked": false,
