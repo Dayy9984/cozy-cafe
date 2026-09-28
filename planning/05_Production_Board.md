@@ -23,3 +23,5 @@
 v0.8: iso-grid/layout-editor/art-pipeline/integration의 변경된 수용 기준으로 다시 검사한다. 이전 PASS를 승계하지 않는다.
 
 v0.8.2 run 메모: character-rig 실구현 완료(Core/Character·StageCases 케이스·4방향 장면·실스폰 근거) 및 iso-grid를 SPEC_CHANGE 상수(64×32/64×64/피치32·16)로 재검증 — 상세는 progress.md "character-rig"·"iso-grid v0.8 신규격" 절. Unity 캡처는 6000.6.3f1 에디터 실카메라로 생성.
+
+v0.8.2 증거 보강: character-rig 가림 증거를 전 4방향 실측(SW/SE18px·NW/NE0px)으로, 위상·팔레트 불변 스윕을 계약 전 상태(idle/walk/sit/work)로 확장, variant_png_assets을 배송 자산 실스캔으로 전환, 캐릭터 시트 캡처를 Zoom2(600×400)로 상향, capture_game.py Windows형 절대경로 수용 보강.

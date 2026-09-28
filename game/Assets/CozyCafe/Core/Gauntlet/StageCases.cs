@@ -274,7 +274,10 @@ namespace CozyCafe.Core.Gauntlet
             // --- palette geometry invariance on real composited pixels ---
             bool paletteMoved = false;
             int recoloredPx = 0;
-            var states = new[] { "idle", "walk" };
+            // Every state the contract declares (idle/walk/sit/work), not a
+            // picked subset — the sweep reads the data-sourced table itself.
+            var states = new List<string>(data.States.Keys);
+            states.Sort();
             for (int p = 0; p < module.PresetCount && !paletteMoved; p++)
             {
                 var c0 = module.ComboForPreset(p);
@@ -365,11 +368,15 @@ namespace CozyCafe.Core.Gauntlet
             bool collectionAdded = live.PersistedCustomerRecords() != 0
                 || liveCustomers != 24;
 
-            // --- occlusion evidence on the real composite ---
+            // --- occlusion evidence on the real composite, all directions ---
             var glassed = module.ComboForPreset(1); // casual_02 wears glasses_01
-            int frontVis, rearVis;
-            module.Composite(glassed, Facing.SW, "idle", 0, out frontVis);
-            module.Composite(glassed, Facing.NW, "idle", 0, out rearVis);
+            int swVis, seVis, nwVis, neVis;
+            module.Composite(glassed, Facing.SW, "idle", 0, out swVis);
+            module.Composite(glassed, Facing.SE, "idle", 0, out seVis);
+            module.Composite(glassed, Facing.NW, "idle", 0, out nwVis);
+            module.Composite(glassed, Facing.NE, "idle", 0, out neVis);
+            int frontVis = Math.Min(swVis, seVis);
+            int rearVis = Math.Max(nwVis, neVis);
 
             var cases = new List<CaseResult>();
             cases.Add(new CaseResult("rig_count", module.RigCount));
@@ -386,6 +393,10 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("palette_outfit_count", data.PaletteOutfit));
             cases.Add(new CaseResult("front_glasses_visible_px", frontVis));
             cases.Add(new CaseResult("rear_glasses_visible_px", rearVis));
+            cases.Add(new CaseResult("glasses_visible_sw_px", swVis));
+            cases.Add(new CaseResult("glasses_visible_se_px", seVis));
+            cases.Add(new CaseResult("glasses_visible_nw_px", nwVis));
+            cases.Add(new CaseResult("glasses_visible_ne_px", neVis));
             cases.Add(new CaseResult("recolored_pixel_count", recoloredPx));
             cases.Add(new CaseResult("variant_png_assets", module.VariantAssetCount));
             cases.Add(new CaseResult("appearance_seed_replay", replay));

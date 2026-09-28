@@ -89,7 +89,7 @@ namespace CozyCafe.Editor
             ref GameObject view, ref GameObject camGo, ref RenderTexture rt)
         {
             int pw, ph;
-            byte[] rgba = SceneRenderer.RenderPixels(scene, 1, out pw, out ph);
+            byte[] rgba = SceneRenderer.RenderPixels(scene, scene.Zoom, out pw, out ph);
             var src = new Texture2D(pw, ph, TextureFormat.RGBA32, false);
             src.filterMode = FilterMode.Point;
             int stride = pw * 4;

@@ -86,15 +86,23 @@ character-rig 케이스, StageScenes에 4방향 조립 장면, SceneRenderer에
 GameBootstrap이 실모듈 등록.
 검증: dotnet build Release 경고0·오류0. check_stage character-rig → CASE
 5키 실모듈 측정으로 방출: rig_count1·starter_presets3·
-palette_moves_geometry false(전 프리셋×4방향×idle/walk 알파+커버리지 바이트
-비교, 변환 실작업 recolored_px51520)·layer_phase_synced true(전 레이어
-앵커32,72·위상 공유·walk 프레임간 도형이동 동일)·customer_collection_added
-false(24명 스폰→디스폰→스냅샷 잔여0·코덱스 섹션 없음) — 5/5 일치.
-추가 근거키: front_glasses_visible_px18/rear_glasses_visible_px0·
-part 4/3/1/2·palette 6/8/8·variant_png_assets0·appearance_seed_replay true.
+palette_moves_geometry false(전 프리셋×4방향×계약 전 상태idle/walk/sit/work
+알파+커버리지 바이트 비교, 변환 실작업 recolored_px82432)·
+layer_phase_synced true(전 레이어 앵커32,72·위상 공유·전 상태 프레임간
+도형이동 동일)·customer_collection_added false(24명 스폰→디스폰→스냅샷
+잔여0·코덱스 섹션 없음) — 5/5 일치.
+추가 근거키: glasses_visible SW18·SE18·NW0·NE0(전 방향 실측, 후면 2방향
+모두 머리카락 아래 가림 확인)·part 4/3/1/2·palette 6/8/8·
+variant_png_assets0(상수0이 아니라 배송 자산 루트art/+game/Assets/CozyCafe
+실제 *.png 콤보서명 스캔 결과)·appearance_seed_replay true.
 capture_game.py → Unity 6000.6.3f1 CaptureShot.Run 실카메라 경로로
-out/character_rig.png 400×340(4방향 조립 캐릭터+바닥·향위 틱) 생성·PNG 검증
+out/character_rig.png 600×400(GameScene.Zoom=2, 양 호스트 동일 픽셀;
+4방향 조립 캐릭터+바닥·향위 틱, 파츠 조립 식별 가능한 배율) 생성·PNG 검증
 통과; GameCli render fallback도 동일 픽셀 출력.
+강화(보강): 가림 증거를 SW/NW 한 쌍에서 전 4방향으로 확장, 위상·팔레트
+불변 스윕을 계약 전 상태로 확장, variant_png_assets을 실측 스캔으로 전환,
+capture_game.py가 Windows형 절대경로(X:/…)를 cygwin/msys에서 /x/…로
+정규화해 수용하도록 보강(판정 기준·게이트 불변, 증거 범위만 확장).
 ## iso-grid — v0.8 신규격 코어 상수 갱신(SPEC_CHANGE 전파)
 배경: 8563b32 SPEC_CHANGE(윗면64×32·공간64×64·피치32/16)가 gates·데이터·문서를
 갱신했고 코드 상수는 신규 런 빌더 몫으로 남겨졌다(DECISIONS.md 명시). 구 코어는

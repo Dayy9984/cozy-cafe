@@ -173,6 +173,10 @@ namespace CozyCafe.Core.Scene
         public int HighlightCellY = -1;
         public bool ShowOriginCaret;
         public bool TileCanvasView;
+        /// Render magnification for stage captures (1 = source pixels). The
+        /// character sheet uses 2 so part assembly is legible in the PNG.
+        /// Paint-time only — logical geometry never reads it.
+        public int Zoom = 1;
 
         public bool Validate()
         {

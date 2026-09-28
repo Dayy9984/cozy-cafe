@@ -76,10 +76,11 @@ namespace CozyCafe.Core.Gauntlet
             s.Room = new RoomGrid(4, 4);
             s.IsLoaded = s.Validate();
             s.FixedViewport = true;
-            s.ViewportW = 400;
-            s.ViewportH = 340;
-            s.AnchorX = 200;
-            s.AnchorY = 56;
+            s.ViewportW = 600;
+            s.ViewportH = 400;
+            s.AnchorX = 300;
+            s.AnchorY = 96;
+            s.Zoom = 2;
 
             // casual_02 wears glasses (front view keeps them visible);
             // staff_01 wears the apron; casual_01 shows a rear view; and a

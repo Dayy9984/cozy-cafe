@@ -71,7 +71,7 @@ namespace CozyCafe.Cli
                     Console.Error.WriteLine("NOT_IMPLEMENTED: stage '" + stage + "' produced no scene");
                     return 2;
                 }
-                byte[] png = SceneRenderer.RenderPng(scene, 1);
+                byte[] png = SceneRenderer.RenderPng(scene, scene.Zoom);
                 File.WriteAllBytes(outputPath, png);
                 Console.Out.Write("RENDER\t" + stage + "\t" + outputPath + "\n");
                 Console.Out.Flush();

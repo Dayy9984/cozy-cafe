@@ -970,10 +970,66 @@ namespace CozyCafe.Core.Character
                 out glassesVisiblePx);
         }
 
-        /// Count of stored per-variant sprite assets: always zero — variants
-        /// are composited at runtime from shared layers, never generated as
-        /// per-combo PNG assets.
-        public int VariantAssetCount { get { return 0; } }
+        /// <summary>
+        /// Count of stored per-variant sprite assets, measured on the shipped
+        /// asset roots (art/ and game/Assets/CozyCafe, resolved from the
+        /// loaded contract's data dir). A baked per-combo variant carries a
+        /// combo signature — two or more part-family tokens in its name, or a
+        /// seed/variant marker — while base single-part sheets do not match.
+        /// Runtime compositing keeps the count at zero.
+        /// </summary>
+        public int VariantAssetCount
+        {
+            get
+            {
+                int n = 0;
+                foreach (var root in ShippedAssetRoots())
+                {
+                    string[] files;
+                    try
+                    {
+                        if (!Directory.Exists(root)) continue;
+                        files = Directory.GetFiles(root, "*.png",
+                            SearchOption.AllDirectories);
+                    }
+                    catch (Exception) { continue; }
+                    foreach (var f in files)
+                    {
+                        if (LooksLikeVariantAsset(f)) n++;
+                    }
+                }
+                return n;
+            }
+        }
+
+        private IEnumerable<string> ShippedAssetRoots()
+        {
+            string dataDir;
+            try { dataDir = Path.GetDirectoryName(Data.ContractPath); }
+            catch (Exception) { yield break; }
+            if (string.IsNullOrEmpty(dataDir)) yield break;
+            string root;
+            try { root = Path.GetFullPath(Path.Combine(dataDir, "..")); }
+            catch (Exception) { yield break; }
+            yield return Path.Combine(root, "art");
+            yield return Path.Combine(root, "game", "Assets", "CozyCafe");
+        }
+
+        private static bool LooksLikeVariantAsset(string path)
+        {
+            string name = Path.GetFileName(path).ToLowerInvariant();
+            string full = path.Replace('\\', '/').ToLowerInvariant();
+            int tokens = 0;
+            foreach (var t in new[] { "hair_", "outfit_", "apron_",
+                "glasses_", "body_", "skin_" })
+            {
+                if (name.Contains(t)) tokens++;
+            }
+            return tokens >= 2
+                || name.Contains("seed")
+                || full.Contains("variant")
+                || full.Contains("combo");
+        }
 
         protected override bool OnProbe()
         {
@@ -1012,14 +1068,16 @@ namespace CozyCafe.Core.Character
                 if (l.AnchorX != Rig.FootAnchorX || l.AnchorY != Rig.FootAnchorY) return false;
                 if (l.PhaseDy != CharacterArt.PhaseDy(Data, "walk", 1)) return false;
             }
-            // Occlusion: rear composite shows zero glasses pixels.
+            // Occlusion: every rear composite shows zero glasses pixels and
+            // every front composite keeps them visible.
             var g = RollAppearance(7, false);
             if (g.GlassesIndex < 0) g.GlassesIndex = 0;
             int vis;
-            Composite(g, Facing.NW, "idle", 0, out vis);
-            if (vis != 0) return false;
-            Composite(g, Facing.SW, "idle", 0, out vis);
-            if (vis <= 0) return false;
+            foreach (Facing dir in Enum.GetValues(typeof(Facing)))
+            {
+                Composite(g, dir, "idle", 0, out vis);
+                if (CharacterArt.IsFront(dir) ? vis <= 0 : vis != 0) return false;
+            }
             // Seeded spawn/despawn leaves no records behind.
             var s1 = Spawn(101, false);
             var s2 = Spawn(101, false);

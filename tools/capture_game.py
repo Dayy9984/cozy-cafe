@@ -81,14 +81,31 @@ def try_gamecli(stage, output):
     return False
 
 
+def resolve_output(arg):
+    """Absolute output path on whichever flavor of python runs the harness.
+    Native Windows python already treats a drive-letter path as absolute;
+    cygwin/msys flavors translate X:/... to the mounted /x/... form so file
+    I/O and child-process argv resolve the same file."""
+    p = str(arg)
+    if Path(p).is_absolute():
+        return Path(p)
+    if (len(p) > 2 and p[0].isalpha() and p[1] == ":"
+            and p[2] in ("/", chr(92)) and os.name == "posix"
+            and sys.platform.startswith(("cygwin", "msys"))):
+        mp = Path("/" + p[0].lower() + p[2:].replace(chr(92), "/"))
+        if mp.parent.exists() or mp.parent.parent.exists():
+            return mp
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", required=True)
     ap.add_argument("--output", required=True)
     a = ap.parse_args()
 
-    output = Path(a.output)
-    if not output.is_absolute():
+    output = resolve_output(a.output)
+    if output is None:
         print("capture: --output must be an absolute path", file=sys.stderr)
         return 2
     output.parent.mkdir(parents=True, exist_ok=True)
