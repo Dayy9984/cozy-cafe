@@ -106,7 +106,8 @@
     "furniture_baked_offset_recorded": true,
     "furniture_effective_offset_y_px": -8,
     "atlas_all_frames_32x32": true,
-    "atlas_frames_present": true
+    "atlas_frames_present": true,
+    "pixel_art_quantized_cells": true
   },
   "ui-local-ugc": {
     "ui_text_baked": false,
