@@ -182,6 +182,37 @@ namespace CozyCafe.Core.Render
                 }
             }
 
+            // Assembled characters: real composited sprites standing on
+            // their logical ground anchor, depth-sorted with each other —
+            // shadow + facing tick + the layered sprite. Visual only.
+            if (scene.Characters.Count > 0)
+            {
+                var chars = new List<CharacterPlacement>(scene.Characters);
+                chars.Sort(delegate (CharacterPlacement a, CharacterPlacement b)
+                {
+                    return a.Depth.CompareTo(b.Depth);
+                });
+                foreach (var ch in chars)
+                {
+                    double cx, cy;
+                    IsoMath.Project(ch.GridX, ch.GridY, out cx, out cy);
+                    cx = cx * zoom + tx;
+                    cy = cy * zoom + ty;
+                    canvas.FillEllipse(cx, cy, 7 * zoom, 3 * zoom, Shadow);
+                    BlitSprite(canvas, ch.Sprite,
+                        (int)Math.Round(cx - ch.AnchorX * zoom),
+                        (int)Math.Round(cy - ch.AnchorY * zoom), zoom);
+                    // Facing tick: paint-only overlay pointing the way the
+                    // sprite faces — drawn over the feet like the stage's
+                    // other guide marks.
+                    double vx, vy;
+                    FacingVector(ch.Direction, out vx, out vy);
+                    canvas.DrawLine(cx + vx * 4 * zoom, cy + vy * 4 * zoom,
+                        cx + vx * 12 * zoom, cy + vy * 12 * zoom, GuideYellow,
+                        Math.Max(1, 2 * zoom));
+                }
+            }
+
             // Stage overlays: red outline on the highlighted cell and the
             // yellow origin caret at grid corner (0,0) — paint only.
             if (scene.HighlightCellX >= 0 && scene.HighlightCellY >= 0)
@@ -322,6 +353,36 @@ namespace CozyCafe.Core.Render
         {
             double t = IsoMath.VisualThicknessPx * zoom;
             return new[] { ya, yb, yb + t, ya + t };
+        }
+
+        /// Iso ground direction -> screen vector for the facing tick.
+        private static void FacingVector(string dir, out double vx, out double vy)
+        {
+            switch (dir)
+            {
+                case "SW": vx = -0.894; vy = 0.447; return;
+                case "SE": vx = 0.894; vy = 0.447; return;
+                case "NW": vx = -0.894; vy = -0.447; return;
+                default: vx = 0.894; vy = -0.447; return; // NE
+            }
+        }
+
+        /// Nearest-neighbor blit of a composited character sprite.
+        private static void BlitSprite(SoftwareCanvas dst, SoftwareCanvas src,
+            int ox, int oy, int zoom)
+        {
+            byte[] sp = src.Pixels;
+            for (int y = 0; y < src.Height; y++)
+            {
+                for (int x = 0; x < src.Width; x++)
+                {
+                    int i = (y * src.Width + x) * 4;
+                    if (sp[i + 3] == 0) continue;
+                    var c = new Rgba(sp[i], sp[i + 1], sp[i + 2], sp[i + 3]);
+                    if (zoom <= 1) dst.SetPixel(ox + x, oy + y, c);
+                    else dst.FillRect(ox + x * zoom, oy + y * zoom, zoom, zoom, c);
+                }
+            }
         }
 
         private static void AddFurniture(List<Fill> fills, Furniture f, int zoom,

@@ -35,7 +35,7 @@ namespace CozyCafe.Core.Render
             // Side faces over the top face: a band straddling each lower edge
             // (~0.8 px inside the diamond plus ~0.5 px below the edge) reads
             // as the slab's 4 px edge thickness while the silhouette stays
-            // inside canvas rows 0-32.
+            // inside canvas rows 0-31.
             SideBand(src, 0, 16.0, 32, 32.0, SideLeft);
             SideBand(src, 32, 32.0, 64, 16.0, SideRight);
             return src;

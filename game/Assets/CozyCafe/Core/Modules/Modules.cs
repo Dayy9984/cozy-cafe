@@ -124,45 +124,9 @@ namespace CozyCafe.Core.Modules
     }
 
 
-    /// <summary>
-    /// Shared-body character catalog per the MVP defaults: one rig, three
-    /// starter presets, four hair / three top / two glasses parts.
-    /// </summary>
-    public sealed class CharacterModule : ModuleBase
-    {
-        public override string Name { get { return "character"; } }
-
-        public int RigCount { get { return 1; } }
-        public readonly List<string> Presets = new List<string>();
-        public readonly List<string> HairParts = new List<string>();
-        public readonly List<string> TopParts = new List<string>();
-        public readonly List<string> GlassesParts = new List<string>();
-
-        public CharacterModule()
-        {
-            Presets.Add("preset_barista_apron");
-            Presets.Add("preset_barista_vest");
-            Presets.Add("preset_customer_plain");
-            HairParts.Add("hair_11001");
-            HairParts.Add("hair_11002");
-            HairParts.Add("hair_11003");
-            HairParts.Add("hair_11004");
-            TopParts.Add("top_22001");
-            TopParts.Add("top_22002");
-            TopParts.Add("top_22003");
-            GlassesParts.Add("glasses_33001");
-            GlassesParts.Add("glasses_33002");
-        }
-
-        protected override bool OnProbe()
-        {
-            return RigCount == 1
-                && Presets.Count == 3
-                && HairParts.Count == 4
-                && TopParts.Count == 3
-                && GlassesParts.Count == 2;
-        }
-    }
+    // The shared character rig lives in CozyCafe.Core.Character
+    // (Character/CharacterModule.cs): data-sourced parts and palettes,
+    // layered compositing, seeded appearances.
 }
 
 namespace CozyCafe.Core.Modules

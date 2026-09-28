@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CozyCafe.Core.Render;
 
 namespace CozyCafe.Core.Scene
 {
@@ -133,6 +134,27 @@ namespace CozyCafe.Core.Scene
     }
 
     /// <summary>
+    /// A composited character sprite placed on the ground plane: the shared
+    /// rig cell (64x80) with its foot anchor, a facing id from the contract's
+    /// direction list, and a grid point. Only the renderer reads these —
+    /// logical cells, collision, paths and depth keys are untouched.
+    /// </summary>
+    public sealed class CharacterPlacement
+    {
+        public string Direction;
+        public double GridX;
+        public double GridY;
+        public SoftwareCanvas Sprite;
+        public int AnchorX;
+        public int AnchorY;
+
+        public double Depth
+        {
+            get { return GridX + GridY; }
+        }
+    }
+
+    /// <summary>
     /// The loaded game scene: the logical room grid plus placed furniture and
     /// agents. IsLoaded is set by GameBootstrap.LoadDefaultScene only after
     /// the scene validates — CASE reporters read it, they never set it.
@@ -142,6 +164,8 @@ namespace CozyCafe.Core.Scene
         public RoomGrid Room;
         public readonly List<Furniture> Furniture = new List<Furniture>();
         public readonly List<Agent> Agents = new List<Agent>();
+        public readonly List<CharacterPlacement> Characters =
+            new List<CharacterPlacement>();
         public bool IsLoaded;
 
         // Render hints for stage captures. These only steer the painter —
@@ -155,6 +179,10 @@ namespace CozyCafe.Core.Scene
         public int HighlightCellY = -1;
         public bool ShowOriginCaret;
         public bool TileCanvasView;
+        /// Render magnification for stage captures (1 = source pixels). The
+        /// character sheet uses 2 so part assembly is legible in the PNG.
+        /// Paint-time only — logical geometry never reads it.
+        public int Zoom = 1;
 
         public bool Validate()
         {

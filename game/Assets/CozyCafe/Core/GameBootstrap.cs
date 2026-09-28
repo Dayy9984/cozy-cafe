@@ -1,3 +1,4 @@
+using CozyCafe.Core.Character;
 using CozyCafe.Core.Economy;
 using CozyCafe.Core.Layout;
 using CozyCafe.Core.Modules;

@@ -69,7 +69,9 @@ GameBootstrap 레지스트리에 등록(실제 Probe가 프로젝트 부트 게�
 CASE 8키를 실제 코어 호출로 방출: machines5·menus8·research5·
 milk_is_inventory false·ice_milk_unlocks_M04 true·missing_steam_blocks_M05 true·
 reopen_rerolls_staff false·stat_appearance_independent true — 8/8 일치.
-project-boot 재검사 2/2 유지, idle-economy 재검사 8/8 유지. 수치 변경 없음.## layout-editor — 레이아웃·가구 편집기 실구현
+project-boot 재검사 2/2 유지, idle-economy 재검사 8/8 유지. 수치 변경 없음.
+
+## layout-editor — 레이아웃·가구 편집기 실구현
 SPEC_CHANGE(64x32/64x64/피치32·16, DECISIONS 2026-09-28)이 코드에 미반영이던
 것을 반영: IsoMath·IsoContract·TileArt·SceneRenderer·asset_catalog·DEVELOPMENT
 전면 동기화(64x32 윗면, 64x64 공간·캔버스, 두께4 시각전용). 픽셀중심 스캔라인
@@ -140,3 +142,73 @@ layout-editor 22/22·iso-grid 16/16·project-boot 2/2·idle-economy 8/8·
 research-staff 8/8. GameCli render 폴백도 실측 PNG 생성(504403B).
 남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 — 코어
 API와 StageView 그리기만 구현. 이전 항목과 동일.
+project-boot 재검사 2/2 유지, idle-economy 재검사 8/8 유지. 수치 변경 없음.
+## character-rig — 공유리그·파츠/팔레트·랜덤외형 실구현 (v0.8.2)
+구축: Core/Character 신규(CharacterModule.cs). RigDescriptor 1개(셀64×80·발앵커32,72·
+방향SW/SE/NW/NE·상태idle1/walk4/sit1/work2)는 data/art_contract.json에서,
+시작 프리셋3(casual_01/02·staff_01)은 data/character_presets.json에서 로드·id를
+데이터 파츠표(hair_01..04/outfit_01..03/apron_01/glasses_01..02)로 해석.
+파츠·팔레트 수(4/3/1/2, 6/8/8) 전부 데이터 원본 참조·하드코딩 없음. 절차적
+레이어 래스터라이저(공통몸체+파츠)·정확일치 팔레트 변환(RGB만 교체, 알파 바이트
+무기록·기하 불변)·공유 프레임시계 phase(모든 레이어 동일 앵커/위상)·후면시
+안경을 머리카락 아래 그리는 방향인지 가림·seed→외형콤보 결정론 롤(손님/직원,
+스탯과 무관)·임시 스폰/디스폰(코덱스·단골·의뢰·변형PNG 없음). StaffModule의
+후보 외형 추첨을 동일 리그 롤로 통합(독립시드 유지). StageCases에
+character-rig 케이스, StageScenes에 4방향 조립 장면, SceneRenderer에
+캐릭터 블릿+향위 표시 추가. Modules.cs의 구 스텁 CharacterModule 제거,
+GameBootstrap이 실모듈 등록.
+검증: dotnet build Release 경고0·오류0. check_stage character-rig → CASE
+5키 실모듈 측정으로 방출: rig_count1·starter_presets3·
+palette_moves_geometry false(전 프리셋×4방향×계약 전 상태idle/walk/sit/work
+알파+커버리지 바이트 비교, 변환 실작업 recolored_px82432)·
+layer_phase_synced true(전 레이어 앵커32,72·위상 공유·전 상태 프레임간
+도형이동 동일)·customer_collection_added false(24명 스폰→디스폰→스냅샷
+잔여0·코덱스 섹션 없음) — 5/5 일치.
+추가 근거키: glasses_visible SW18·SE18·NW0·NE0(전 방향 실측, 후면 2방향
+모두 머리카락 아래 가림 확인)·part 4/3/1/2·palette 6/8/8·
+variant_png_assets0(상수0이 아니라 배송 자산 루트art/+game/Assets/CozyCafe
+실제 *.png 콤보서명 스캔 결과)·appearance_seed_replay true.
+capture_game.py → Unity 6000.6.3f1 CaptureShot.Run 실카메라 경로로
+out/character_rig.png 600×400(GameScene.Zoom=2, 양 호스트 동일 픽셀;
+4방향 조립 캐릭터+바닥·향위 틱, 파츠 조립 식별 가능한 배율) 생성·PNG 검증
+통과; GameCli render fallback도 동일 픽셀 출력.
+강화(보강): 가림 증거를 SW/NW 한 쌍에서 전 4방향으로 확장, 위상·팔레트
+불변 스윕을 계약 전 상태로 확장, variant_png_assets을 실측 스캔으로 전환,
+capture_game.py가 Windows형 절대경로(X:/…)를 cygwin/msys에서 /x/…로
+정규화해 수용하도록 보강(판정 기준·게이트 불변, 증거 범위만 확장).
+## iso-grid — v0.8 신규격 코어 상수 갱신(SPEC_CHANGE 전파)
+배경: 8563b32 SPEC_CHANGE(윗면64×32·공간64×64·피치32/16)가 gates·데이터·문서를
+갱신했고 코드 상수는 신규 런 빌더 몫으로 남겨졌다(DECISIONS.md 명시). 구 코어는
+64×31/64×62/15.5라 iso-grid가 4키 미스매치로 실패 상태였다.
+변경: IsoMath 상수·역변환 분모(31→32)·TileCanvasContract 64→64·TileArt
+다이아몬드 반높이16·측면띠 변 위치·MeasureFloorSeams 버퍼·관련 주석 전면 갱신.
+MeasureTopFace는 투영 코너의 연속 구간(64×32)을 실측 — planning/04의
+"연속 투영 영역" 해석 그대로. 단일셀 도색 bbox는 공유 half-open 규칙상
+적도 끝 픽셀이 상하 이웃 소유라 62로 나오며(바닥 합집합이 무이음인 정확한
+이유), 래스터 감사는 MeasureFloorSeams가 계속 담당한다.
+art/asset_catalog.json 타일 6항목 수치도 계약값으로 정합.
+검증: check_stage iso-grid 16/16·project-boot 2/2·research-staff 8/8·
+character-rig 5/5 전부 GameCli 실측 일치. Unity 에디터 실기동 시
+6000.6.3f1으로 프로젝트 마이그레이션됨(ProjectVersion·manifest·
+packages-lock·신규 ProjectSettings 자산은 에디터 자동 변경분, 실상 기록).
+수치 변경: SPEC_CHANGE 전파 외 없음(데이터 원본·게이트 불변).
+
+## layout-editor — 병합충돌 해소 + 전 스테이지 재검증 (HEAD×c1f9a1d)
+배경: character-rig 병합(c1f9a1d)이 StageCases·StageScenes·IsoContract·
+SceneRenderer·TileArt·progress·capture_game에 충돌을 남겼다.
+해소: StageCases에 layout-editor+character-rig 양쪽 케이스·메서드 유지,
+StageScenes에 LayoutEditorRoom+CharacterRigSheet·Place/GlassesSeed 유지,
+SceneRenderer에 팁픽셀 도색+캐릭터 블릿(FacingVector/BlitSprite) 공존시키고
+AddFurniture는 byId 인수 시그니처(DrawAnchorResolved 실적용)로 통일.
+IsoContract·TileArt는 layout-editor 측 유지 — 도색 bbox 팁픽셀 포함 실측과
+64x68 주석이 현 규격(공간64+두께4)에 맞다. TileArt 띠 주석을 행0-31로 정정
+(측면띠 최대 y≈32.45<행32 중심, 실도색 0-31행). capture_game은 스테이징
+사본 Unity + resolve_output(POSIX 변환) 양쪽 기능을 병합.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+layout-editor 22/22·iso-grid 16/16·project-boot 2/2·idle-economy 8/8·
+research-staff 8/8·character-rig 5/5 전부 실제 코어 계산값 일치.
+capture_game.py --stage layout-editor → Unity 6000.6.3f1이 스테이징
+사본에서 CaptureShot.Run 실실행, out/layout_editor.png 420×300 실PNG
+생성 — 추적 소스 변경 0(git status 신규 수정 없음, 산출물만 untracked).
+남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 —
+코어 API와 StageView 그리기만 구현. 이전 항목과 동일.
