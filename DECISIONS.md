@@ -141,3 +141,17 @@ effective_image_model=gpt-image.
 후: anchor_y(n) = 8 + 16(n−1). 1층 8 → 2층(작업대 위 머신) 24 → 3층 40.
 stack_level_height_px = 16 유지. 부모 기준 1회 해석 원칙 유지.
 불변: 나머지 계약 전부.
+
+## SPEC_CHANGE 2026-09-28 — 생성 방식 = 균일 그리드 시트 (사용자 지시)
+사유: 사용자 지적 — 생성 원본이 1536×1024 자유배치 컴포넌트라 아이템별 스케일이
+들쑥날쑥하고 추출 시 개별 리스케일로 채움 비율이 깨진다. "32×32면 여러 개를 한
+번에 생성" — sprite-gen의 one-sheet 모델과 일치한다.
+전: job당 1회 생성, 프롬프트가 자유 컴포넌트 배치 → 추출기가 컴포넌트별 검출·개별
+다운스케일 → 에셋 간 스케일 불일치.
+후: generation_sheet_policy(uniform_grid_sheet) — 한 호출 = 동일 크기 셀의 균일
+그리드(최종 32×32의 ≥4배 슈퍼샘플), 셀 하나 = 에셋/프레임 하나. 추출은 선언된
+격자로 등분 슬라이스(컨투어 검출·임의 리스케일 금지), 셀 간 채움·스케일 편차는
+QA 결격. jobs.json에 sheet_policy·cell_asset_px·batch_group 추가, 프롬프트 7종에
+균일 그리드 요구 추가 + 잔존 구스펙 수치(-8px→-4px, side4px→side2px) 동기화.
+불변: 12프레임 단일시트, OAuth only, codex 전용, effective_image_model=gpt-image,
+모든 치수 계약.
