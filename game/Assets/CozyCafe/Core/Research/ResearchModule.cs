@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CozyCafe.Core.Economy;
 using CozyCafe.Core.Modules;
@@ -30,9 +31,19 @@ namespace CozyCafe.Core.Research
         public double ActiveEndsAt { get; private set; }
         public int CompletedCount { get; private set; }
 
+        /// Progress is kept as remaining_base_work — nominal seconds of
+        /// work still owed at rate 1.0 — billed down continuously at
+        /// WorkRate. A mid-run rate change settles the elapsed segment at
+        /// the old rate and re-anchors, so the last rate always bills the
+        /// rest correctly instead of dropping the change.
+        public double ActiveRemainingWork { get; private set; }
+        public double WorkRate { get; private set; }
+        private double rateAnchorClock;
+
         public ResearchModule(Economy.EconomyModule econ)
         {
             Econ = econ;
+            WorkRate = 1.0;
         }
 
         public bool IsCompleted(ResearchDef r)
@@ -105,7 +116,44 @@ namespace CozyCafe.Core.Research
             if (!Econ.TryCharge(next.Cost)) return;
             Queue.RemoveAt(0);
             Active = next;
-            ActiveEndsAt = Clock + next.Seconds;
+            ActiveRemainingWork = next.Seconds;
+            rateAnchorClock = Clock;
+            ActiveEndsAt = Clock + next.Seconds / WorkRate;
+        }
+
+        /// Public retry for the queue front — used at every funds or
+        /// prerequisite boundary. Returns true when an entry is running
+        /// after the call.
+        public bool TryStartQueued()
+        {
+            TryStartNext();
+            return Active != null;
+        }
+
+        /// Seconds until the active entry completes (PositiveInfinity when
+        /// the lab is idle) — the session's next research boundary.
+        public double NextCompletionDelta()
+        {
+            if (Active == null) return double.PositiveInfinity;
+            double d = ActiveEndsAt - Clock;
+            return d < 0 ? 0 : d;
+        }
+
+        /// Rate-change boundary (e.g. the staff roster changed): the
+        /// elapsed segment drains remaining_base_work at the OLD rate, the
+        /// anchor moves to now, and the remaining work is re-billed by the
+        /// new rate — mid-run speed changes are never lost.
+        public void SetWorkRate(double rate)
+        {
+            if (rate <= 0) rate = 1.0;
+            if (Active != null)
+            {
+                ActiveRemainingWork -= (Clock - rateAnchorClock) * WorkRate;
+                if (ActiveRemainingWork < 0) ActiveRemainingWork = 0;
+                ActiveEndsAt = Clock + ActiveRemainingWork / rate;
+                rateAnchorClock = Clock;
+            }
+            WorkRate = rate;
         }
 
         /// Advances the lab clock; a finished entry applies its unlock, then
@@ -126,6 +174,28 @@ namespace CozyCafe.Core.Research
             Clock = horizon;
         }
 
+        /// Session-stepping variant used by CafeSession's interleaved
+        /// advance: the queue front is evaluated at the interval's END
+        /// boundary, so a start anchors at the event time when the funds
+        /// (or prerequisite) actually became sufficient — never at the
+        /// stale pre-step clock. Completions still land on their exact
+        /// scheduled instants inside the interval.
+        public void SimulateStep(double seconds)
+        {
+            if (seconds <= 0) return;
+            double horizon = Clock + seconds;
+            while (Active != null && ActiveEndsAt <= horizon)
+            {
+                Clock = ActiveEndsAt;
+                var done = Active;
+                Active = null;
+                ApplyCompletion(done);
+                TryStartNext();
+            }
+            Clock = horizon;
+            TryStartNext();
+        }
+
         /// Completion is an event boundary: the research id becomes a
         /// permanent completed flag, its unlock lands as a machine or an
         /// ingredient flag — never an inventory item — and newly ownable
@@ -143,6 +213,77 @@ namespace CozyCafe.Core.Research
             }
             CompletedCount++;
             Econ.SyncOwnedMenus();
+        }
+
+        /// Deterministic state record: lab clock, work rate + anchor,
+        /// the active entry's remaining base work and scheduled end, the
+        /// wait line, unlock flags and the completion count.
+        public Dictionary<string, object> SaveState()
+        {
+            var d = new Dictionary<string, object>();
+            d["clock"] = Clock;
+            d["rate"] = WorkRate;
+            d["anchor"] = rateAnchorClock;
+            d["count"] = (long)CompletedCount;
+            d["flags"] = SaveDoc.SortedStrings(UnlockedFlags);
+            var q = new List<object>();
+            foreach (var r in Queue) q.Add(r.Id);
+            d["queue"] = q;
+            if (Active == null)
+            {
+                d["active"] = null;
+            }
+            else
+            {
+                var a = new Dictionary<string, object>();
+                a["id"] = Active.Id;
+                a["remaining"] = ActiveRemainingWork;
+                a["ends_at"] = ActiveEndsAt;
+                d["active"] = a;
+            }
+            return d;
+        }
+
+        /// Replaces the whole lab state from a save record.
+        public void RestoreState(Dictionary<string, object> d)
+        {
+            Clock = SaveDoc.Double(SaveDoc.Get(d, "clock"));
+            WorkRate = SaveDoc.Double(SaveDoc.Get(d, "rate"));
+            rateAnchorClock = SaveDoc.Double(SaveDoc.Get(d, "anchor"));
+            CompletedCount = (int)SaveDoc.Long(SaveDoc.Get(d, "count"));
+            UnlockedFlags.Clear();
+            foreach (var f in SaveDoc.List(SaveDoc.Get(d, "flags")))
+            {
+                UnlockedFlags.Add(SaveDoc.Str(f));
+            }
+            Queue.Clear();
+            foreach (var o in SaveDoc.List(SaveDoc.Get(d, "queue")))
+            {
+                var def = Find(SaveDoc.Str(o));
+                if (def == null)
+                {
+                    throw new FormatException("save: unknown queued research");
+                }
+                Queue.Add(def);
+            }
+            var active = SaveDoc.Get(d, "active") as Dictionary<string, object>;
+            if (active == null)
+            {
+                Active = null;
+                ActiveRemainingWork = 0;
+                ActiveEndsAt = 0;
+            }
+            else
+            {
+                var def = Find(SaveDoc.Str(SaveDoc.Get(active, "id")));
+                if (def == null)
+                {
+                    throw new FormatException("save: unknown active research");
+                }
+                Active = def;
+                ActiveRemainingWork = SaveDoc.Double(SaveDoc.Get(active, "remaining"));
+                ActiveEndsAt = SaveDoc.Double(SaveDoc.Get(active, "ends_at"));
+            }
         }
 
         public ResearchDef Find(string id)

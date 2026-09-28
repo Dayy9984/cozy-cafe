@@ -212,3 +212,39 @@ capture_game.py --stage layout-editor → Unity 6000.6.3f1이 스테이징
 생성 — 추적 소스 변경 0(git status 신규 수정 없음, 산출물만 untracked).
 남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 —
 코어 API와 StageView 그리기만 구현. 이전 항목과 동일.
+
+## save-offline — 저장·오프라인 정산 실구현
+구축: Core/Save 신규(SaveStore·SaveDocument·CafeSession·OfflineResult,
+shared helper SaveDoc). 저장은 .tmp 스테이징→fsync→File.Replace 원자교체로
+구 primary를 .bak으로 보존(정전/중단 쓰기에도 torn primary 없음), 읽기는
+문서검증 통과 후보를 primary→backup→none 순으로 선택. 문서는 v2 스키마
+( settlement id·checkpoint_utc·runtime_clock·applied 원장·모듈 상태·
+레이아웃·사적 메모 ) strict 파싱+버전 마이그레이션(v1→v2 실경로).
+CafeSession.Advance는 판매·연구완료·예약자금 임계·직원변경 경계를
+시간순으로 스텝 — 청크로 진행한 온라인과 일괄 오프라인 정산이 동일
+이벤트 열을 지나 동일 결과. 연구 진행은 remaining_base_work+WorkRate
+앵커 방식(중간 속도변경 시 구간요율로 먼저 정산 후 재앵커)으로 리팩터 —
+SimulateStep이 큐 시작을 스텝 종단 경계(자금 도달 시점)에 앵커해
+세션 인터리브에서 비용 청구 시점과 시작 시각이 정합(기존 SimulateSeconds
+독립호출 의미는 유지). Economy/Research/Staff에 SaveState·RestoreState와
+감사필드(TotalCharged·NextSaleDelta·NextCompletionDelta·
+TotalResearchBonusPct) 추가. 공개 프리셋은 allow-list 화장/배치 키만 —
+지갑·연구·스탯·메모·경로·인증은 구조적으로 미포함+재귀감사.
+검증: dotnet build Release 경고0·오류0. check_stage save-offline →
+GameCli 실모듈·실파일 왕복 CASE 6키: offline_online_difference0
+(직원고용+연구예약+중간속도변경 후 3600s — 청크 온라인 vs 저장→
+복원→단일정산, 지갑·타이머·연구·직원·레이아웃 전필드 비교)·
+research_cost_charged_once true(진행중 저장→복원 정산 후 TotalCharged
+=300)·time_backwards_reward0(체크포인트 이전 시각 정산)·
+restored_layout_equal true(파일 왕복 SaveLayout 문자열 동일)·
+duplicate_credit0(동일 settlement id 재적용)·save_backup_recovers
+true(깨진JSON·잘린primary+stale.tmp·양쪽손상→백업복구·v1마이그레이션
+실복원) — 6/6 일치. 증거키 save_version_migrates·malformed_json_uses_
+backup·power_loss_recovers·research_rate_rebills(구간요율 정산 실측)·
+offline_cap_enforced·private_fields_in_preset 전부 실측.
+project-boot 2/2·idle-economy 8/8·research-staff 8/8·layout-editor
+22/22 재검사 유지. 수치 변경 없음(mvp.json·gates 불변).
+구현상 새 규칙: 연구 속도=1+Σ직원연구보너스%/100, 직원변경 경계에서만
+적용(기존 실행분은 구요율로 정산) — 명세 규칙 구현이며 데이터 수치 미변경.
+남은 문제: 실제 게임 루프(Unity 측 autosave 호출·UI 프리셋 공유 버튼)
+연동은 미착수 — 코어 계약+게이트 경로만 구현·검증.

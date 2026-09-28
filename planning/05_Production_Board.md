@@ -11,7 +11,7 @@
 |desktop-tools|미니창·메모·할일·타이머·음악|layout-editor|READY|
 |idle-economy|자동판매·강화|project-boot|READY|
 |research-staff|연구·메뉴·직원|idle-economy|READY|
-|save-offline|저장·복귀·시간경계|research-staff,layout-editor|READY|
+|save-offline|저장·복귀·시간경계|research-staff,layout-editor|검증완료(리뷰대기)|
 |character-rig|소수 파츠·팔레트·랜덤 손님|iso-grid,research-staff|READY|
 |art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|READY|
 |ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|READY|
@@ -31,3 +31,9 @@ v0.8.2 병합 해소: character-rig(c1f9a1d)×layout-editor 충돌 7파일 해�
 재검증: build 경고0·layout-editor 22/22·iso-grid 16/16·project-boot 2/2·
 idle-economy 8/8·research-staff 8/8·character-rig 5/5, Unity 스테이징
 사본 캡처로 out/layout_editor.png 생성·추적소스 변경 0.
+
+v0.8.2 save-offline 실구현: Core/Save(SaveStore 원자교체+백업·SaveDocument
+v2+v1마이그레이션·CafeSession 이벤트경계 Advance·remaining_base_work)와
+모듈 상태기록 추가, StageCases save-offline 케이스 배선. 검증: build
+경고0·check_stage save-offline 6/6·research-staff 8/8·idle-economy 8/8·
+layout-editor 22/22·project-boot 2/2 — 상세는 progress.md "save-offline" 절.

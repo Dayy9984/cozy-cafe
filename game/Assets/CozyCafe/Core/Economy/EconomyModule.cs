@@ -74,6 +74,10 @@ namespace CozyCafe.Core.Economy
         public int StaffSalesBonusPct;
         public double Clock { get; private set; }
         public bool WalletWentNegative { get; private set; }
+        /// Sum of every successful wallet charge — the audit total a
+        /// save restores alongside the balance so a re-billed cost is
+        /// measurable across the round-trip.
+        public long TotalCharged { get; private set; }
         public readonly HashSet<string> OwnedMachines = new HashSet<string>();
         public readonly HashSet<string> CompletedResearch = new HashSet<string>();
         private readonly Dictionary<string, MenuLine> lines =
@@ -221,6 +225,7 @@ namespace CozyCafe.Core.Economy
         {
             if (amount < 0 || Coins < amount) return false;
             Coins -= amount;
+            TotalCharged += amount;
             if (Coins < 0) WalletWentNegative = true;
             return true;
         }
@@ -275,6 +280,108 @@ namespace CozyCafe.Core.Economy
                 next.NextSaleAt += next.Def.CycleSeconds;
             }
             Clock = horizon;
+        }
+
+        /// Seconds until the earliest pending sale event across owned menu
+        /// lines — the session's next wallet boundary (PositiveInfinity when
+        /// nothing is scheduled).
+        public double NextSaleDelta()
+        {
+            double t = double.PositiveInfinity;
+            foreach (var line in lines.Values)
+            {
+                double d = line.NextSaleAt - Clock;
+                if (d < t) t = d;
+            }
+            if (t < 0) return 0;
+            return t;
+        }
+
+        /// Deterministic state record for the save module: wallet,
+        /// remainder, charge audit, ownership, dedupe set, sale sequence
+        /// and every menu line's level + next-sale instant.
+        public Dictionary<string, object> SaveState()
+        {
+            var d = new Dictionary<string, object>();
+            d["coins"] = Coins;
+            d["rem"] = RemainderHundredths;
+            d["clock"] = Clock;
+            d["staff_pct"] = (long)StaffSalesBonusPct;
+            d["charged"] = TotalCharged;
+            d["sale_seq"] = saleSeq;
+            d["neg"] = WalletWentNegative;
+            d["machines"] = SaveDoc.SortedStrings(OwnedMachines);
+            d["research_done"] = SaveDoc.SortedStrings(CompletedResearch);
+            d["settled"] = SaveDoc.SortedStrings(settledEvents);
+            var ls = new List<object>();
+            var ids = new List<string>(lines.Keys);
+            ids.Sort(StringComparer.Ordinal);
+            foreach (var id in ids)
+            {
+                var l = lines[id];
+                var rec = new Dictionary<string, object>();
+                rec["id"] = id;
+                rec["level"] = (long)l.Level;
+                rec["next_at"] = l.NextSaleAt;
+                ls.Add(rec);
+            }
+            d["lines"] = ls;
+            return d;
+        }
+
+        /// Replaces the whole module state from a save record. A next_at
+        /// below zero (migrated records without a stored instant)
+        /// reschedules the line one full cycle out; SyncOwnedMenus then
+        /// opens any menu the restored flags newly unlock.
+        public void RestoreState(Dictionary<string, object> d)
+        {
+            if (Data == null)
+            {
+                throw new FormatException("save: cannot restore economy without data");
+            }
+            Coins = SaveDoc.Long(SaveDoc.Get(d, "coins"));
+            RemainderHundredths = SaveDoc.Long(SaveDoc.Get(d, "rem"));
+            Clock = SaveDoc.Double(SaveDoc.Get(d, "clock"));
+            StaffSalesBonusPct = (int)SaveDoc.Long(SaveDoc.Get(d, "staff_pct"));
+            TotalCharged = SaveDoc.Long(SaveDoc.Get(d, "charged"));
+            saleSeq = SaveDoc.Long(SaveDoc.Get(d, "sale_seq"));
+            WalletWentNegative = SaveDoc.Bool(SaveDoc.Get(d, "neg"));
+            OwnedMachines.Clear();
+            foreach (var m in SaveDoc.List(SaveDoc.Get(d, "machines")))
+            {
+                OwnedMachines.Add(SaveDoc.Str(m));
+            }
+            CompletedResearch.Clear();
+            foreach (var r in SaveDoc.List(SaveDoc.Get(d, "research_done")))
+            {
+                CompletedResearch.Add(SaveDoc.Str(r));
+            }
+            settledEvents.Clear();
+            foreach (var e in SaveDoc.List(SaveDoc.Get(d, "settled")))
+            {
+                settledEvents.Add(SaveDoc.Str(e));
+            }
+            lines.Clear();
+            foreach (var o in SaveDoc.List(SaveDoc.Get(d, "lines")))
+            {
+                var rec = SaveDoc.Dict(o);
+                var menu = FindMenu(SaveDoc.Str(SaveDoc.Get(rec, "id")));
+                if (menu == null)
+                {
+                    throw new FormatException("save: unknown menu id in record");
+                }
+                double nextAt = SaveDoc.Double(SaveDoc.Get(rec, "next_at"));
+                if (nextAt < 0) nextAt = Clock + menu.CycleSeconds;
+                var line = new MenuLine(menu, nextAt);
+                line.Level = (int)SaveDoc.Long(SaveDoc.Get(rec, "level"));
+                lines[menu.Id] = line;
+            }
+            SyncOwnedMenus();
+        }
+
+        private MenuDef FindMenu(string id)
+        {
+            return Data != null ? Data.FindMenu(id) : null;
         }
 
         /// Probe does real work on a throwaway startup state — the live

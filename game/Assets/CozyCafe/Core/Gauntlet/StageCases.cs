@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using CozyCafe.Core.Character;
 using CozyCafe.Core.Economy;
 using CozyCafe.Core.Iso;
 using CozyCafe.Core.Layout;
 using CozyCafe.Core.Research;
+using CozyCafe.Core.Save;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Staff;
 
@@ -43,6 +45,8 @@ namespace CozyCafe.Core.Gauntlet
                     return ResearchStaff();
                 case "layout-editor":
                     return LayoutEditorStage();
+                case "save-offline":
+                    return SaveOffline();
                 case "character-rig":
                     return CharacterRig();
                 default:
@@ -487,6 +491,245 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("picking_and_ghost_share_render_transform",
                 ghx == pdx && ghy == pdy));
 
+            return cases;
+        }
+
+        /// <summary>
+        /// Save + offline settlement. Every value below is produced by real
+        /// SaveStore file I/O, a real document parse/migration and real
+        /// session simulation through the event-boundary Advance path:
+        /// the online timeline is driven continuously while the offline
+        /// one is written to disk at T0, read back, restored into a fresh
+        /// session and settled once — then the whole timeline state is
+        /// compared field by field. Backup failover, torn-write recovery,
+        /// v1 migration, the 24h cap, reversal clamp, settlement-id dedupe,
+        /// byte-equal layout restore and the private-field-free public
+        /// preset are all exercised on the same real paths.
+        /// </summary>
+        private static List<CaseResult> SaveOffline()
+        {
+            var cases = new List<CaseResult>();
+            var data = MvpData.Load();
+            string tmpDir = Path.Combine(Directory.GetCurrentDirectory(),
+                "out", "save-offline-tmp");
+            if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true);
+            Directory.CreateDirectory(tmpDir);
+            const long T0 = 1700000000L;
+            try
+            {
+                // ---- offline settle == continuous play ------------------
+                const long window = 3600;
+                const long preSave = 500;
+                var online = CafeSession.CreateStartup(data, 777, 6, 6);
+                online.Staff.OpenHirePanel();
+                online.Hire(0);              // staff-change boundary
+                online.Lab.Reserve("R01");
+                online.Lab.Reserve("R02");
+                online.Advance(preSave);     // R01 running by now
+                online.Lab.SetWorkRate(1.25); // mid-run speed change
+                for (long t = preSave; t < window; t += 150)
+                {
+                    online.Advance(Math.Min(150, window - t));
+                }
+
+                var off = CafeSession.CreateStartup(data, 777, 6, 6);
+                off.Staff.OpenHirePanel();
+                off.Hire(0);
+                off.Lab.Reserve("R01");
+                off.Lab.Reserve("R02");
+                off.Advance(preSave);
+                off.Lab.SetWorkRate(1.25);
+                var storeA = new SaveStore(Path.Combine(tmpDir, "a", "save.json"),
+                    SaveDocument.IsValidJson);
+                off.WriteCheckpoint(storeA, T0);
+
+                var back = CafeSession.CreateStartup(data, 424242, 5, 4);
+                string textA;
+                var srcA = storeA.TryRead(out textA);
+                var docRead = SaveDocument.Parse(textA);
+                back.Restore(docRead);
+                var res = back.SettleOffline(docRead, T0 + (window - preSave));
+                long diff = back.StateDifference(online);
+                if (srcA != SaveStore.LoadSource.Primary
+                    || res.Seconds != window - preSave)
+                {
+                    diff++;
+                }
+                cases.Add(new CaseResult("offline_online_difference", diff));
+
+                // ---- research cost charged exactly once -----------------
+                // The R01 reservation charges 300 when the wallet crosses
+                // the funds threshold mid-run; a checkpoint taken while it
+                // is still active must not re-bill on restore+settle.
+                var s1 = CafeSession.CreateStartup(data, 555, 6, 6);
+                s1.Lab.Reserve("R01");
+                s1.Advance(500);             // charged already, still running
+                var storeB = new SaveStore(Path.Combine(tmpDir, "b", "save.json"),
+                    SaveDocument.IsValidJson);
+                var docB = s1.WriteCheckpoint(storeB, T0);
+                var s2 = CafeSession.CreateStartup(data, 9, 6, 6);
+                string textB;
+                storeB.TryRead(out textB);
+                s2.Restore(SaveDocument.Parse(textB));
+                var resB = s2.SettleOffline(docB, T0 + 700);
+                bool chargedOnce = resB.Seconds == 700
+                    && s2.Econ.TotalCharged == 300
+                    && s2.Econ.CompletedResearch.Contains("R01");
+                cases.Add(new CaseResult("research_cost_charged_once", chargedOnce));
+
+                // ---- time reversal yields zero reward -------------------
+                var s3 = CafeSession.CreateStartup(data, 31, 6, 6);
+                s3.Restore(SaveDocument.Parse(textA));
+                var back3 = s3.SettleOffline(docRead, T0 - 500);
+                long rewardBack = back3.CoinsGained * 100 + back3.RemainderGained;
+                cases.Add(new CaseResult("time_backwards_reward", rewardBack));
+
+                // ---- byte-equal layout restore through the file ---------
+                var sL = CafeSession.CreateStartup(data, 42, 6, 5);
+                sL.Layout.TryPlace(FurnitureKind.Door, 0, 2, 0);
+                sL.Layout.BeginCommand();
+                var tb = sL.Layout.TryPlace(FurnitureKind.Table, 2, 1, 0);
+                sL.Layout.TryPlace(FurnitureKind.Chair, 1, 1, 0);
+                var commit1 = sL.Layout.EndCommand();
+                sL.Layout.BeginCommand();
+                var ct = sL.Layout.TryPlace(FurnitureKind.Counter, 4, 3, 0);
+                var mg = sL.Layout.TryPlace(FurnitureKind.Grinder, 4, 3, 0);
+                var commit2 = sL.Layout.EndCommand();
+                string layoutSnap = sL.Layout.SaveLayout();
+                var storeL = new SaveStore(Path.Combine(tmpDir, "l", "save.json"),
+                    SaveDocument.IsValidJson);
+                sL.WriteCheckpoint(storeL, T0);
+                var sL2 = CafeSession.CreateStartup(data, 4242, 3, 3);
+                string textL;
+                storeL.TryRead(out textL);
+                sL2.Restore(SaveDocument.Parse(textL));
+                cases.Add(new CaseResult("restored_layout_equal",
+                    commit1 == PlacementReject.None
+                    && commit2 == PlacementReject.None
+                    && tb.Ok && ct.Ok && mg.Ok
+                    && mg.Placed.HostId == ct.Placed.Id
+                    && sL2.Layout.SaveLayout() == layoutSnap));
+
+                // ---- settlement-id dedupe -------------------------------
+                // Re-applying the same checkpoint document credits zero.
+                var dup = back.SettleOffline(docRead, T0 + window);
+                long dupGain = dup.CoinsGained * 100 + dup.RemainderGained;
+                if (!dup.Duplicate) dupGain++;
+                cases.Add(new CaseResult("duplicate_credit", dupGain));
+
+                // ---- recovery: malformed primary -> backup --------------
+                var storeF = new SaveStore(Path.Combine(tmpDir, "f", "save.json"),
+                    SaveDocument.IsValidJson);
+                var s5 = CafeSession.CreateStartup(data, 77, 6, 6);
+                s5.Lab.Reserve("R01");
+                s5.Advance(450);             // R01 charged ~420, still active
+                var docF1 = s5.WriteCheckpoint(storeF, T0);
+                s5.Advance(300);             // R01 completes ~540
+                s5.WriteCheckpoint(storeF, T0 + 300);   // primary=v2, backup=v1
+                long coinsF1 = SaveDoc.Long(SaveDoc.Get(docF1.Economy, "coins"));
+
+                File.WriteAllText(storeF.PrimaryPath,
+                    "{ \"save_version\": 2, broken,,,");
+                string rt;
+                var lsrc = storeF.TryRead(out rt);
+                var s6 = CafeSession.CreateStartup(data, 1, 6, 6);
+                s6.Restore(SaveDocument.Parse(rt));
+                bool badJsonRecovered = lsrc == SaveStore.LoadSource.Backup
+                    && s6.Econ.Coins == coinsF1
+                    && s6.Lab.Active != null && s6.Lab.Active.Id == "R01"
+                    && !s6.Econ.CompletedResearch.Contains("R01");
+
+                // power loss mid-write: a torn primary plus a stale .tmp
+                // leftover are never candidates — backup still recovers.
+                string full2 = File.ReadAllText(storeF.BackupPath);
+                File.WriteAllText(storeF.TempPath, full2.Substring(0, 40));
+                File.WriteAllText(storeF.PrimaryPath,
+                    full2.Substring(0, full2.Length / 2));
+                var lsrc2 = storeF.TryRead(out rt);
+                var s7 = CafeSession.CreateStartup(data, 1, 6, 6);
+                s7.Restore(SaveDocument.Parse(rt));
+                bool powerLossRecovered = lsrc2 == SaveStore.LoadSource.Backup
+                    && s7.Econ.Coins == coinsF1
+                    && s7.Lab.Active != null && s7.Lab.Active.Id == "R01";
+
+                // both copies unreadable -> None, no silent state.
+                File.WriteAllText(storeF.BackupPath, "also junk");
+                bool noneFound = storeF.TryRead(out rt) == SaveStore.LoadSource.None;
+
+                // ---- version migration: real v1-shaped save -------------
+                var migStore = new SaveStore(Path.Combine(tmpDir, "m", "save.json"),
+                    SaveDocument.IsValidJson);
+                var v1 = new Dictionary<string, object>();
+                v1["version"] = (long)1;
+                v1["utc_saved"] = T0;
+                v1["coins"] = (long)1234;
+                v1["settled_seq"] = (long)41;
+                v1["staff_seed"] = (long)77;
+                v1["machines_owned"] = new List<object> { "grinder", "espresso", "ice" };
+                v1["research_done"] = new List<object> { "R01" };
+                var lv = new Dictionary<string, object>();
+                lv["M01"] = (long)3;
+                lv["M02"] = (long)2;
+                lv["M03"] = (long)1;
+                v1["menu_levels"] = lv;
+                v1["layout_json"] = layoutSnap;
+                Directory.CreateDirectory(Path.GetDirectoryName(migStore.PrimaryPath));
+                File.WriteAllText(migStore.PrimaryPath, MiniJson.ToJson(v1));
+                var msrc = migStore.TryRead(out rt);
+                var mdoc = SaveDocument.Parse(rt);
+                var s8 = CafeSession.CreateStartup(data, 5, 4, 4);
+                s8.Restore(mdoc);
+                bool migrated = msrc == SaveStore.LoadSource.Primary
+                    && s8.Econ.Coins == 1234
+                    && s8.Econ.OwnedMachines.Contains("ice")
+                    && s8.Econ.CompletedResearch.Contains("R01")
+                    && s8.Econ.Lines["M01"].Level == 3
+                    && s8.Layout.SaveLayout() == layoutSnap;
+
+                // ---- remaining_base_work re-billed by the last rate ------
+                // Rate change mid-run: the elapsed segment drains at the old
+                // rate and only the remainder is re-billed by the new one.
+                var sR = CafeSession.CreateStartup(data, 88, 6, 6);
+                sR.Lab.Reserve("R01");
+                sR.Advance(500);                  // R01 active since 420
+                sR.Lab.SetWorkRate(2.0);          // rate-change boundary
+                double remAfter = sR.Lab.ActiveRemainingWork; // 120-80=40 left
+                double expectedEnd = sR.Lab.Clock + remAfter / 2.0;
+                bool scheduled = sR.Lab.ActiveEndsAt == expectedEnd
+                    && remAfter == 40.0;
+                sR.Advance(200);
+                bool rebills = scheduled
+                    && sR.Econ.CompletedResearch.Contains("R01")
+                    && sR.Lab.Active == null
+                    && sR.Lab.CompletedCount == 1
+                    && sR.Lab.Clock == 700;
+
+                // ---- 24h cap + private-field-free preset ----------------
+                var s9 = CafeSession.CreateStartup(data, 3, 6, 6);
+                s9.Restore(SaveDocument.Parse(textA));
+                var capRes = s9.SettleOffline(docRead, T0 + 90000);
+                bool capOk = capRes.Seconds == data.OfflineCapSeconds;
+
+                sL.Memos.Add("private memo: vault code 1234");
+                sL.Todos.Add("call the supplier");
+                var preset = sL.ExportPublicPreset("my-cafe");
+                bool privateLeak = CafeSession.PresetContainsPrivateFields(preset);
+
+                cases.Add(new CaseResult("save_backup_recovers",
+                    badJsonRecovered && powerLossRecovered
+                    && noneFound && migrated));
+                cases.Add(new CaseResult("save_version_migrates", migrated));
+                cases.Add(new CaseResult("malformed_json_uses_backup", badJsonRecovered));
+                cases.Add(new CaseResult("power_loss_recovers", powerLossRecovered));
+                cases.Add(new CaseResult("research_rate_rebills", rebills));
+                cases.Add(new CaseResult("offline_cap_enforced", capOk));
+                cases.Add(new CaseResult("private_fields_in_preset", privateLeak));
+            }
+            finally
+            {
+                try { Directory.Delete(tmpDir, true); }
+                catch (Exception) { }
+            }
             return cases;
         }
 
