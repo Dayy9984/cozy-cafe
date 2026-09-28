@@ -1,4 +1,6 @@
+using CozyCafe.Core.Art;
 using CozyCafe.Core.Character;
+using CozyCafe.Core.Render;
 using CozyCafe.Core.Scene;
 
 namespace CozyCafe.Core.Gauntlet
@@ -19,6 +21,8 @@ namespace CozyCafe.Core.Gauntlet
                     return IsoTileCanvas();
                 case "character-rig":
                     return CharacterRigSheet();
+                case "art-pipeline":
+                    return ArtPipelineSheet();
                 default:
                     return DefaultBoot();
             }
@@ -91,6 +95,62 @@ namespace CozyCafe.Core.Gauntlet
             Place(s, module, module.ComboForPreset(0), Facing.NW, 0.9, 3.1);
             Place(s, module, module.RollAppearance(
                 GlassesSeed(module), false), Facing.NE, 3.1, 3.1);
+            return s;
+        }
+
+        /// <summary>
+        /// Approved-art contact sheet: the real atlas manifest drives the
+        /// layout - each declared frame is cropped out of the approved sheet
+        /// the pipeline wrote and staged with its recorded anchor and offset
+        /// metadata. If the approved artifacts are absent or invalid the
+        /// scene reports not-loaded (capture = BLOCKED, never substituted).
+        /// </summary>
+        private static GameScene ArtPipelineSheet()
+        {
+            var s = new GameScene();
+            s.Room = new RoomGrid(1, 1);
+            var m = ArtAssets.LoadManifest();
+            if (!m.Valid)
+            {
+                s.IsLoaded = false;
+                return s;
+            }
+            SoftwareCanvas sheet;
+            if (!PngReader.TryLoad(ArtAssets.SheetPath(m), out sheet))
+            {
+                s.IsLoaded = false;
+                return s;
+            }
+            foreach (var f in m.Frames)
+            {
+                var cell = new SoftwareCanvas(f.W, f.H);
+                for (int y = 0; y < f.H; y++)
+                {
+                    for (int x = 0; x < f.W; x++)
+                    {
+                        int si = ((f.Y + y) * sheet.Width + f.X + x) * 4;
+                        int di = (y * f.W + x) * 4;
+                        cell.Pixels[di] = sheet.Pixels[si];
+                        cell.Pixels[di + 1] = sheet.Pixels[si + 1];
+                        cell.Pixels[di + 2] = sheet.Pixels[si + 2];
+                        cell.Pixels[di + 3] = sheet.Pixels[si + 3];
+                    }
+                }
+                s.ArtCells.Add(new ArtCellPlacement
+                {
+                    Id = f.Id,
+                    Category = f.Category,
+                    Sprite = cell,
+                    AnchorX = f.OriginX,
+                    AnchorY = f.OriginY,
+                    BakedDy = f.BakedDy,
+                    RenderDy = f.RenderDy,
+                });
+            }
+            s.ArtContactView = true;
+            s.FixedViewport = true;
+            s.Zoom = 1;
+            s.IsLoaded = s.Validate();
             return s;
         }
 

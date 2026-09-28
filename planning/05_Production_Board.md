@@ -13,7 +13,7 @@
 |research-staff|연구·메뉴·직원|idle-economy|READY|
 |save-offline|저장·복귀·시간경계|research-staff,layout-editor|READY|
 |character-rig|소수 파츠·팔레트·랜덤 손님|iso-grid,research-staff|READY|
-|art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|READY|
+|art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|구현완료(model NOT_VERIFIED)|
 |ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|READY|
 |integration|무개입 카페 통합|ui-local-ugc|READY|
 |native-release|실제 Mac/Windows 빌드·검증|integration|READY|
@@ -25,3 +25,5 @@ v0.8: iso-grid/layout-editor/art-pipeline/integration의 변경된 수용 기준
 v0.8.2 run 메모: character-rig 실구현 완료(Core/Character·StageCases 케이스·4방향 장면·실스폰 근거) 및 iso-grid를 SPEC_CHANGE 상수(64×32/64×64/피치32·16)로 재검증 — 상세는 progress.md "character-rig"·"iso-grid v0.8 신규격" 절. Unity 캡처는 6000.6.3f1 에디터 실카메라로 생성.
 
 v0.8.2 증거 보강: character-rig 가림 증거를 전 4방향 실측(SW/SE18px·NW/NE0px)으로, 위상·팔레트 불변 스윕을 계약 전 상태(idle/walk/sit/work)로 확장, variant_png_assets을 배송 자산 실스캔으로 전환, 캐릭터 시트 캡처를 Zoom2(600×400)로 상향, capture_game.py Windows형 절대경로 수용 보강.
+
+v0.8.3 art-pipeline 실구현: tools/assets.py+sprite-gen(b725baa) 경유 Codex OAuth로 7잡 실생성, tools/art_pipeline.py 추출·QA·승인, art/approved/(sheet+manifest+qa_contact) 실산출물, StageCases/StageScenes/SceneRenderer/PngReader·ArtAssets 코어 배선. 게이트 10/11 일치·effective_image_model만 실측 gpt-image(요청 sunburst 미검증, honest MISMATCH). Unity CaptureShot 실카메라 캡처 out/art_pipeline.png.

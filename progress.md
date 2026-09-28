@@ -119,3 +119,41 @@ character-rig 5/5 전부 GameCli 실측 일치. Unity 에디터 실기동 시
 6000.6.3f1으로 프로젝트 마이그레이션됨(ProjectVersion·manifest·
 packages-lock·신규 ProjectSettings 자산은 에디터 자동 변경분, 실상 기록).
 수치 변경: SPEC_CHANGE 전파 외 없음(데이터 원본·게이트 불변).
+
+## art-pipeline — Codex OAuth 생성·추출·승인·게이트 실구현
+실행경로: tools/assets.py 포팅(워크스페이스 루트 레이아웃·vendored codex
+경로 정규화·C2PA 모델 추출). .external/sprite-gen을 핀 커밋
+b725baa5aad026f183e2083275b441f2db225c48로 클론+venv(py3.13·pip -e)·lock.
+Codex CLI 0.156.1, ChatGPT OAuth 로그인 상태로 7잡 전부 실생성
+(tile_wood/body_anchor/machine_espresso/ui_style/ui_icons/table_square/
+chair → art/generated/*/raw.png + provider-report.json + provenance.json).
+초기 실패 원인: PATH의 codex.EXE(323MB opencodex 셸프)가 형제
+codex-code-mode-host.exe를 못 찾아 image_gen 미기동 — vendored OpenAI
+bin 디렉터리로 해결 후 생성 성공. --model 미전달·유료API/타provider
+폴백 없음, auth.json 미열람.
+모델 검증: PNG 내장 C2PA manifest의 softwareAgent/version에서 실측
+"gpt-image"(OpenAI Media Service 서명). 요청 gpt-image-2.5-sunburst와
+불일치 → effective_image_model은 실측값 "gpt-image", provenance는
+model_verification NOT_VERIFIED로 정직 기록. Sunburst 성공 미선언.
+추출·QA(tools/art_pipeline.py build): raw 알파 실측, 타일은 소스
+다이아몬드(정점217·적도481·전방점745 실측)를 마스크해 64×32 밴드로
+리샘플+측면 스커트를 엣지 스트래들 밴드(≤4px, 실루엣≤행35)로 재투영.
+가구·머신·캐릭터·UI는 컴포넌트 분리→계약 셀(128×160/128×128/64×80/32×32)
+앵커 정렬. 14셀 전부 QA APPROVED(타일 실측 top_row0·equator15·max64·
+rows0-31 충족·side_h2). jobs.json approval·catalog status·provider.json
+installed_commit/status 실측 기록.
+승인 산출물: art/approved/sprite_sheet_alpha.png(830×164)·
+atlas_manifest.json(프레임 rect/origin/fps/loop·baked[0,0]·runtime[0,-8]·
+physical_thickness0 명시)·qa_contact.png·qa_report.json. 인코딩은 코어
+PngWriter와 동일 포맷(RGBA8·filter0·zlib stored).
+코어 배선: Core/Render/PngReader.cs(역디코더·5필터·zlib), Core/Art/
+ArtAssets.cs(루트 해석·매니페스트 검증·타일 실측·가구 유효오프셋·
+크리덴셜 스캔·팔레트 재생성 카운트), StageCases "art-pipeline",
+StageScenes 승인아트 연락시트(ArtContactView), SceneRenderer
+연락시트 렌더(계약테두리·앵커·타일밴드 가이드·가구 -8 마커).
+검증: dotnet build Release 경고0·오류0. check_stage: project-boot 2/2·
+iso-grid 16/16·character-rig 5/5 일치 유지. art-pipeline 11키 중 10키
+일치, 유일 미스매치 effective_image_model = "gpt-image"(요청
+gpt-image-2.5-sunburst 대비 실측 미검증 — 숨기지 않고 실측 보고).
+capture_game.py → Unity 6000.6.3f1 CaptureShot.Run 실카메라로
+out/art_pipeline.png(1512×676) 생성. 팔레트 변형 재생성 0건.

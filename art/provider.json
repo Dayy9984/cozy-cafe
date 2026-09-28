@@ -8,6 +8,6 @@
   "require_model_verification_for_final_claim": true,
   "sprite_gen_repo": "https://github.com/aldegad/sprite-gen.git",
   "upstream_observed_skill_version": "1.58.0",
-  "installed_commit": null,
-  "status": "CONFIGURED_NOT_AUTHENTICATED_OR_GENERATED"
+  "installed_commit": "b725baa5aad026f183e2083275b441f2db225c48",
+  "status": "GENERATED_MODEL_NOT_VERIFIED"
 }

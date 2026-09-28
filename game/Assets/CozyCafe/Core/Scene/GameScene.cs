@@ -149,6 +149,24 @@ namespace CozyCafe.Core.Scene
     }
 
     /// <summary>
+    /// An approved atlas frame staged for the art-pipeline contact-sheet
+    /// render: the decoded cell sprite with its manifest-declared anchor,
+    /// category, and baked/runtime offsets so the painter can evidence the
+    /// single -8 px furniture correction. Read-only render data - no
+    /// logical cells touch it.
+    /// </summary>
+    public sealed class ArtCellPlacement
+    {
+        public string Id;
+        public string Category;
+        public SoftwareCanvas Sprite;
+        public int AnchorX;
+        public int AnchorY;
+        public int BakedDy;
+        public int RenderDy;
+    }
+
+    /// <summary>
     /// The loaded game scene: the logical room grid plus placed furniture and
     /// agents. IsLoaded is set by GameBootstrap.LoadDefaultScene only after
     /// the scene validates — CASE reporters read it, they never set it.
@@ -173,6 +191,11 @@ namespace CozyCafe.Core.Scene
         public int HighlightCellY = -1;
         public bool ShowOriginCaret;
         public bool TileCanvasView;
+        /// Art-pipeline stage view: render the approved atlas cells with
+        /// their contract borders, anchors and the furniture -8 px lift.
+        public bool ArtContactView;
+        public readonly List<ArtCellPlacement> ArtCells =
+            new List<ArtCellPlacement>();
         /// Render magnification for stage captures (1 = source pixels). The
         /// character sheet uses 2 so part assembly is legible in the PNG.
         /// Paint-time only — logical geometry never reads it.

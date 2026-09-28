@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using CozyCafe.Core.Art;
 using CozyCafe.Core.Character;
 using CozyCafe.Core.Economy;
 using CozyCafe.Core.Iso;
+using CozyCafe.Core.Render;
 using CozyCafe.Core.Research;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Staff;
@@ -42,6 +44,8 @@ namespace CozyCafe.Core.Gauntlet
                     return ResearchStaff();
                 case "character-rig":
                     return CharacterRig();
+                case "art-pipeline":
+                    return ArtPipeline();
                 default:
                     return null;
             }
@@ -400,6 +404,67 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("recolored_pixel_count", recoloredPx));
             cases.Add(new CaseResult("variant_png_assets", module.VariantAssetCount));
             cases.Add(new CaseResult("appearance_seed_replay", replay));
+            return cases;
+        }
+
+        /// <summary>
+        /// Real art-pipeline state: provider/auth config, generated raws and
+        /// per-job provenance on disk, the approved atlas manifest + decoded
+        /// sheet pixels (tile measured against the 64x32/64x64 contract,
+        /// furniture effective offset = baked + runtime, palette-variant
+        /// regeneration count). Nothing is claimed - a missing artifact or
+        /// unverified model reports its actual measured value.
+        /// </summary>
+        private static List<CaseResult> ArtPipeline()
+        {
+            string provider = ArtAssets.Provider();
+            var manifest = ArtAssets.LoadManifest();
+            SoftwareCanvas sheet = null;
+            if (manifest.Valid)
+            {
+                PngReader.TryLoad(ArtAssets.SheetPath(manifest), out sheet);
+            }
+
+            ArtFrame tile = null;
+            foreach (var f in manifest.Frames)
+            {
+                if (f.Category == "tile") { tile = f; break; }
+            }
+            bool tileOk = false;
+            int tileCanvasH = 0;
+            if (tile != null && sheet != null)
+            {
+                tileCanvasH = tile.H;
+                var tm = ArtAssets.MeasureTile(sheet, tile);
+                tileOk = tile.W == 64 && tile.H == 64
+                    && tm.TopRow == 0 && tm.MaxWidth == 64
+                    && tm.TopFaceRows == 32 && tm.EquatorRow >= 14
+                    && tm.EquatorRow <= 18 && tm.SilhouetteBottomRow >= 31
+                    && tm.SilhouetteBottomRow <= 35;
+            }
+
+            bool recorded;
+            int effY = ArtAssets.EffectiveFurnitureOffsetY(manifest, out recorded);
+            bool physicalThickness =
+                manifest.PhysicalThickness != 0
+                || (tile != null && tile.H > 64);
+            string effective = ArtAssets.EffectiveImageModel();
+
+            var cases = new List<CaseResult>();
+            cases.Add(new CaseResult("provider", provider ?? "BLOCKED"));
+            cases.Add(new CaseResult("credentials_bundled",
+                ArtAssets.CredentialsBundled()));
+            cases.Add(new CaseResult("raw_png_exists", ArtAssets.RawPngsExist()));
+            cases.Add(new CaseResult("atlas_manifest_valid", manifest.Valid));
+            cases.Add(new CaseResult("generation_per_palette_variant",
+                ArtAssets.PaletteVariantGenerations(manifest)));
+            cases.Add(new CaseResult("tile_size_verified", tileOk));
+            cases.Add(new CaseResult("effective_image_model", effective));
+            cases.Add(new CaseResult("thickness_physical_geometry_generated",
+                physicalThickness));
+            cases.Add(new CaseResult("tile_canvas_height", tileCanvasH));
+            cases.Add(new CaseResult("furniture_baked_offset_recorded", recorded));
+            cases.Add(new CaseResult("furniture_effective_offset_y_px", effY));
             return cases;
         }
 

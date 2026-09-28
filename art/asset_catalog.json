@@ -11,7 +11,7 @@
       "idle": 1
     },
     "footprint": null,
-    "status": "NOT_CREATED",
+    "status": "APPROVED",
     "notes": "User top64x32 / space64x64. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
     "top_size_px": [
       64,
@@ -22,7 +22,8 @@
       64
     ],
     "visual_thickness_px": 4,
-    "physical_thickness": 0
+    "physical_thickness": 0,
+    "source_job": "tile_wood"
   },
   {
     "id": "floor_dark_wood",
@@ -184,8 +185,9 @@
       1,
       1
     ],
-    "status": "NOT_CREATED",
-    "notes": "Canvas is provisional padded render size, NOT tile size. Counter mount required."
+    "status": "APPROVED",
+    "notes": "Canvas is provisional padded render size, NOT tile size. Counter mount required.",
+    "source_job": "machine_espresso"
   },
   {
     "id": "machine_steam",
@@ -313,7 +315,7 @@
       1,
       1
     ],
-    "status": "NOT_CREATED",
+    "status": "APPROVED",
     "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. USER_FIXED_TABLE",
     "render_offset_px": [
       0,
@@ -324,7 +326,8 @@
       0
     ],
     "render_offset_owner": "renderer",
-    "physical_elevation": 0
+    "physical_elevation": 0,
+    "source_job": "table_square"
   },
   {
     "id": "table_round",
@@ -369,7 +372,7 @@
       1,
       1
     ],
-    "status": "NOT_CREATED",
+    "status": "APPROVED",
     "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. USER_FIXED_CHAIR",
     "render_offset_px": [
       0,
@@ -380,7 +383,8 @@
       0
     ],
     "render_offset_owner": "renderer",
-    "physical_elevation": 0
+    "physical_elevation": 0,
+    "source_job": "chair"
   },
   {
     "id": "stool",
@@ -515,8 +519,9 @@
       "work": 2
     },
     "footprint": null,
-    "status": "NOT_CREATED",
-    "notes": "One shared rig; foot anchor32,72 provisional."
+    "status": "APPROVED",
+    "notes": "One shared rig; foot anchor32,72 provisional.",
+    "source_job": "body_anchor"
   },
   {
     "id": "hair_01",
@@ -816,8 +821,9 @@
       "focus": 1
     },
     "footprint": null,
-    "status": "NOT_CREATED",
-    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+    "status": "APPROVED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement.",
+    "source_job": "ui_style"
   },
   {
     "id": "ui_button",
@@ -835,8 +841,9 @@
       "focus": 1
     },
     "footprint": null,
-    "status": "NOT_CREATED",
-    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement."
+    "status": "APPROVED",
+    "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement.",
+    "source_job": "ui_icons"
   },
   {
     "id": "ui_tab",

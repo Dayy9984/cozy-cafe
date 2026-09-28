@@ -1,0 +1,229 @@
+{
+  "qa": {
+    "tile_wood": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 64,
+        "canvas_h": 64,
+        "contract_canvas": [
+          64,
+          64
+        ],
+        "diamond": {
+          "top_row": 0,
+          "equator_row": 15,
+          "top_face_h": 32,
+          "max_width": 64,
+          "rhombus_bottom_row": 31,
+          "silhouette_bottom_row": 33,
+          "side_h": 2
+        },
+        "top_face_px": [
+          64,
+          32
+        ],
+        "opaque_px": 1216,
+        "nonempty": true
+      }
+    },
+    "body_anchor": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 64,
+        "canvas_h": 80,
+        "contract_canvas": [
+          64,
+          80
+        ],
+        "opaque_px": 1513,
+        "nonempty": true
+      }
+    },
+    "machine_espresso": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 128,
+        "canvas_h": 128,
+        "contract_canvas": [
+          128,
+          128
+        ],
+        "opaque_px": 6234,
+        "nonempty": true
+      }
+    },
+    "ui_style": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "opaque_px": 91,
+        "nonempty": true
+      }
+    },
+    "ui_icons_0": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "opaque_px": 234,
+        "nonempty": true
+      }
+    },
+    "ui_icons_1": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "opaque_px": 374,
+        "nonempty": true
+      }
+    },
+    "ui_icons_2": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "opaque_px": 336,
+        "nonempty": true
+      }
+    },
+    "ui_icons_3": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "opaque_px": 340,
+        "nonempty": true
+      }
+    },
+    "ui_icons_4": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "opaque_px": 425,
+        "nonempty": true
+      }
+    },
+    "ui_icons_5": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "opaque_px": 321,
+        "nonempty": true
+      }
+    },
+    "ui_icons_6": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "opaque_px": 435,
+        "nonempty": true
+      }
+    },
+    "ui_icons_7": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "opaque_px": 387,
+        "nonempty": true
+      }
+    },
+    "table_square": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 128,
+        "canvas_h": 160,
+        "contract_canvas": [
+          128,
+          160
+        ],
+        "anchor": [
+          64,
+          136
+        ],
+        "unbaked_pivot": true,
+        "opaque_px": 4159,
+        "nonempty": true
+      }
+    },
+    "chair": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 128,
+        "canvas_h": 160,
+        "contract_canvas": [
+          128,
+          160
+        ],
+        "anchor": [
+          64,
+          136
+        ],
+        "unbaked_pivot": true,
+        "opaque_px": 4635,
+        "nonempty": true
+      }
+    }
+  },
+  "frames": [
+    "tile_wood",
+    "body_anchor",
+    "machine_espresso",
+    "ui_style",
+    "ui_icons_0",
+    "ui_icons_1",
+    "ui_icons_2",
+    "ui_icons_3",
+    "ui_icons_4",
+    "ui_icons_5",
+    "ui_icons_6",
+    "ui_icons_7",
+    "table_square",
+    "chair"
+  ],
+  "sheet_size": [
+    830,
+    164
+  ]
+}
