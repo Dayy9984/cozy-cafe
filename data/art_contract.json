@@ -145,6 +145,6 @@
     "saved_instance_policy": "save logical cell and orientation; resolve render offset from asset contract without cumulative writes",
     "attachment_policy": "resolve child from parent visual mount once; do not repeat parent alignment offset on child",
     "stack_level_height_px": 16,
-    "stack_anchor_rule": "anchor_y(level n) = 8 - 16*(n-1); each level up shifts anchor 16px screen-up; resolved once from parent top mount"
+    "stack_anchor_rule": "anchor_y(level n) = 8 + 16*(n-1); level 1 anchor = 8, each higher level = +16px in canvas y; resolved once from parent top mount"
   }
 }
