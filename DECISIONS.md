@@ -79,3 +79,21 @@ COZYCAFE_MVP_JSON 환경 경로는 cygpath -w 네이티브 형태로 전달(MSYS
 자동 변환되지 않음). 전후: 전 - 추적 트리를 직접 열어 덮어씀 → 후 - 사본만
 변형되고 종료 후 삭제, git status 변경 0 실측.
 불변: Unity 6 엔진 결정, gates.json 기대값, CASE 계약, editor 버전 핀 6000.6.3f1.
+
+## SPEC_CHANGE 2026-09-28 — effective_image_model 기대값 sunburst→gpt-image (사용자 지시 B)
+사유: 사용자 확인 후 재조사 결과 OpenAI 공식 문서·커뮤니티·codex 소스가 모두 확인해준다 —
+내장 image_gen은 model 인자가 없고 백엔드가 자동 라우팅(기본 Flare, 복잡 시 Sunburst
+에스컬레이션)하며, Images 2.5로 생성해도 C2PA는 "gpt-image" v2.0으로만 기록한다.
+gpt-image-2.5-sunburst의 명시 지정은 Images/Responses API(API key)에서만 가능하고
+계약은 API-key 경로를 금지한다(OAuth only). 즉 OAuth 제약 하에서는 이 기대값을
+정직하게 충족할 방법이 없다.
+전: "effective_image_model": "gpt-image-2.5-sunburst" — 요청 모델 명칭을 측정값으로
+기대해 영구 FAIL/BLOCKED 유발.
+후: "effective_image_model": "gpt-image" — 실측 백엔드 식별자(C2PA softwareAgent).
+요청 모델은 art/provider.json·job provenance에 gpt-image-2.5-sunburst로 그대로
+기록되며 model_verification은 NOT_VERIFIED를 유지한다(측정값 위조 없음).
+결과: 백엔드 제공 모델을 정직하게 기록·검증하는 계약으로 정렬. raw_png_exists 등
+다른 10개 키는 불변. 백엔드가 향후 다른 모델을 제공하면 측정값이 달라져 게이트가
+다시 실패하는 것이 정상 동작이다.
+불변: provider codex 전용, OAuth only, API-key/provider fallback 금지,
+provenance 요청 모델 기록 유지, 나머지 게이트 키 전부.
