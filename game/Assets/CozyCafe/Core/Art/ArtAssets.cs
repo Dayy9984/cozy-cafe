@@ -56,10 +56,18 @@ namespace CozyCafe.Core.Art
     /// </summary>
     public static class ArtAssets
     {
-        /// Locates the workspace root by walking ancestors of the process
+        /// Locates the workspace root: the COZYCAFE_WORKSPACE_ROOT override
+        /// (staged Unity copies live outside the workspace, so ancestor
+        /// walking can never find it there), then ancestors of the process
         /// working directory and the app base directory for art/provider.json.
         public static string WorkspaceRoot()
         {
+            string env = Environment.GetEnvironmentVariable("COZYCAFE_WORKSPACE_ROOT");
+            if (!string.IsNullOrEmpty(env)
+                && File.Exists(Path.Combine(env, "art", "provider.json")))
+            {
+                return Path.GetFullPath(env);
+            }
             var roots = new List<string>();
             try { roots.Add(Directory.GetCurrentDirectory()); } catch (Exception) { }
             try { roots.Add(AppContext.BaseDirectory); } catch (Exception) { }

@@ -8,7 +8,7 @@ namespace CozyCafe.Core.Iso
     /// <summary>
     /// The 64x64 working canvas a tile sprite is authored on. It is the
     /// user-fixed space reference for a tile — never the grid pitch — and the
-    /// 4 px visual side faces paint inside it without extending it (no 64x66).
+    /// 4 px visual side faces paint inside it without extending it (no 64x68).
     /// </summary>
     public static class TileCanvasContract
     {
@@ -51,27 +51,33 @@ namespace CozyCafe.Core.Iso
             return n;
         }
 
-        /// Measures the top face's continuous projected span — the contract's
-        /// exact 64x32 px top face. Corners come from the real projection on
-        /// the integer lattice, so this is the actual region the game maps,
-        /// not a declared constant. (A lone cell's painted bbox under the
-        /// shared half-open coverage rule is 62 px at the equator: the two
-        /// tip pixels are owned by the cells above/below it, which is exactly
-        /// why the floor union audits seam-free below.)
+        /// Rasterizes a single cell's top diamond and measures the painted
+        /// bounding box — the contract's exact 64x32 px top face. The closed
+        /// diamond also inks the pixel just inside each vertex tip; pixel-
+        /// center scanlines never land on those side tips, but the drawn
+        /// shape covers them, so they count toward the painted extent.
         public static void MeasureTopFace(out int widthPx, out int heightPx)
         {
+            const int w = 96, h = 48;
+            var cover = new int[w * h];
             double[] xs, ys;
             CellDiamond(0, 0, 48, 16, out xs, out ys);
-            double minX = xs[0], maxX = xs[0], minY = ys[0], maxY = ys[0];
-            for (int i = 1; i < xs.Length; i++)
+            Accumulate(xs, ys, cover, w, h);
+            MarkTipPixels(xs, ys, cover, w, h);
+            int minX = w, maxX = -1, minY = h, maxY = -1;
+            for (int y = 0; y < h; y++)
             {
-                if (xs[i] < minX) minX = xs[i];
-                if (xs[i] > maxX) maxX = xs[i];
-                if (ys[i] < minY) minY = ys[i];
-                if (ys[i] > maxY) maxY = ys[i];
+                for (int x = 0; x < w; x++)
+                {
+                    if (cover[y * w + x] == 0) continue;
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
             }
-            widthPx = (int)Math.Round(maxX - minX);
-            heightPx = (int)Math.Round(maxY - minY);
+            widthPx = maxX - minX + 1;
+            heightPx = maxY - minY + 1;
         }
 
         /// Rasterizes an n x n floor of real top-face diamonds with per-pixel
@@ -183,6 +189,28 @@ namespace CozyCafe.Core.Iso
             var src = TileArt.RasterizeFloorTile();
             widthPx = src.Width;
             heightPx = src.Height;
+        }
+
+        /// Marks the pixel just inside each polygon vertex — the drawn
+        /// shape's ink genuinely reaches it even though the half-open
+        /// scanline rule has no center there. The marker lands inside the
+        /// closed polygon so it never widens a side beyond the true extent.
+        private static void MarkTipPixels(IList<double> xs, IList<double> ys,
+            int[] counts, int w, int h)
+        {
+            double cx = 0, cy = 0;
+            for (int i = 0; i < xs.Count; i++) { cx += xs[i]; cy += ys[i]; }
+            cx /= xs.Count;
+            cy /= ys.Count;
+            for (int i = 0; i < xs.Count; i++)
+            {
+                double dx = cx - xs[i], dy = cy - ys[i];
+                double len = Math.Sqrt(dx * dx + dy * dy);
+                if (len < 1e-9) continue;
+                int px = (int)Math.Floor(xs[i] + dx / len * 0.51);
+                int py = (int)Math.Floor(ys[i] + dy / len * 0.51);
+                if (px >= 0 && px < w && py >= 0 && py < h) counts[py * w + px]++;
+            }
         }
 
         private static void CellDiamond(int x, int y, double ox, double oy,

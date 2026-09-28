@@ -50,6 +50,12 @@ namespace CozyCafe.Core.Scene
         public int CellX;
         public int CellY;
         public int QuarterTurns;
+        /// Editor-assigned instance id; 0 = unassigned authored piece.
+        public int Id;
+        /// Id of the host furniture this piece is mounted on (machines on
+        /// counters/tables); 0 = floor-placed. Children share the host cell
+        /// and add no extra footprint.
+        public int HostId;
 
         public Furniture(FurnitureKind kind, int cellX, int cellY)
         {

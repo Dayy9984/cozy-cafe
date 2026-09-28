@@ -20,10 +20,10 @@ remaining_base_work로 연구 속도 변경을 처리. 1시간 마지막rate 곱
 64×64는 공간/작업 기준이며 셀 피치가 아니다. 4px를 더한64×68, collider 두께4, 논리Z4는 모두 금지다.
 현재 구현 기본값(사용자가 피치를 직접 지정한 것은 아님):
   sx=(x-y)*32, sy=(x+y)*16
-  x=sx/64+sy/31, y=sy/31-sx/64
+  x=sx/64+sy/32, y=sy/32-sx/64
 실수좌표에서 왕복하고 최종 카메라 합성에서만 공통 픽셀스냅을 한다. 16를 칸마다 정수화하지 않는다.
 이 함수는 ground projection이며 z/thickness 인자를 받지 않는다. 외곽 side mask는 따로 그린다.
-실제 래스터31행/뒷선 정렬은 첫 2×2/3×3 타일 시각검증에서 확인한다. 피치 조정 필요 시 원인과
+실제 래스터32행/뒷선 정렬은 첫 2×2/3×3 타일 시각검증에서 확인한다. 피치 조정 필요 시 원인과
 새 기본값을 결정기록에 올리고 plan/gates/예제를 함께 버전업하며 사용자 확정 크기는 바꾸지 않는다.
 
 p_ground=project(grid_x,grid_y)
@@ -67,12 +67,14 @@ art-pipeline은 art/approved/qa_contact.png와 sprite-sheet-alpha.png를 commit�
 
 ## v0.8.1 엔진 — Unity (사용자 지시가 Godot 기본값을 대체)
 
-게임은 `game/` 아래 Unity 프로젝트로 만든다(Unity 6000.0.51f1 기준 — 원작과 동일 계열).
+게임은 `game/` 아래 Unity 프로젝트로 만든다(Unity 6000.6.3f1 기준 — 원작과 동일
+Unity 6 계열이며 호스트 실제 설치본과 동일 버전; 6000.0.51f1 기본값에서 상향,
+사유는 DECISIONS.md 2026-09-28 항목 참조).
 `game/ProjectSettings/ProjectVersion.txt`와 `game/Assets/`가 있어야 하며,
 `Packages/manifest.json`에 필요 모듈만 둔다. URP/HDRP 미사용 — Built-in 2D.
 
 ### 하네스 계약 (gates 값 불변)
-- `tools/game_adapter.py <stage>` → Unity `-batchmode -projectPath game -executeMethod CozyCafe.Editor.GauntletEntry.Run -quit`.
+- `tools/game_adapter.py <stage>` → Unity `-batchmode -projectPath <staged copy of game>` -executeMethod CozyCafe.Editor.GauntletEntry.Run -quit`. 어댑터는 추적 game/을 임시 사본으로 복사해 에디터를 실행한다 — Unity는 프로젝트를 열 때 추적 파일을 in-place로 재작성하므로 평가 대상 트리는 byte-identical을 유지해야 한다.
 - 진입점은 `static void Run()`으로, `GAUNTLET_STAGE` env로 스테이지 id를 읽고
   `GAUNTLET_RESULTS`(절대경로)에 `CASE<TAB>key<TAB>json` 라인을 쓴다.
   실패 시 `EditorApplication.Exit(2)`. CASE 값은 반드시 실제 게임 모듈 호출 결과.
@@ -83,6 +85,7 @@ art-pipeline은 art/approved/qa_contact.png와 sprite-sheet-alpha.png를 commit�
 
 ### Unity 배치 주의
 - 배치모드에서도 `-nographics`를 쓰지 않는다(렌더가 필요한 캡처 게이트 때문).
+- 에디터 호스트(capture/case)는 항상 stage_unity_project()가 만든 임시 사본을 -projectPath로 연다. 추적 트리를 직접 열지 않는다. env로 넘기는 경로는 네이티브 형태여야 한다(MSYS는 env 값을 경로 변환하지 않음).
 - 첫 실행은 Library 임포트+컴파일로 수 분 걸릴 수 있다 — 어댑터는 30분 타임아웃.
 - 한글 IME·투명·항상위·DPI·복귀는 네이티브 빌드 검증(native-release)에서 다룬다.
 - Windows 빌드는 macOS 에디터의 Windows Standalone 모듈로 cross-build 후 Windows에서 실행 검증.

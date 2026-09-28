@@ -70,6 +70,79 @@ CASE 8키를 실제 코어 호출로 방출: machines5·menus8·research5·
 milk_is_inventory false·ice_milk_unlocks_M04 true·missing_steam_blocks_M05 true·
 reopen_rerolls_staff false·stat_appearance_independent true — 8/8 일치.
 project-boot 재검사 2/2 유지, idle-economy 재검사 8/8 유지. 수치 변경 없음.
+
+## layout-editor — 레이아웃·가구 편집기 실구현
+SPEC_CHANGE(64x32/64x64/피치32·16, DECISIONS 2026-09-28)이 코드에 미반영이던
+것을 반영: IsoMath·IsoContract·TileArt·SceneRenderer·asset_catalog·DEVELOPMENT
+전면 동기화(64x32 윗면, 64x64 공간·캔버스, 두께4 시각전용). 픽셀중심 스캔라인
+아래 정확다이아몬드가 옆꼭짓점 열을 잃던 것을 측정·래스터 양쪽에 팁픽셀을
+포함시켜 64폭 복원(iso-grid 16/16 유지, 이음0).
+구축: Core/Layout 신규 — LayoutModule(RoomGrid/가구/도어/좌석/호스트
+머신 편집, 1x1 페인트=정확히1셀, Begin/EndCommand 그룹+드래그1코맨드,
+커밋 전 유효성검사 실패 시 전체 롤백, Undo/Redo 스택)와
+RenderContract((0,-8) 스크린업 보정을 baked+runtime 합=-8로 한 번만 적용,
+줌2→-16, 회전불변, 논리 셀·충돌·동선·깊이키·좌석판정·세이브에 불영향,
+피킹·고스트=실 렌더 트랜스폼 공유, 자식 부착은 부모 마운트 1회만, 캐릭터
+미적용). GameScene.Furniture에 Id/HostId/BakedOffsetY, GameBootstrap에
+Layout 모듈 등록 및 머신-카운터 호스트 구조. StageCases.layout-editor로
+22키 전부 실제 코어 계산값 방출, StageScenes.layout-editor로 도어+테이블+
+의자+스툴+카운터+머신 가구배치 캡처 장면. SceneRenderer/StageViewBuilder에
+도어아트·마운트자식·깊이동률·렌더오프셋 적용.
+검증: dotnet build Release 경고0·오류0. check_stage layout-editor 22/22
+(호스트 실패코드 그대로 방출, 유효·무효 양면 검증). iso-grid 16/16·
+project-boot 2/2·idle-economy 8/8·research-staff 8/8 회귀 유지.
+capture_game.py --stage layout-editor → Unity 6000.6.3f1 CaptureShot.Run
+실편집장면 PNG 420x300(out/evidence/layout_editor.png)·GameCli render
+폴백 PNG 504KB(layout_editor_cli.png) 각각 실측. Unity가 프로젝트를
+6000.6.3f1로 업그레이드해 생성한 ProjectSettings/Packages 낙전본은 버전
+핀(6000.0.51f1)과 다르므로 복원 처리, 캡처 실행 자체는 정상.
+남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 — 코어
+API와 StageView 그리기만 구현.
+
+## layout-editor — capture/check 추적 소스 변형 수정 (critic 지적 반영)
+문제: 설치된 Unity 6000.6.3f1이 6000.0.51f1 핀 프로젝트를 열 때마다
+manifest·packages-lock·ProjectSettings·ProjectVersion을 덮어써 capture
+실행이 추적 소스를 변경했다. 이전에는 업그레이드 산출물을 되돌려 매 실행이
+다시 변형을 일으키는 상태였다.
+조치: (1) 프로젝트를 실제 설치본 버전 6000.6.3f1로 상향해 에디터 재생성
+산출물(manifest·lock·ProjectSettings·PhysicsCore2D·ProjectAuditor 신규
+에셋)을 제품 상태로 수용 — 동일 버전 재실행에서 추적 파일 변경 0 실측.
+(2) tools/game_adapter.py에 unity_matches_project(에디터 경로 버전과
+ProjectVersion.txt m_EditorVersion 일치 확인) 추가, run_unity는 불일치
+시 BLOCKED. tools/capture_game.py의 try_unity는 불일치 시 Unity 호스트를
+건너뛰고 GameCli render 폴백(동일 GameScene의 실제 래스터 PNG).
+검증: capture_game.py --stage layout-editor → Unity 6000.6.3f1
+CaptureShot.Run으로 실제 카메라 PNG 생성 후 git diff/status 신규 변경 0.
+UNITY_BIN을 버전 없는 바이너리로 지정한 불일치 시험에서 가드가 Unity를
+건너뛰고 GameCli가 실제 PNG를 생성. check_stage 5종 재검사:
+layout-editor 22/22·iso-grid 16/16·project-boot 2/2·idle-economy 8/8·
+research-staff 8/8 전부 실제 코어 계산값 일치. dotnet build Release
+경고0·오류0.
+남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 —
+코어 API와 StageView 그리기만 구현. 이전 항목과 동일.
+
+## layout-editor — Unity 호스트를 스테이징 사본에서 실행 (critic 재지적 반영)
+문제: 이전 조치(버전 핀 일치 + 버전가드)로는 부족했다 — 에디터가 열리는 한
+-projectPath 대상인 추적 트리는 언제든 덮어써질 수 있다(critic: "capture/check
+명령이 추적 소스를 변경. 커밋된 제품을 변경 없이 평가하라").
+조치: tools/game_adapter.py에 stage_unity_project() 추가 — 추적 game/을
+임시 디렉터리로 복사(Library/Temp/Logs/obj/bin/UserSettings 제외, 동일
+소스)하고 Unity의 -projectPath는 항상 그 사본이다. 자식 종료 후 사본 삭제.
+추가 수정: MSYS 파이썬에서 mkdtemp·mkstemp는 POSIX 경로를 반환하고 argv는
+자동 변환되지만 env 값은 변환되지 않으므로 Unity에 넘기는 모든 경로를
+cygpath -w로 네이티브화(native_path). 또한 스테이징 사본 밖에는 data/ 조상이
+없고 Unity가 CWD를 -projectPath로 바꾸므로 COZYCAFE_MVP_JSON을 실제
+data/mvp.json으로 명시 — 안 하면 MvpData.TryLoad가 null이라
+test_entry_calls_real_modules=false로 회귀(실측으로 확인 후 수정).
+검증(실측): capture_game.py --stage layout-editor → Unity 6000.6.3f1이
+사본 프로젝트에서 CaptureShot.Run으로 실제 PNG 9429B 생성, git status
+신규 변경 0, 사본 잔여물 0. game_adapter.run_unity('project-boot') →
+사본에서 CASE 2/2(true·true) 방출. check_stage 5종 재검사:
+layout-editor 22/22·iso-grid 16/16·project-boot 2/2·idle-economy 8/8·
+research-staff 8/8. GameCli render 폴백도 실측 PNG 생성(504403B).
+남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 — 코어
+API와 StageView 그리기만 구현. 이전 항목과 동일.
+project-boot 재검사 2/2 유지, idle-economy 재검사 8/8 유지. 수치 변경 없음.
 ## character-rig — 공유리그·파츠/팔레트·랜덤외형 실구현 (v0.8.2)
 구축: Core/Character 신규(CharacterModule.cs). RigDescriptor 1개(셀64×80·발앵커32,72·
 방향SW/SE/NW/NE·상태idle1/walk4/sit1/work2)는 data/art_contract.json에서,
@@ -210,3 +283,53 @@ effective_image_model은 실측 "gpt-image"(요청 sunburst 미검증을 숨기�
 회귀: character-rig 5/5·iso-grid 16/16·project-boot 2/2 전부 일치.
 캡처: Unity 6000.6.3f1 CaptureShot.Run 실카메라로 out/art_pipeline.png
 (1512×676) 재생성 — 기존과 동일 바이트.
+
+## layout-editor — 병합충돌 해소 + 전 스테이지 재검증 (HEAD×c1f9a1d)
+배경: character-rig 병합(c1f9a1d)이 StageCases·StageScenes·IsoContract·
+SceneRenderer·TileArt·progress·capture_game에 충돌을 남겼다.
+해소: StageCases에 layout-editor+character-rig 양쪽 케이스·메서드 유지,
+StageScenes에 LayoutEditorRoom+CharacterRigSheet·Place/GlassesSeed 유지,
+SceneRenderer에 팁픽셀 도색+캐릭터 블릿(FacingVector/BlitSprite) 공존시키고
+AddFurniture는 byId 인수 시그니처(DrawAnchorResolved 실적용)로 통일.
+IsoContract·TileArt는 layout-editor 측 유지 — 도색 bbox 팁픽셀 포함 실측과
+64x68 주석이 현 규격(공간64+두께4)에 맞다. TileArt 띠 주석을 행0-31로 정정
+(측면띠 최대 y≈32.45<행32 중심, 실도색 0-31행). capture_game은 스테이징
+사본 Unity + resolve_output(POSIX 변환) 양쪽 기능을 병합.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+layout-editor 22/22·iso-grid 16/16·project-boot 2/2·idle-economy 8/8·
+research-staff 8/8·character-rig 5/5 전부 실제 코어 계산값 일치.
+capture_game.py --stage layout-editor → Unity 6000.6.3f1이 스테이징
+사본에서 CaptureShot.Run 실실행, out/layout_editor.png 420×300 실PNG
+생성 — 추적 소스 변경 0(git status 신규 수정 없음, 산출물만 untracked).
+남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 —
+코어 API와 StageView 그리기만 구현. 이전 항목과 동일.
+
+
+## art-pipeline — 병합충돌 해소 + Unity 스테이징 캡처 art 루트 수정 (HEAD×a35533f)
+배경: art-pipeline(HEAD)×layout-editor+SPEC_CHANGE(a35533f) 병합이
+StageCases·StageScenes·05_Production_Board·progress 4파일에 충돌을 남겼다.
+a35533f는 하네스 커밋으로 DECISIONS.md SPEC_CHANGE "effective_image_model
+기대값 sunburst→gpt-image(사용자 지시 B)"와 gates.json 갱신을 포함한다 —
+OAuth 표면이 백엔드 고정 모델만 제공해 요청명 측정이 불가하다는 실측 기록에
+따른 기대값 정정이며, 빌더의 기준 약화가 아니다(요청 모델은 provider.json·
+provenance에 그대로 기록, model_verification NOT_VERIFIED 유지).
+해소: StageCases는 CozyCafe.Core.Render·Layout 양쪽 using 유지(art-pipeline은
+PngReader, layout-editor는 LayoutModule/RenderContract 사용), StageScenes는
+Art+Layout 유지. 보드·progress는 양쪽 항목 모두 보존.
+수정: Unity 스테이징 사본 캡처가 art-pipeline 장면을 못 만들던 실결함 수정.
+stage_unity_project()는 game/만 복사해 tmp에 두는데 ArtAssets.WorkspaceRoot가
+cwd/AppContext 조상만 걸어 art/provider.json을 못 찾아 CaptureShot이
+"produced no scene" rc=2로 GameCli 폴백으로만 동작했다. COZYCAFE_MVP_JSON과
+같은 패턴으로 COZYCAFE_WORKSPACE_ROOT 오버라이드를 ArtAssets에 추가하고
+capture_game.py·game_adapter.py 양쪽 호스트 env에 실제 루트를 전달.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+art-pipeline 11/11(provider codex·raw_png_exists true·effective_image_model
+실측 "gpt-image"=SPEC_CHANGE 기대값·팔레트재생성0·타일64×32/캔버스64·
+가구유효-8)·character-rig 5/5·iso-grid 16/16·project-boot 2/2 전부 일치.
+capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot.Run
+실카메라로 out/art_pipeline.png(1512×676) 재생성 — 기존 커밋과 바이트 동일,
+추적 소스 변경 0(스테이징 사본만 변형·종료 후 삭제).
+남은 문제: 요청 모델 gpt-image-2.5-sunburst는 이 계정 OAuth 표면에서
+선택·검증 불가(provider.json probe 실측, 유료API 경로만 가능하나 계약 금지) —
+SPEC_CHANGE 기대값으로 정렬됐으나 백엔드 모델이 바뀌면 게이트가 다시
+실패하는 것이 정상 동작.

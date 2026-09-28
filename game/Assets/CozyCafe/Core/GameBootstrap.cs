@@ -1,5 +1,6 @@
 using CozyCafe.Core.Character;
 using CozyCafe.Core.Economy;
+using CozyCafe.Core.Layout;
 using CozyCafe.Core.Modules;
 using CozyCafe.Core.Research;
 using CozyCafe.Core.Staff;
@@ -41,8 +42,16 @@ namespace CozyCafe.Core
             var s = new GameScene();
             s.Room = new RoomGrid(8, 8); // MVP default room footprint
 
-            s.Furniture.Add(new Furniture(FurnitureKind.EspressoMachine, 1, 1));
-            s.Furniture.Add(new Furniture(FurnitureKind.Counter, 1, 2));
+            // The espresso machine mounts on the counter below it - the
+            // editor's host-child rule applies to authored content too.
+            var counter = new Furniture(FurnitureKind.Counter, 1, 2) { Id = 1 };
+            var espresso = new Furniture(FurnitureKind.EspressoMachine, 1, 2)
+            {
+                Id = 2,
+                HostId = counter.Id
+            };
+            s.Furniture.Add(counter);
+            s.Furniture.Add(espresso);
             s.Furniture.Add(new Furniture(FurnitureKind.Table, 3, 3));
             s.Furniture.Add(new Furniture(FurnitureKind.Chair, 3, 4));
             s.Furniture.Add(new Furniture(FurnitureKind.Table, 5, 2));

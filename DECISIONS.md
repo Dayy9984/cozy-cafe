@@ -54,3 +54,46 @@ Record: DEVELOPMENT.md v0.8.2 section; adapter dispatch in
 후: top 64×32 / space·canvas 64×64 / pitch 32·16 / 두께 금지 조합 64×68.
 유지: visual_thickness 4px(물리0), 탁자·의자 (0,-8) 한 번, 캐릭터 셀/앵커.
 전파: art_contract.json(데이터 원본)·gates.json·문서를 갱신하고 코드 상수는 새 건틀릿 런의 빌더가 게이트에 맞춰 변경한다.
+
+## SPEC_CHANGE 2026-09-28 — Unity 에디터 버전 6000.0.51f1→6000.6.3f1 (호스트 설치본 일치)
+사유: 빌드 호스트에 설치된 유일한 에디터가 6000.6.3f1이다. 다른 버전으로 프로젝트를
+여는 실행(capture/case host)이 Packages·ProjectSettings·ProjectVersion.txt를 매번
+덮어써 추적 소스를 변경했다(독립 critic 지적: "capture/check 명령이 추적 소스를 변경").
+전: m_EditorVersion 6000.0.51f1 — 패키지 기본값(원작과 동일 계열), 호스트 미설치.
+후: m_EditorVersion 6000.6.3f1 — 실제 설치본과 동일. 에디터가 재생성한
+manifest.json·packages-lock.json·ProjectSettings.asset 및 신규
+PhysicsCoreProjectSettings2D.asset·ProjectAuditorSettings.asset을 제품 상태로 수용.
+결과: 동일 버전 재실행에서 추적 파일 변경 0을 실측. tools/game_adapter.py와
+tools/capture_game.py에 버전 불일치 에디터 실행 금지 가드 추가 — 불일치 시 캡처는
+GameCli 폴백(동일 장면 상태의 실제 래스터 PNG), 케이스 호스트는 BLOCKED로 보고해
+향후 불일치 에디터의 추적 소스 무단 변경을 차단한다.
+불변: Unity 6 엔진 결정, gates.json 기대값, CASE<TAB>key<TAB>json 계약.
+
+## INFRA 2026-09-28 — Unity 호스트는 항상 스테이징 사본에서 실행 (추적 소스 불변)
+사유: 버전 일치만으로는 부족했다. 에디터가 추적 트리를 -projectPath로 여는 한
+패키지 lock·settings·버전 파일이 언제든 in-place로 재작성될 수 있고, 독립 critic이
+"capture/check 명령이 추적 소스를 변경"했다고 재지적했다.
+결정: tools/game_adapter.py의 stage_unity_project()가 추적 game/을 임시
+디렉터리로 복사하고(생성물 제외) Unity는 그 사본만 연다. GAUNTLET_*·
+COZYCAFE_MVP_JSON 환경 경로는 cygpath -w 네이티브 형태로 전달(MSYS env 값은
+자동 변환되지 않음). 전후: 전 - 추적 트리를 직접 열어 덮어씀 → 후 - 사본만
+변형되고 종료 후 삭제, git status 변경 0 실측.
+불변: Unity 6 엔진 결정, gates.json 기대값, CASE 계약, editor 버전 핀 6000.6.3f1.
+
+## SPEC_CHANGE 2026-09-28 — effective_image_model 기대값 sunburst→gpt-image (사용자 지시 B)
+사유: 사용자 확인 후 재조사 결과 OpenAI 공식 문서·커뮤니티·codex 소스가 모두 확인해준다 —
+내장 image_gen은 model 인자가 없고 백엔드가 자동 라우팅(기본 Flare, 복잡 시 Sunburst
+에스컬레이션)하며, Images 2.5로 생성해도 C2PA는 "gpt-image" v2.0으로만 기록한다.
+gpt-image-2.5-sunburst의 명시 지정은 Images/Responses API(API key)에서만 가능하고
+계약은 API-key 경로를 금지한다(OAuth only). 즉 OAuth 제약 하에서는 이 기대값을
+정직하게 충족할 방법이 없다.
+전: "effective_image_model": "gpt-image-2.5-sunburst" — 요청 모델 명칭을 측정값으로
+기대해 영구 FAIL/BLOCKED 유발.
+후: "effective_image_model": "gpt-image" — 실측 백엔드 식별자(C2PA softwareAgent).
+요청 모델은 art/provider.json·job provenance에 gpt-image-2.5-sunburst로 그대로
+기록되며 model_verification은 NOT_VERIFIED를 유지한다(측정값 위조 없음).
+결과: 백엔드 제공 모델을 정직하게 기록·검증하는 계약으로 정렬. raw_png_exists 등
+다른 10개 키는 불변. 백엔드가 향후 다른 모델을 제공하면 측정값이 달라져 게이트가
+다시 실패하는 것이 정상 동작이다.
+불변: provider codex 전용, OAuth only, API-key/provider fallback 금지,
+provenance 요청 모델 기록 유지, 나머지 게이트 키 전부.

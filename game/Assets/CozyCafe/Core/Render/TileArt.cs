@@ -9,7 +9,7 @@ namespace CozyCafe.Core.Render
     /// occupies canvas rows 0-31 exactly: apex flush at the top edge, bottom
     /// vertex on the midline. The 4 px thickness is painted as thin side
     /// faces straddling the two lower (outer-contour) edges inside that band
-    /// — visual only, physical thickness stays 0, no 64x66 canvas.
+    /// — visual only, physical thickness stays 0, no 64x68 canvas.
     /// </summary>
     public static class TileArt
     {
@@ -36,8 +36,8 @@ namespace CozyCafe.Core.Render
             // (~0.8 px inside the diamond plus ~0.5 px below the edge) reads
             // as the slab's 4 px edge thickness while the silhouette stays
             // inside canvas rows 0-31.
-            SideBand(src, 0, 16, 32, 32, SideLeft);
-            SideBand(src, 32, 32, 64, 16, SideRight);
+            SideBand(src, 0, 16.0, 32, 32.0, SideLeft);
+            SideBand(src, 32, 32.0, 64, 16.0, SideRight);
             return src;
         }
 

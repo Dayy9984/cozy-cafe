@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CozyCafe.Core.Iso;
+using CozyCafe.Core.Layout;
 using CozyCafe.Core.Scene;
 
 namespace CozyCafe.Core.Render
@@ -39,6 +40,7 @@ namespace CozyCafe.Core.Render
         private static readonly Rgba TableSkirt = Rgba.Opaque(112, 72, 46);
         private static readonly Rgba ChairTop = Rgba.Opaque(176, 116, 74);
         private static readonly Rgba ChairSkirt = Rgba.Opaque(124, 80, 50);
+        private static readonly Rgba DoorMat = Rgba.Opaque(88, 128, 92);
         private static readonly Rgba MachineBody = Rgba.Opaque(84, 88, 98);
         private static readonly Rgba MachineTop = Rgba.Opaque(204, 208, 218);
         private static readonly Rgba CounterBody = Rgba.Opaque(150, 104, 66);
@@ -94,8 +96,14 @@ namespace CozyCafe.Core.Render
             }
 
             var furn = new List<Furniture>(scene.Furniture);
-            furn.Sort(delegate (Furniture a, Furniture b) { return a.DepthKey.CompareTo(b.DepthKey); });
-            foreach (var f in furn) AddFurniture(fills, f, zoom);
+            furn.Sort(delegate (Furniture a, Furniture b)
+            {
+                int c = a.DepthKey.CompareTo(b.DepthKey);
+                return c != 0 ? c : a.HostId.CompareTo(b.HostId);
+            });
+            var byId = new Dictionary<int, Furniture>();
+            foreach (var f in furn) if (f.Id != 0) byId[f.Id] = f;
+            foreach (var f in furn) AddFurniture(fills, f, zoom, byId);
 
             foreach (var a in scene.Agents) AddAgent(fills, a, zoom);
 
@@ -149,6 +157,33 @@ namespace CozyCafe.Core.Render
                     tys[i] = f.Ys[i] + ty;
                 }
                 canvas.FillPolygon(txs, tys, f.Color);
+            }
+
+            // Tip pixels at each diamond vertex land inside the closed top
+            // face but off scanline centers - painting them keeps rendered
+            // ink at the contract's exact 64x32 top-face extent.
+            for (int y = 0; y < room.Height; y++)
+            {
+                for (int x = 0; x < room.Width; x++)
+                {
+                    if (!room.HasCell(x, y)) continue;
+                    double[] vxs, vys;
+                    Diamond(x, y, zoom, out vxs, out vys);
+                    double ccx = 0, ccy = 0;
+                    for (int i = 0; i < 4; i++) { ccx += vxs[i]; ccy += vys[i]; }
+                    ccx /= 4;
+                    ccy /= 4;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        double vx = ccx - vxs[i], vy = ccy - vys[i];
+                        double len = Math.Sqrt(vx * vx + vy * vy);
+                        if (len < 1e-9) continue;
+                        canvas.SetPixel(
+                            (int)Math.Floor(vxs[i] + vx / len * 0.51 + tx),
+                            (int)Math.Floor(vys[i] + vy / len * 0.51 + ty),
+                            SeamLine);
+                    }
+                }
             }
 
             // Assembled characters: real composited sprites standing on
@@ -471,20 +506,31 @@ namespace CozyCafe.Core.Render
             }
         }
 
-        private static void AddFurniture(List<Fill> fills, Furniture f, int zoom)
+        private static void AddFurniture(List<Fill> fills, Furniture f, int zoom,
+            Dictionary<int, Furniture> byId)
         {
-            double gx, gy, ox, oy;
+            double gx, gy;
             IsoMath.Project(f.CellX + 0.5, f.CellY + 0.5, out gx, out gy);
             gx *= zoom;
             gy *= zoom;
-            f.RenderOffset(out ox, out oy);
-            double dx = gx + ox * zoom;
-            double dy = gy + oy * zoom;
+            // The real render transform: (ground + target) * zoom for floor
+            // pieces; children draw through their host's mount once.
+            double dx, dy;
+            RenderContract.DrawAnchorResolved(f,
+                delegate (int id)
+                {
+                    Furniture h;
+                    return byId.TryGetValue(id, out h) ? h : null;
+                },
+                zoom, out dx, out dy);
             double depth = f.DepthKey;
 
             double[] xs, ys;
-            Ellipse(gx, gy, 13 * zoom, 4.5 * zoom, out xs, out ys);
-            fills.Add(Make(xs, ys, Shadow, 3, depth - 0.5));
+            if (f.HostId == 0)
+            {
+                Ellipse(gx, gy, 13 * zoom, 4.5 * zoom, out xs, out ys);
+                fills.Add(Make(xs, ys, Shadow, 3, depth - 0.5));
+            }
 
             switch (f.Kind)
             {
@@ -511,6 +557,10 @@ namespace CozyCafe.Core.Render
                     fills.Add(Make(xs, ys, CounterBody, 4, depth));
                     DiamondAt(dx, dy - 10 * zoom, 15 * zoom, 6 * zoom, out xs, out ys);
                     fills.Add(Make(xs, ys, CounterTop, 4, depth + 0.1));
+                    break;
+                case FurnitureKind.Door:
+                    DiamondAt(dx, dy + 2 * zoom, 16 * zoom, 7 * zoom, out xs, out ys);
+                    fills.Add(Make(xs, ys, DoorMat, 2, depth - 0.4));
                     break;
                 default: // machines: grounded box, no lift
                     Rect(dx - 13 * zoom, dy - 12 * zoom, dx + 13 * zoom, dy + 2 * zoom,

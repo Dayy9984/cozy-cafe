@@ -1,4 +1,5 @@
 using CozyCafe.Core.Art;
+using CozyCafe.Core.Layout;
 using CozyCafe.Core.Character;
 using CozyCafe.Core.Render;
 using CozyCafe.Core.Scene;
@@ -19,6 +20,8 @@ namespace CozyCafe.Core.Gauntlet
                     return IsoGridFloor();
                 case "iso-grid-tile":
                     return IsoTileCanvas();
+                case "layout-editor":
+                    return LayoutEditorRoom();
                 case "character-rig":
                     return CharacterRigSheet();
                 case "art-pipeline":
@@ -63,6 +66,36 @@ namespace CozyCafe.Core.Gauntlet
             s.Room = new RoomGrid(1, 1);
             s.IsLoaded = s.Validate();
             s.TileCanvasView = true;
+            return s;
+        }
+
+        /// Furnished room for the layout-editor capture: a wall-slot door,
+        /// paired table/seat sets, a counter hosting a real espresso machine
+        /// and two agents - built through the real editor so every placement
+        /// passed the same validity checks the gates exercise.
+        private static GameScene LayoutEditorRoom()
+        {
+            var s = new GameScene();
+            s.Room = new RoomGrid(6, 5);
+            var ed = new LayoutModule(s);
+            ed.TryPlace(FurnitureKind.Door, 0, 2, 0);
+            ed.BeginCommand();
+            ed.TryPlace(FurnitureKind.Table, 2, 1, 0);
+            ed.TryPlace(FurnitureKind.Chair, 1, 1, 0);
+            ed.TryPlace(FurnitureKind.Chair, 3, 1, 0);
+            ed.TryPlace(FurnitureKind.Table, 4, 3, 0);
+            ed.TryPlace(FurnitureKind.Stool, 4, 2, 0);
+            ed.TryPlace(FurnitureKind.Counter, 5, 0, 0);
+            ed.EndCommand();
+            ed.TryPlace(FurnitureKind.EspressoMachine, 5, 0, 0);
+            s.Agents.Add(new Agent { Name = "staff_0", PresetId = 0, GridX = 2.5, GridY = 3.5, IsStaff = true });
+            s.Agents.Add(new Agent { Name = "customer_0", PresetId = 1, GridX = 1.5, GridY = 3.5, IsStaff = false });
+            s.IsLoaded = s.Validate();
+            s.FixedViewport = true;
+            s.ViewportW = 420;
+            s.ViewportH = 300;
+            s.AnchorX = 200;
+            s.AnchorY = 40;
             return s;
         }
 
