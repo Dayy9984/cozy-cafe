@@ -52,17 +52,17 @@ namespace CozyCafe.Core.Gauntlet
             s.Room = new RoomGrid(4, 4);
             s.IsLoaded = s.Validate();
             s.FixedViewport = true;
-            s.ViewportW = 176;
-            s.ViewportH = 160;
-            s.AnchorX = 88;
-            s.AnchorY = 20;
+            s.ViewportW = 352;
+            s.ViewportH = 320;
+            s.AnchorX = 176;
+            s.AnchorY = 40;
             s.HighlightCellX = 1;
             s.HighlightCellY = 1;
             s.ShowOriginCaret = true;
             return s;
         }
 
-        /// Single tile on its 32x32 authoring canvas.
+        /// Single tile on its 64x64 authoring canvas.
         private static GameScene IsoTileCanvas()
         {
             var s = new GameScene();
@@ -95,10 +95,10 @@ namespace CozyCafe.Core.Gauntlet
             s.Agents.Add(new Agent { Name = "customer_0", PresetId = 1, GridX = 1.5, GridY = 3.5, IsStaff = false });
             s.IsLoaded = s.Validate();
             s.FixedViewport = true;
-            s.ViewportW = 210;
-            s.ViewportH = 150;
-            s.AnchorX = 100;
-            s.AnchorY = 20;
+            s.ViewportW = 420;
+            s.ViewportH = 300;
+            s.AnchorX = 200;
+            s.AnchorY = 40;
             return s;
         }
 
@@ -168,10 +168,10 @@ namespace CozyCafe.Core.Gauntlet
             s.Room = new RoomGrid(4, 4);
             s.IsLoaded = s.Validate();
             s.FixedViewport = true;
-            s.ViewportW = 300;
-            s.ViewportH = 200;
-            s.AnchorX = 150;
-            s.AnchorY = 48;
+            s.ViewportW = 600;
+            s.ViewportH = 400;
+            s.AnchorX = 300;
+            s.AnchorY = 96;
             s.Zoom = 2;
 
             // casual_02 wears glasses (front view keeps them visible);

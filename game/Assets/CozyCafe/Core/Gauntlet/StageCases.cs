@@ -108,6 +108,8 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("tile_seam_or_overlap_pixels", seams + overlaps));
             cases.Add(new CaseResult("fixed_sizes_and_default_pitch_distinguished",
                 IsoContract.FixedSizesAndPitchDistinguished()));
+            cases.Add(new CaseResult("stack_level_height_px",
+                IsoContract.StackLevelHeightPx()));
             return cases;
         }
 
@@ -270,7 +272,7 @@ namespace CozyCafe.Core.Gauntlet
         /// Layout/furniture editor gates. Every value below is computed by a
         /// real LayoutModule run on a real room - 1x1 tile paint, grouped
         /// undo/redo, door/pair/host validity, atomic host-subtree ops, and
-        /// the v0.8 single (0,-4) screen-up render offset resolved through
+        /// the v0.8 single (0,-8) screen-up render offset resolved through
         /// RenderContract while logical state stays unshifted.
         /// </summary>
         private static List<CaseResult> LayoutEditorStage()
@@ -351,7 +353,7 @@ namespace CozyCafe.Core.Gauntlet
                 editCommit == PlacementReject.None
                 && edited.Coins == steady.Coins && edited.Coins > 0));
 
-            // --- the v0.8 single (0,-4) screen-up render offset ---
+            // --- the v0.8 single (0,-8) screen-up render offset ---
             var room = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
             room.BeginCommand();
             room.TryPlace(FurnitureKind.Door, 0, 3, 0);
@@ -365,9 +367,9 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("table_render_offset_y_px", oy));
             RenderContract.TargetOffset(FurnitureKind.Chair, out ox, out oy);
             cases.Add(new CaseResult("chair_render_offset_y_px", oy));
-            RenderContract.RuntimeOffset(FurnitureKind.Table, 0.0, -4.0, out ox, out oy);
+            RenderContract.RuntimeOffset(FurnitureKind.Table, 0.0, -8.0, out ox, out oy);
             cases.Add(new CaseResult("table_runtime_offset_when_baked_y_px", oy));
-            RenderContract.EffectiveOffset(FurnitureKind.Table, 0.0, -4.0, out ox, out oy);
+            RenderContract.EffectiveOffset(FurnitureKind.Table, 0.0, -8.0, out ox, out oy);
             cases.Add(new CaseResult("table_effective_offset_when_baked_y_px", oy));
 
             double gx, gy, dx, dy;
@@ -375,8 +377,8 @@ namespace CozyCafe.Core.Gauntlet
             RenderContract.DrawAnchor(table, 2.0, out dx, out dy);
             cases.Add(new CaseResult("table_offset_at_zoom2_y_px", dy - gy * 2.0));
 
-            // The -4 is always screen-up: resolving the draw transform at
-            // every quarter turn must yield the identical (0,-4) delta.
+            // The -8 is always screen-up: resolving the draw transform at
+            // every quarter turn must yield the identical (0,-8) delta.
             double cgx, cgy;
             IsoMath.Project(chair.CellX + 0.5, chair.CellY + 0.5, out cgx, out cgy);
             bool rotates = false;
@@ -385,17 +387,17 @@ namespace CozyCafe.Core.Gauntlet
                 chair.QuarterTurns = q;
                 double ddx, ddy;
                 RenderContract.DrawAnchor(chair, 1.0, out ddx, out ddy);
-                if (ddy - cgy != -4.0 || ddx - cgx != 0.0) rotates = true;
+                if (ddy - cgy != -8.0 || ddx - cgx != 0.0) rotates = true;
             }
             cases.Add(new CaseResult("chair_offset_rotates_with_furniture", rotates));
 
             // --- the offset must never leak into logical geometry ---
-            // Prove the -4 actually moves draw anchors, then prove every
+            // Prove the -8 actually moves draw anchors, then prove every
             // logical structure is byte-identical after the render path runs.
             double tgx, tgy, tdx, tdy;
             IsoMath.Project(table.CellX + 0.5, table.CellY + 0.5, out tgx, out tgy);
             RenderContract.DrawAnchor(table, 1.0, out tdx, out tdy);
-            bool offsetApplied = tdy == tgy - 4.0 && tdx == tgx;
+            bool offsetApplied = tdy == tgy - 8.0 && tdx == tgx;
 
             string logBefore = room.Snapshot();
             var blockedBefore = room.BlockedCells();
@@ -471,7 +473,7 @@ namespace CozyCafe.Core.Gauntlet
                 RenderContract.TargetOffset(hostTable.Kind, out hox, out hoy);
                 RenderContract.MountLocal(hostTable.Kind, out mx, out my);
                 RenderContract.TargetOffset(child.Kind, out chx, out chy);
-                // parent(-4) + mount + child each appear exactly once.
+                // parent(-8) + mount + child each appear exactly once.
                 duplicates = cdy != hgy + hoy + my + chy
                     || cdx != hgx + hox + mx + chx;
             }
@@ -804,7 +806,7 @@ namespace CozyCafe.Core.Gauntlet
         /// <summary>
         /// Real art-pipeline state: provider/auth config, generated raws and
         /// per-job provenance on disk, the approved atlas manifest + decoded
-        /// sheet pixels (tile measured against the 32x16/32x32 contract,
+        /// sheet pixels (tile measured against the 64x32/64x64 contract,
         /// furniture effective offset = baked + runtime, palette-variant
         /// regeneration count). Nothing is claimed - a missing artifact or
         /// unverified model reports its actual measured value.
@@ -830,18 +832,18 @@ namespace CozyCafe.Core.Gauntlet
             {
                 tileCanvasH = tile.H;
                 var tm = ArtAssets.MeasureTile(sheet, tile);
-                tileOk = tile.W == 32 && tile.H == 32
-                    && tm.TopRow == 0 && tm.MaxWidth == 32
-                    && tm.TopFaceRows == 16 && tm.EquatorRow >= 6
-                    && tm.EquatorRow <= 10 && tm.SilhouetteBottomRow >= 15
-                    && tm.SilhouetteBottomRow <= 17;
+                tileOk = tile.W == 64 && tile.H == 64
+                    && tm.TopRow == 0 && tm.MaxWidth == 64
+                    && tm.TopFaceRows == 32 && tm.EquatorRow >= 12
+                    && tm.EquatorRow <= 20 && tm.SilhouetteBottomRow >= 31
+                    && tm.SilhouetteBottomRow <= 35;
             }
 
             bool recorded;
             int effY = ArtAssets.EffectiveFurnitureOffsetY(manifest, out recorded);
             bool physicalThickness =
                 manifest.PhysicalThickness != 0
-                || (tile != null && tile.H > 32);
+                || (tile != null && tile.H > 64);
             string effective = ArtAssets.EffectiveImageModel();
 
             var cases = new List<CaseResult>();

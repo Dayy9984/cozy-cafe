@@ -9,8 +9,8 @@ namespace CozyCafe.Core.Render
 {
     /// <summary>
     /// Software rasterizer of real game state used by the GameCli host's
-    /// "render" command. Draws the iso floor (32x16 top faces with dark seam
-    /// outlines), the 2 px visual-only side skirts on exterior edges only,
+    /// "render" command. Draws the iso floor (64x32 top faces with dark seam
+    /// outlines), the 4 px visual-only side skirts on exterior edges only,
     /// furniture lifted by its screen-space render offset, and agents.
     /// Logical geometry is never modified — this only paints.
     /// </summary>
@@ -162,7 +162,7 @@ namespace CozyCafe.Core.Render
 
             // Tip pixels at each diamond vertex land inside the closed top
             // face but off scanline centers - painting them keeps rendered
-            // ink at the contract's exact 32x16 top-face extent.
+            // ink at the contract's exact 64x32 top-face extent.
             for (int y = 0; y < room.Height; y++)
             {
                 for (int x = 0; x < room.Width; x++)
@@ -203,7 +203,7 @@ namespace CozyCafe.Core.Render
                     IsoMath.Project(ch.GridX, ch.GridY, out cx, out cy);
                     cx = cx * zoom + tx;
                     cy = cy * zoom + ty;
-                    canvas.FillEllipse(cx, cy, 3.5 * zoom, 1.5 * zoom, Shadow);
+                    canvas.FillEllipse(cx, cy, 7 * zoom, 3 * zoom, Shadow);
                     BlitSprite(canvas, ch.Sprite,
                         (int)Math.Round(cx - ch.AnchorX * zoom),
                         (int)Math.Round(cy - ch.AnchorY * zoom), zoom);
@@ -212,9 +212,9 @@ namespace CozyCafe.Core.Render
                     // other guide marks.
                     double vx, vy;
                     FacingVector(ch.Direction, out vx, out vy);
-                    canvas.DrawLine(cx + vx * 2 * zoom, cy + vy * 2 * zoom,
-                        cx + vx * 6 * zoom, cy + vy * 6 * zoom, GuideYellow,
-                        Math.Max(1, zoom));
+                    canvas.DrawLine(cx + vx * 4 * zoom, cy + vy * 4 * zoom,
+                        cx + vx * 12 * zoom, cy + vy * 12 * zoom, GuideYellow,
+                        Math.Max(1, 2 * zoom));
                 }
             }
 
@@ -234,8 +234,8 @@ namespace CozyCafe.Core.Render
             if (scene.ShowOriginCaret)
             {
                 double ax = tx, ay = ty;
-                canvas.DrawLine(ax - 4, ay - 9, ax - 16, ay - 1.5, GuideYellow, 2);
-                canvas.DrawLine(ax + 4, ay - 9, ax + 16, ay - 1.5, GuideYellow, 2);
+                canvas.DrawLine(ax - 8, ay - 18, ax - 32, ay - 3, GuideYellow, 2);
+                canvas.DrawLine(ax + 8, ay - 18, ax + 32, ay - 3, GuideYellow, 2);
             }
             // Mini-mode window chrome + the real tools panel snapshot —
             // paint-only overlays like the other stage marks.
@@ -247,129 +247,12 @@ namespace CozyCafe.Core.Render
             return canvas.Pixels;
         }
 
-        /// <summary>
-        /// The art-pipeline stage view: every approved atlas frame staged by
-        /// StageScenes, magnified 2x over a dark panel with its contract
-        /// canvas border (red), ground anchor crosshair (yellow), the 32x16
-        /// top-face band guide on tiles (cyan), and the furniture -4 px
-        /// effective-offset marker (green) - the renderer's own evidence
-        /// that the approved cells carry the declared geometry.
-        /// </summary>
-        private static byte[] RenderArtContactPixels(GameScene scene,
-            out int width, out int height)
-        {
-            const int zoom = 2, pad = 12, gutter = 12;
-            const int maxRowW = 1700;
-            var cells = scene.ArtCells;
-            int x = pad, y = pad, rowH = 0, w = 0;
-            var pos = new List<int[]>();
-            foreach (var c in cells)
-            {
-                int cw = c.Sprite.Width * zoom, ch = c.Sprite.Height * zoom;
-                if (x > pad && x + cw > maxRowW) { x = pad; y += rowH + gutter; rowH = 0; }
-                pos.Add(new[] { x, y });
-                x += cw + gutter;
-                if (ch > rowH) rowH = ch;
-                if (x > w) w = x;
-            }
-            int h = y + rowH + pad;
-            w += pad - gutter;
-
-            var dev = new SoftwareCanvas(w, h);
-            dev.Clear(Background);
-            for (int i = 0; i < cells.Count; i++)
-            {
-                var c = cells[i];
-                int cw = c.Sprite.Width * zoom, ch = c.Sprite.Height * zoom;
-                int ox = pos[i][0], oy = pos[i][1];
-                dev.FillRect(ox, oy, cw, ch, CanvasBg);
-                BlendSprite(dev, c.Sprite, ox, oy, zoom);
-
-                // contract canvas border
-                dev.FillRect(ox, oy, cw, 1, MarkRed);
-                dev.FillRect(ox, oy + ch - 1, cw, 1, MarkRed);
-                dev.FillRect(ox, oy, 1, ch, MarkRed);
-                dev.FillRect(ox + cw - 1, oy, 1, ch, MarkRed);
-
-                if (c.Category == "tile")
-                {
-                    dev.FillRect(ox, oy + 16 * zoom, cw, 1, GuideCyan);
-                }
-                // anchor crosshair
-                int ax = ox + c.AnchorX * zoom, ay = oy + c.AnchorY * zoom;
-                for (int d = -6; d <= 6; d++)
-                {
-                    dev.SetPixel(ax + d, ay, GuideYellow);
-                    dev.SetPixel(ax, ay + d, GuideYellow);
-                }
-                if (c.Category == "furniture" && c.RenderDy != 0)
-                {
-                    // the single applied lift: marker at anchor+(-4)
-                    int ey = ay + (c.BakedDy + c.RenderDy) * zoom;
-                    for (int d = -6; d <= 6; d++)
-                    {
-                        dev.SetPixel(ax + d, ey, GuideGreen);
-                        dev.SetPixel(ax, ey + d, GuideGreen);
-                    }
-                }
-            }
-            width = w;
-            height = h;
-            return dev.Pixels;
-        }
-
-        /// Alpha-composited nearest-neighbor blit (art cells carry real alpha).
-        private static void BlendSprite(SoftwareCanvas dst, SoftwareCanvas src,
-            int ox, int oy, int zoom)
-        {
-            byte[] sp = src.Pixels;
-            for (int y = 0; y < src.Height; y++)
-            {
-                for (int x = 0; x < src.Width; x++)
-                {
-                    int i = (y * src.Width + x) * 4;
-                    int a = sp[i + 3];
-                    if (a == 0) continue;
-                    var c = new Rgba(sp[i], sp[i + 1], sp[i + 2], sp[i + 3]);
-                    if (zoom <= 1) BlendPixel(dst, ox + x, oy + y, c);
-                    else
-                    {
-                        for (int dy = 0; dy < zoom; dy++)
-                        {
-                            for (int dx = 0; dx < zoom; dx++)
-                            {
-                                BlendPixel(dst, ox + x * zoom + dx, oy + y * zoom + dy, c);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private static void BlendPixel(SoftwareCanvas dst, int x, int y, Rgba c)
-        {
-            if (x < 0 || y < 0 || x >= dst.Width || y >= dst.Height) return;
-            int i = (y * dst.Width + x) * 4;
-            int a = c.A;
-            if (a == 255)
-            {
-                dst.Pixels[i] = c.R; dst.Pixels[i + 1] = c.G;
-                dst.Pixels[i + 2] = c.B; dst.Pixels[i + 3] = 255;
-                return;
-            }
-            int inv = 255 - a;
-            dst.Pixels[i] = (byte)((c.R * a + dst.Pixels[i] * inv) / 255);
-            dst.Pixels[i + 1] = (byte)((c.G * a + dst.Pixels[i + 1] * inv) / 255);
-            dst.Pixels[i + 2] = (byte)((c.B * a + dst.Pixels[i + 2] * inv) / 255);
-            dst.Pixels[i + 3] = 255;
-        }
-
-        /// The tile-authoring view: the real 32x32 canvas raster magnified
-        /// 8x on a dark viewport, with a pixel-grid dot lattice, a separator
+        /// The tile-authoring view: the real 64x64 canvas raster magnified
+        /// 4x on a dark viewport, with a pixel-grid dot lattice, a separator
         /// at the top-face band bottom, and the canvas bounds outlined.
         private static byte[] RenderTileCanvasPixels(out int width, out int height)
         {
-            const int zoom = 8;
+            const int zoom = 4;
             var src = TileArt.RasterizeFloorTile();
             int cw = TileCanvasContract.WidthPx;
             int ch = TileCanvasContract.HeightPx;
@@ -395,7 +278,7 @@ namespace CozyCafe.Core.Render
                     dev.FillRect(ox + sx * zoom, oy + sy * zoom, zoom, zoom, c);
                 }
             }
-            // Guide at the bottom edge of the 32x16 top-face band.
+            // Guide at the bottom edge of the 64x32 top-face band.
             dev.FillRect(ox, oy + IsoMath.TileTopHeightPx * zoom, cw * zoom, 2, GuideYellow);
             // Canvas bounds.
             dev.FillRect(ox, oy, cw * zoom, 2, MarkRed);
@@ -470,7 +353,7 @@ namespace CozyCafe.Core.Render
             }
         }
 
-        /// 2 px visual skirt hanging below the top-face edge (topA -> topB).
+        /// 4 px visual skirt hanging below the top-face edge (topA -> topB).
         private static double[] SkirtX(double xa, double xb)
         {
             return new[] { xa, xb, xb, xa };
@@ -534,45 +417,45 @@ namespace CozyCafe.Core.Render
             double[] xs, ys;
             if (f.HostId == 0)
             {
-                Ellipse(gx, gy, 6.5 * zoom, 2.25 * zoom, out xs, out ys);
+                Ellipse(gx, gy, 13 * zoom, 4.5 * zoom, out xs, out ys);
                 fills.Add(Make(xs, ys, Shadow, 3, depth - 0.5));
             }
 
             switch (f.Kind)
             {
                 case FurnitureKind.Table:
-                    Ellipse(dx, dy + 4 * zoom, 1.5 * zoom, 3 * zoom, out xs, out ys);
+                    Ellipse(dx, dy + 8 * zoom, 3 * zoom, 6 * zoom, out xs, out ys);
                     fills.Add(Make(xs, ys, TableSkirt, 4, depth));
-                    DiamondAt(dx, dy, 10 * zoom, 4.5 * zoom, out xs, out ys);
+                    DiamondAt(dx, dy, 20 * zoom, 9 * zoom, out xs, out ys);
                     fills.Add(Make(SkirtX(xs[3], xs[2]), SkirtY(ys[3], ys[2], zoom),
                         TableSkirt, 4, depth + 0.1));
                     fills.Add(Make(xs, ys, TableTop, 4, depth));
                     break;
                 case FurnitureKind.Chair:
                 case FurnitureKind.Stool:
-                    DiamondAt(dx, dy, 5.5 * zoom, 2.5 * zoom, out xs, out ys);
+                    DiamondAt(dx, dy, 11 * zoom, 5 * zoom, out xs, out ys);
                     fills.Add(Make(SkirtX(xs[3], xs[2]), SkirtY(ys[3], ys[2], zoom),
                         ChairSkirt, 4, depth + 0.1));
                     fills.Add(Make(xs, ys, ChairTop, 4, depth));
-                    Rect(dx - 4.5 * zoom, dy - 7 * zoom, dx - 2.5 * zoom, dy, out xs, out ys);
+                    Rect(dx - 9 * zoom, dy - 14 * zoom, dx - 5 * zoom, dy, out xs, out ys);
                     fills.Add(Make(xs, ys, ChairSkirt, 4, depth - 0.1));
                     break;
                 case FurnitureKind.Counter:
-                    Rect(dx - 7.5 * zoom, dy - 5 * zoom, dx + 7.5 * zoom, dy + zoom,
+                    Rect(dx - 15 * zoom, dy - 10 * zoom, dx + 15 * zoom, dy + 2 * zoom,
                         out xs, out ys);
                     fills.Add(Make(xs, ys, CounterBody, 4, depth));
-                    DiamondAt(dx, dy - 5 * zoom, 7.5 * zoom, 3 * zoom, out xs, out ys);
+                    DiamondAt(dx, dy - 10 * zoom, 15 * zoom, 6 * zoom, out xs, out ys);
                     fills.Add(Make(xs, ys, CounterTop, 4, depth + 0.1));
                     break;
                 case FurnitureKind.Door:
-                    DiamondAt(dx, dy + zoom, 8 * zoom, 3.5 * zoom, out xs, out ys);
+                    DiamondAt(dx, dy + 2 * zoom, 16 * zoom, 7 * zoom, out xs, out ys);
                     fills.Add(Make(xs, ys, DoorMat, 2, depth - 0.4));
                     break;
                 default: // machines: grounded box, no lift
-                    Rect(dx - 6.5 * zoom, dy - 6 * zoom, dx + 6.5 * zoom, dy + zoom,
+                    Rect(dx - 13 * zoom, dy - 12 * zoom, dx + 13 * zoom, dy + 2 * zoom,
                         out xs, out ys);
                     fills.Add(Make(xs, ys, MachineBody, 4, depth));
-                    DiamondAt(dx, dy - 6 * zoom, 6.5 * zoom, 2.5 * zoom, out xs, out ys);
+                    DiamondAt(dx, dy - 12 * zoom, 13 * zoom, 5 * zoom, out xs, out ys);
                     fills.Add(Make(xs, ys, MachineTop, 4, depth + 0.1));
                     break;
             }
@@ -826,10 +709,129 @@ namespace CozyCafe.Core.Render
             gy *= zoom;
             double depth = a.GridX + a.GridY;
             double[] xs, ys;
-            Ellipse(gx, gy, 3.5 * zoom, 1.5 * zoom, out xs, out ys);
+            Ellipse(gx, gy, 7 * zoom, 3 * zoom, out xs, out ys);
             fills.Add(Make(xs, ys, Shadow, 3, depth - 0.5));
-            Ellipse(gx, gy - 4 * zoom, 3 * zoom, 4.5 * zoom, out xs, out ys);
+            Ellipse(gx, gy - 8 * zoom, 6 * zoom, 9 * zoom, out xs, out ys);
             fills.Add(Make(xs, ys, a.IsStaff ? StaffColor : CustomerColor, 5, depth));
+        }
+
+        /// <summary>
+        /// The art-pipeline stage view: every approved atlas frame staged by
+        /// StageScenes, magnified 2x over a dark panel with its contract
+        /// canvas border (red), ground anchor crosshair (yellow), the 64x32
+        /// top-face band guide on tiles (cyan), and the furniture -8 px
+        /// effective-offset marker (green) - the renderer's own evidence
+        /// that the approved cells carry the declared geometry.
+        /// </summary>
+        private static byte[] RenderArtContactPixels(GameScene scene,
+            out int width, out int height)
+        {
+            const int zoom = 2, pad = 12, gutter = 12;
+            const int maxRowW = 1700;
+            var cells = scene.ArtCells;
+            int x = pad, y = pad, rowH = 0, w = 0;
+            var pos = new List<int[]>();
+            foreach (var c in cells)
+            {
+                int cw = c.Sprite.Width * zoom, ch = c.Sprite.Height * zoom;
+                if (x > pad && x + cw > maxRowW) { x = pad; y += rowH + gutter; rowH = 0; }
+                pos.Add(new[] { x, y });
+                x += cw + gutter;
+                if (ch > rowH) rowH = ch;
+                if (x > w) w = x;
+            }
+            int h = y + rowH + pad;
+            w += pad - gutter;
+
+            var dev = new SoftwareCanvas(w, h);
+            dev.Clear(Background);
+            for (int i = 0; i < cells.Count; i++)
+            {
+                var c = cells[i];
+                int cw = c.Sprite.Width * zoom, ch = c.Sprite.Height * zoom;
+                int ox = pos[i][0], oy = pos[i][1];
+                dev.FillRect(ox, oy, cw, ch, CanvasBg);
+                BlendSprite(dev, c.Sprite, ox, oy, zoom);
+
+                // contract canvas border
+                dev.FillRect(ox, oy, cw, 1, MarkRed);
+                dev.FillRect(ox, oy + ch - 1, cw, 1, MarkRed);
+                dev.FillRect(ox, oy, 1, ch, MarkRed);
+                dev.FillRect(ox + cw - 1, oy, 1, ch, MarkRed);
+
+                if (c.Category == "tile")
+                {
+                    dev.FillRect(ox, oy + 32 * zoom, cw, 1, GuideCyan);
+                }
+                // anchor crosshair
+                int ax = ox + c.AnchorX * zoom, ay = oy + c.AnchorY * zoom;
+                for (int d = -6; d <= 6; d++)
+                {
+                    dev.SetPixel(ax + d, ay, GuideYellow);
+                    dev.SetPixel(ax, ay + d, GuideYellow);
+                }
+                if (c.Category == "furniture" && c.RenderDy != 0)
+                {
+                    // the single applied lift: marker at anchor+(-8)
+                    int ey = ay + (c.BakedDy + c.RenderDy) * zoom;
+                    for (int d = -6; d <= 6; d++)
+                    {
+                        dev.SetPixel(ax + d, ey, GuideGreen);
+                        dev.SetPixel(ax, ey + d, GuideGreen);
+                    }
+                }
+            }
+            width = w;
+            height = h;
+            return dev.Pixels;
+        }
+
+        /// Alpha-composited nearest-neighbor blit (art cells carry real alpha).
+        private static void BlendSprite(SoftwareCanvas dst, SoftwareCanvas src,
+            int ox, int oy, int zoom)
+        {
+            byte[] sp = src.Pixels;
+            for (int y = 0; y < src.Height; y++)
+            {
+                for (int x = 0; x < src.Width; x++)
+                {
+                    int i = (y * src.Width + x) * 4;
+                    int a = sp[i + 3];
+                    if (a == 0) continue;
+                    var c = new Rgba(sp[i], sp[i + 1], sp[i + 2], sp[i + 3]);
+                    if (zoom <= 1) BlendPixel(dst, ox + x, oy + y, c);
+                    else
+                    {
+                        for (int dy = 0; dy < zoom; dy++)
+                        {
+                            for (int dx = 0; dx < zoom; dx++)
+                            {
+                                BlendPixel(dst, ox + x * zoom + dx,
+                                    oy + y * zoom + dy, c);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// Source-over a single pixel (same rule as the iso compositor).
+        private static void BlendPixel(SoftwareCanvas dst, int x, int y, Rgba c)
+        {
+            if (x < 0 || y < 0 || x >= dst.Width || y >= dst.Height) return;
+            int i = (y * dst.Width + x) * 4;
+            int a = c.A;
+            if (a == 255)
+            {
+                dst.Pixels[i] = c.R; dst.Pixels[i + 1] = c.G;
+                dst.Pixels[i + 2] = c.B; dst.Pixels[i + 3] = 255;
+                return;
+            }
+            int inv = 255 - a;
+            dst.Pixels[i] = (byte)((c.R * a + dst.Pixels[i] * inv) / 255);
+            dst.Pixels[i + 1] = (byte)((c.G * a + dst.Pixels[i + 1] * inv) / 255);
+            dst.Pixels[i + 2] = (byte)((c.B * a + dst.Pixels[i + 2] * inv) / 255);
+            dst.Pixels[i + 3] = 255;
         }
     }
 }

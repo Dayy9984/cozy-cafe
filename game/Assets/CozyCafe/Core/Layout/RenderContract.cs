@@ -5,14 +5,14 @@ using CozyCafe.Core.Scene;
 namespace CozyCafe.Core.Layout
 {
     /// <summary>
-    /// The v0.8 (0,-4) screen-space render-offset pipeline.
+    /// The v0.8 (0,-8) screen-space render-offset pipeline.
     ///
     ///   p_draw = (p_ground + target_offset) * camera_zoom + camera_origin
     ///
     /// The target comes from the asset contract table (tables/chairs/stools
-    /// (0,-4); everything else (0,0)). runtime = target - baked, so
+    /// (0,-8); everything else (0,0)). runtime = target - baked, so
     /// effective = baked + runtime is applied exactly once - unbaked source
-    /// pivot plus renderer -4, or recorded baked -4 plus renderer 0, never
+    /// pivot plus renderer -8, or recorded baked -8 plus renderer 0, never
     /// twice. The offset is always screen-up: it never rotates with the
     /// furniture, is not physical elevation, and never feeds logical cells,
     /// footprints, collision, pathfinding, service links or depth keys.
@@ -31,8 +31,8 @@ namespace CozyCafe.Core.Layout
         }
 
         /// Runtime remainder for a source-art baked offset: target - baked.
-        /// Unbaked art (0,0) yields the full (0,-4); art already baked at -4
-        /// yields 0 so the effective sum stays -4 exactly once.
+        /// Unbaked art (0,0) yields the full (0,-8); art already baked at -8
+        /// yields 0 so the effective sum stays -8 exactly once.
         public static void RuntimeOffset(FurnitureKind kind,
             double bakedX, double bakedY, out double dx, out double dy)
         {
@@ -67,7 +67,7 @@ namespace CozyCafe.Core.Layout
         }
 
         /// Screen draw anchor for a floor-placed piece:
-        /// (ground + target) * zoom. At zoom 2 the -4 becomes -8.
+        /// (ground + target) * zoom. At zoom 2 the -8 becomes -16.
         public static void DrawAnchor(Furniture f, double zoom, out double dx, out double dy)
         {
             double gx, gy, ox, oy;
@@ -86,11 +86,11 @@ namespace CozyCafe.Core.Layout
             {
                 case FurnitureKind.Counter:
                     dx = 0.0;
-                    dy = -4.5;
+                    dy = -9.0;
                     return;
                 case FurnitureKind.Table:
                     dx = 0.0;
-                    dy = -2.5;
+                    dy = -5.0;
                     return;
                 default:
                     dx = 0.0;

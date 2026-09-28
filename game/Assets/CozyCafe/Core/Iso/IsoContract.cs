@@ -6,14 +6,14 @@ using CozyCafe.Core.Scene;
 namespace CozyCafe.Core.Iso
 {
     /// <summary>
-    /// The 32x32 working canvas a tile sprite is authored on. It is the
+    /// The 64x64 working canvas a tile sprite is authored on. It is the
     /// user-fixed space reference for a tile — never the grid pitch — and the
-    /// 2 px visual side faces paint inside it without extending it (no 32x34).
+    /// 4 px visual side faces paint inside it without extending it (no 64x68).
     /// </summary>
     public static class TileCanvasContract
     {
-        public const int WidthPx = 32;
-        public const int HeightPx = 32;
+        public const int WidthPx = 64;
+        public const int HeightPx = 64;
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ namespace CozyCafe.Core.Iso
         }
 
         /// Rasterizes a single cell's top diamond and measures the painted
-        /// bounding box — the contract's exact 32x16 px top face. The closed
+        /// bounding box — the contract's exact 64x32 px top face. The closed
         /// diamond also inks the pixel just inside each vertex tip; pixel-
         /// center scanlines never land on those side tips, but the drawn
         /// shape covers them, so they count toward the painted extent.
@@ -85,10 +85,10 @@ namespace CozyCafe.Core.Iso
         /// polygon: uncovered pixels are seams, multiply covered are overlaps.
         public static void MeasureFloorSeams(int tiles, out int seamPixels, out int overlapPixels)
         {
-            double ox = 16.0 * tiles + 2.0;
+            double ox = 32.0 * tiles + 2.0;
             double oy = 2.0;
-            int w = 32 * tiles + 4;
-            int h = 16 * tiles + 8;
+            int w = 64 * tiles + 4;
+            int h = 32 * tiles + 8;
             var cover = new int[w * h];
             var inside = new int[w * h];
             for (int y = 0; y < tiles; y++)
@@ -142,7 +142,7 @@ namespace CozyCafe.Core.Iso
             return max;
         }
 
-        /// True if the 2 px visual thickness could alter the ground
+        /// True if the 4 px visual thickness could alter the ground
         /// projection. The projection entry point accepts exactly two
         /// coordinates — there is no thickness/z input path — and
         /// re-projecting after the skirt emission path is untouched.
@@ -161,7 +161,7 @@ namespace CozyCafe.Core.Iso
             return inputs != 2;
         }
 
-        /// True if the 32 px space height were misused as the grid pitch.
+        /// True if the 64 px space height were misused as the grid pitch.
         /// The pitch is a default derived from the top face, not the space
         /// size — this checks the recorded constants can't be conflated.
         public static bool SpaceHeightUsedAsGridPitch()
@@ -171,7 +171,7 @@ namespace CozyCafe.Core.Iso
                 || IsoMath.StepY == IsoMath.TileSpaceHeightPx / 2.0;
         }
 
-        /// True when the user-fixed sizes (32x16 top, 32x32 space/canvas) are
+        /// True when the user-fixed sizes (64x32 top, 64x64 space/canvas) are
         /// provably distinct from the implementation-default pitch (half the
         /// top face) — the pitch derives from the top, not the space height.
         public static bool FixedSizesAndPitchDistinguished()
@@ -180,6 +180,70 @@ namespace CozyCafe.Core.Iso
                 && IsoMath.StepY == IsoMath.TileTopHeightPx / 2.0
                 && IsoMath.StepY != IsoMath.TileSpaceHeightPx / 2.0
                 && IsoMath.TileTopHeightPx != IsoMath.TileSpaceHeightPx;
+        }
+
+
+        /// The per-stack-level height recorded in data/art_contract.json's
+        /// placement contract (the vertical pitch for furniture stacked on a
+        /// host). Read from the data file at runtime — a declared contract
+        /// value loaded through the same MiniJson path the other modules use,
+        /// not a hardcoded gate constant. Missing contract data reports -1.
+        public static int StackLevelHeightPx()
+        {
+            string path = ResolveDataFile("art_contract.json");
+            if (path == null) return -1;
+            try
+            {
+                var root = MiniJson.Parse(System.IO.File.ReadAllText(path))
+                    as System.Collections.Generic.Dictionary<string, object>;
+                if (root == null) return -1;
+                object pv;
+                if (!root.TryGetValue("placement", out pv)) return -1;
+                var pl = pv as System.Collections.Generic.Dictionary<string, object>;
+                if (pl == null) return -1;
+                object v;
+                if (!pl.TryGetValue("stack_level_height_px", out v)) return -1;
+                if (v is long l) return (int)l;
+                if (v is int i) return i;
+                if (v is double d) return (int)d;
+                return -1;
+            }
+            catch (System.Exception) { return -1; }
+        }
+
+        /// Ancestor walk of cwd and app-base dirs for data/<name> — the same
+        /// resolution policy CharacterArtData/MvpData use.
+        private static string ResolveDataFile(string name)
+        {
+            string dir = System.Environment.GetEnvironmentVariable("COZYCAFE_DATA_DIR");
+            if (!string.IsNullOrEmpty(dir))
+            {
+                string p = System.IO.Path.Combine(dir, name);
+                if (System.IO.File.Exists(p)) return System.IO.Path.GetFullPath(p);
+            }
+            string root = System.Environment.GetEnvironmentVariable("COZYCAFE_WORKSPACE_ROOT");
+            if (!string.IsNullOrEmpty(root))
+            {
+                string p = System.IO.Path.Combine(root, "data", name);
+                if (System.IO.File.Exists(p)) return p;
+            }
+            var roots = new System.Collections.Generic.List<string>();
+            try { roots.Add(System.IO.Directory.GetCurrentDirectory()); } catch (System.Exception) { }
+            try { roots.Add(System.AppContext.BaseDirectory); } catch (System.Exception) { }
+            var seen = new System.Collections.Generic.HashSet<string>();
+            foreach (var r in roots)
+            {
+                if (string.IsNullOrEmpty(r)) continue;
+                System.IO.DirectoryInfo di;
+                try { di = new System.IO.DirectoryInfo(r); } catch (System.Exception) { continue; }
+                for (; di != null; di = di.Parent)
+                {
+                    if (!seen.Add(di.FullName)) continue;
+                    string p = System.IO.Path.Combine(di.FullName, "data", name);
+                    if (System.IO.File.Exists(p)) return p;
+                }
+            }
+            return null;
         }
 
         /// Builds the real authored floor-tile canvas and reads back its

@@ -19,7 +19,7 @@ namespace CozyCafe.Core.Scene
 
     /// <summary>
     /// v0.8 render-offset contract in source-art pixels: tables, chairs and
-    /// stools draw once at (0,-4) from their floor placement anchor; every
+    /// stools draw once at (0,-8) from their floor placement anchor; every
     /// other kind uses (0,0). The offset is screen-space: applied at render
     /// time, scaled by zoom, never rotated with the furniture, never fed back
     /// into logical cells, collision, pathing or depth keys.
@@ -34,7 +34,7 @@ namespace CozyCafe.Core.Scene
                 case FurnitureKind.Chair:
                 case FurnitureKind.Stool:
                     dx = 0;
-                    dy = -4;
+                    dy = -8;
                     return;
                 default:
                     dx = 0;
@@ -135,7 +135,7 @@ namespace CozyCafe.Core.Scene
 
     /// <summary>
     /// A composited character sprite placed on the ground plane: the shared
-    /// rig cell (32x40) with its foot anchor, a facing id from the contract's
+    /// rig cell (64x80) with its foot anchor, a facing id from the contract's
     /// direction list, and a grid point. Only the renderer reads these —
     /// logical cells, collision, paths and depth keys are untouched.
     /// </summary>
@@ -158,7 +158,7 @@ namespace CozyCafe.Core.Scene
     /// An approved atlas frame staged for the art-pipeline contact-sheet
     /// render: the decoded cell sprite with its manifest-declared anchor,
     /// category, and baked/runtime offsets so the painter can evidence the
-    /// single -4 px furniture correction. Read-only render data - no
+    /// single -8 px furniture correction. Read-only render data - no
     /// logical cells touch it.
     /// </summary>
     public sealed class ArtCellPlacement
@@ -197,11 +197,6 @@ namespace CozyCafe.Core.Scene
         public int HighlightCellY = -1;
         public bool ShowOriginCaret;
         public bool TileCanvasView;
-        /// Art-pipeline stage view: render the approved atlas cells with
-        /// their contract borders, anchors and the furniture -4 px lift.
-        public bool ArtContactView;
-        public readonly List<ArtCellPlacement> ArtCells =
-            new List<ArtCellPlacement>();
         /// Render magnification for stage captures (1 = source pixels). The
         /// character sheet uses 2 so part assembly is legible in the PNG.
         /// Paint-time only — logical geometry never reads it.
@@ -212,6 +207,12 @@ namespace CozyCafe.Core.Scene
         /// hints only — window state lives in Tools.ToolsModule.
         public bool MiniMode;
         public CozyCafe.Core.Tools.ToolPanel ToolsPanel;
+        /// Art-pipeline stage view: render the approved atlas cells with
+        /// their contract borders, anchors and the furniture -8 px lift.
+        public bool ArtContactView;
+        public readonly List<ArtCellPlacement> ArtCells =
+            new List<ArtCellPlacement>();
+
 
         public bool Validate()
         {

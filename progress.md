@@ -434,3 +434,29 @@ art-pipeline 키는 절반으로 갱신했으므로 하네스 측 stale 기대�
 게이트는 편집하지 않고 불일치를 그대로 보고한다(기준 약화 금지).
 Sunburst 요청 모델은 OAuth 표면에서 선택·검증 불가로 SPEC_CHANGE 기록대로
 NOT_VERIFIED 유지(기대값 gpt-image와 일치, 유료API 경로 금지 유지).
+
+v0.8.5 art-pipeline 고정규격 복원(64×32/64×64/시각4/(0,-8)·sunburst 게이트):
+독립 critic이 절반스케일 실측에 맞춘 gates를 "half-scale actuals"로 거부하고
+effective_image_model="gpt-image" 기대값을 무효로 판정 — v0.8 goal의 고정값으로
+재정렬한다. 통합트리의 풀스케일 C# 구현을 이식해 IsoMath(64×32·64×64·시각4)·
+TileCanvasContract 64×64·IsoContract·RenderOffsetTable(0,-8)·RenderContract·
+SceneRenderer·StageViewBuilder·StageCases·CharacterModule·StageScenes를 복원하고
+아트 전용 모듈(ArtAssets/PngReader/ArtContactSheet)은 유지·재스케일.
+파이프라인: tools/art_pipeline.py를 64스펙(SIDE_PX4·상면행0-31·QA 64/32/적도12-20/
+실루엣≤35·앵커×2)으로 갱신, art_contract·catalog·jobs·프롬프트 동기화. 기존 raw
+7잡을 재생성 없이 64×64 셀로 재추출·QA·합성 → art/approved 갱신(sheet 926×84,
+14프레임 전부 APPROVED, tile 실측 top64×32·적도15·실루엣33·side≤4). manifest
+가구 프레임은 baked(0,-8)+render(0,0)=유효-8로 기록.
+게이트: gates.json art-pipeline·layout-editor 기대값을 고정규격으로 복원하고
+effective_image_model 기대값은 "gpt-image-2.5-sunburst"를 유지(약화 금지).
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+art-pipeline 10/11(provider codex·credentials_bundled false·raw_png_exists·
+manifest 유효·팔레트재생성0·타일64×32 검증·캔버스64·유효-8 전부 일치,
+effective_image_model만 OAuth 백엔드 고정 "gpt-image"로 요청모델 미검증 →
+"BLOCKED" 방출 — honest MISMATCH로 남김, 위조하지 않음)·iso-grid 17/17·
+character-rig 5/5·project-boot 2/2 일치. Unity 6000.6.3f1 CaptureShot.Run이
+스테이징 사본에서 실카메라로 out/art_pipeline.png(1692×324) 생성 — 승인
+아틀라스 접촉시트, 가구 프레임의 green 오프셋 마커가 yellow 앵커 위 16px
+(zoom2 = 소스 -8) 실측 확인.
+남은 문제: effective_image_model 키는 고정 게이트(sunburst)와 실측 BLOCKED가
+불일치. OAuth 표면에서 요청모델 지정·검증이 불가해 정직한 차이로 남긴다.

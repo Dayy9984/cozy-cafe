@@ -57,7 +57,7 @@ namespace CozyCafe.Core.Layout
     /// move/rotate/remove. Placement rules are validity checks - never
     /// revenue bottlenecks - evaluated draft/apply style: a drag may pass
     /// through incomplete states but a command applies only when the whole
-    /// layout is valid. Every check judges logical cells; the (0,-4) render
+    /// layout is valid. Every check judges logical cells; the (0,-8) render
     /// offset lives in RenderContract and never feeds back here.
     /// </summary>
     public sealed class LayoutModule : ModuleBase

@@ -8,22 +8,23 @@
     "test_entry_calls_real_modules": true
   },
   "iso-grid": {
-    "tile_top_width": 32,
-    "tile_top_height": 16,
-    "tile_space_width": 32,
-    "tile_space_height": 32,
-    "tile_canvas_width": 32,
-    "tile_canvas_height": 32,
-    "tile_visual_thickness_px": 2,
+    "tile_top_width": 64,
+    "tile_top_height": 32,
+    "tile_space_width": 64,
+    "tile_space_height": 64,
+    "tile_canvas_width": 64,
+    "tile_canvas_height": 64,
+    "tile_visual_thickness_px": 4,
     "tile_physical_thickness": 0,
     "thickness_changes_projection": false,
     "space_height_used_as_grid_pitch": false,
-    "grid_step_x": 16,
-    "grid_step_y": 8,
+    "grid_step_x": 32,
+    "grid_step_y": 16,
     "interior_side_faces": 0,
     "roundtrip_error": 0,
     "tile_seam_or_overlap_pixels": 0,
-    "fixed_sizes_and_default_pitch_distinguished": true
+    "fixed_sizes_and_default_pitch_distinguished": true,
+    "stack_level_height_px": 32
   },
   "layout-editor": {
     "one_tile_changed": 1,
@@ -99,11 +100,11 @@
     "atlas_manifest_valid": true,
     "generation_per_palette_variant": 0,
     "tile_size_verified": true,
-    "effective_image_model": "gpt-image",
+    "effective_image_model": "gpt-image-2.5-sunburst",
     "thickness_physical_geometry_generated": false,
-    "tile_canvas_height": 32,
+    "tile_canvas_height": 64,
     "furniture_baked_offset_recorded": true,
-    "furniture_effective_offset_y_px": -4
+    "furniture_effective_offset_y_px": -8
   },
   "ui-local-ugc": {
     "ui_text_baked": false,

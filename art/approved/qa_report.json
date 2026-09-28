@@ -3,39 +3,39 @@
     "tile_wood": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 32,
-        "canvas_h": 32,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          32,
-          32
+          64,
+          64
         ],
         "diamond": {
           "top_row": 0,
-          "equator_row": 7,
-          "top_face_h": 16,
-          "max_width": 32,
-          "rhombus_bottom_row": 15,
-          "silhouette_bottom_row": 16,
-          "side_h": 1
+          "equator_row": 15,
+          "top_face_h": 32,
+          "max_width": 64,
+          "rhombus_bottom_row": 31,
+          "silhouette_bottom_row": 33,
+          "side_h": 2
         },
         "top_face_px": [
-          32,
-          16
+          64,
+          32
         ],
-        "opaque_px": 320,
+        "opaque_px": 1216,
         "nonempty": true
       }
     },
     "body_anchor": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 32,
-        "canvas_h": 40,
+        "canvas_w": 64,
+        "canvas_h": 80,
         "contract_canvas": [
-          32,
-          40
+          64,
+          80
         ],
-        "opaque_px": 396,
+        "opaque_px": 1513,
         "nonempty": true
       }
     },
@@ -48,124 +48,124 @@
           64,
           64
         ],
-        "opaque_px": 1610,
+        "opaque_px": 938,
         "nonempty": true
       }
     },
     "ui_style": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 16,
-        "canvas_h": 16,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          16,
-          16
+          64,
+          64
         ],
-        "opaque_px": 26,
+        "opaque_px": 460,
         "nonempty": true
       }
     },
     "ui_icons_0": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 16,
-        "canvas_h": 16,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          16,
-          16
+          64,
+          64
         ],
-        "opaque_px": 65,
+        "opaque_px": 1029,
         "nonempty": true
       }
     },
     "ui_icons_1": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 16,
-        "canvas_h": 16,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          16,
-          16
+          64,
+          64
         ],
-        "opaque_px": 103,
+        "opaque_px": 1687,
         "nonempty": true
       }
     },
     "ui_icons_2": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 16,
-        "canvas_h": 16,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          16,
-          16
+          64,
+          64
         ],
-        "opaque_px": 94,
+        "opaque_px": 1596,
         "nonempty": true
       }
     },
     "ui_icons_3": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 16,
-        "canvas_h": 16,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          16,
-          16
+          64,
+          64
         ],
-        "opaque_px": 96,
+        "opaque_px": 1633,
         "nonempty": true
       }
     },
     "ui_icons_4": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 16,
-        "canvas_h": 16,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          16,
-          16
+          64,
+          64
         ],
-        "opaque_px": 113,
+        "opaque_px": 2058,
         "nonempty": true
       }
     },
     "ui_icons_5": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 16,
-        "canvas_h": 16,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          16,
-          16
+          64,
+          64
         ],
-        "opaque_px": 89,
+        "opaque_px": 1541,
         "nonempty": true
       }
     },
     "ui_icons_6": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 16,
-        "canvas_h": 16,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          16,
-          16
+          64,
+          64
         ],
-        "opaque_px": 121,
+        "opaque_px": 2087,
         "nonempty": true
       }
     },
     "ui_icons_7": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 16,
-        "canvas_h": 16,
+        "canvas_w": 64,
+        "canvas_h": 64,
         "contract_canvas": [
-          16,
-          16
+          64,
+          64
         ],
-        "opaque_px": 104,
+        "opaque_px": 1808,
         "nonempty": true
       }
     },
@@ -173,17 +173,17 @@
       "status": "APPROVED",
       "checks": {
         "canvas_w": 64,
-        "canvas_h": 80,
+        "canvas_h": 64,
         "contract_canvas": [
           64,
-          80
+          64
         ],
         "anchor": [
           32,
-          68
+          40
         ],
         "unbaked_pivot": true,
-        "opaque_px": 1095,
+        "opaque_px": 295,
         "nonempty": true
       }
     },
@@ -191,17 +191,17 @@
       "status": "APPROVED",
       "checks": {
         "canvas_w": 64,
-        "canvas_h": 80,
+        "canvas_h": 64,
         "contract_canvas": [
           64,
-          80
+          64
         ],
         "anchor": [
           32,
-          68
+          40
         ],
         "unbaked_pivot": true,
-        "opaque_px": 1215,
+        "opaque_px": 218,
         "nonempty": true
       }
     }
@@ -223,7 +223,7 @@
     "chair"
   ],
   "sheet_size": [
-    430,
+    926,
     84
   ]
 }

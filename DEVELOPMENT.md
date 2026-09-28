@@ -16,8 +16,8 @@ remaining_base_work로 연구 속도 변경을 처리. 1시간 마지막rate 곱
 백업 복원/잘못된 JSON/전원중단/시간역행/버전 migration 시험. 개인자료를 공개 프리셋에서 분리.
 
 ## v0.8 논리 좌표와 시각 보정 계약
-사용자 확정: top32×16 / space32×32 / visual thickness4 / table-chair offset(0,-4).
-32×32는 공간/작업 기준이며 셀 피치가 아니다. 2px를 더한32×34, collider 두께2, 논리Z2는 모두 금지다.
+사용자 확정: top64×32 / space64×64 / visual thickness4 / table-chair offset(0,-8).
+64×64는 공간/작업 기준이며 셀 피치가 아니다. 4px를 더한64×68, collider 두께4, 논리Z4는 모두 금지다.
 현재 구현 기본값(사용자가 피치를 직접 지정한 것은 아님):
   sx=(x-y)*32, sy=(x+y)*16
   x=sx/32+sy/16, y=sy/16-sx/32
@@ -27,7 +27,7 @@ remaining_base_work로 연구 속도 변경을 처리. 1시간 마지막rate 곱
 새 기본값을 결정기록에 올리고 plan/gates/예제를 함께 버전업하며 사용자 확정 크기는 바꾸지 않는다.
 
 p_ground=project(grid_x,grid_y)
-target_offset=asset.render_offset_px  # tables/chair/stool=(0,-4), other=(0,0)
+target_offset=asset.render_offset_px  # tables/chair/stool=(0,-8), other=(0,0)
 p_draw=(p_ground + target_offset) * camera_zoom + camera_origin
 
 render_offset은 원본 아트픽셀이다. 줌2에서는8→16px. 물리 elevation 값이 아니다.

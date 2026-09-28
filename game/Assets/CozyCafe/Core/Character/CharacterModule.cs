@@ -401,7 +401,7 @@ namespace CozyCafe.Core.Character
             switch (state)
             {
                 case "walk": return new[] { 0, -1, 0, -1 }[f % 4];
-                case "sit": return 1;
+                case "sit": return 2;
                 case "work": return (f % 2 == 0) ? 0 : -1;
                 default: return 0; // idle
             }
@@ -627,7 +627,7 @@ namespace CozyCafe.Core.Character
             }
         }
 
-        // ---- layer painters (canonical palette colors, 32x40 cell) ----
+        // ---- layer painters (canonical palette colors, 64x80 cell) ----
 
         private static Rgba[] Canon(PartKind kind, CharacterArtData data)
         {
@@ -639,20 +639,20 @@ namespace CozyCafe.Core.Character
         {
             var skin = Canon(PartKind.Body, data);
             Rgba s0 = skin[0], s1 = skin[1];
-            cv.FillEllipse(16, 15 + dy, 4, 4.5, s0);         // head
-            cv.FillRect(14, 19 + dy, 3, 2, s1);             // neck shadow
-            cv.FillRect(12, 22 + dy, 8, 8, s0);             // torso
-            cv.FillRect(10, 22 + dy, 2, 6, s0);             // arm L
-            cv.FillRect(20, 22 + dy, 2, 6, s0);             // arm R
-            cv.FillRect(13, 30 + dy, 2, 5, s1);             // leg L
-            cv.FillRect(16, 30 + dy, 2, 5, s1);             // leg R
-            cv.FillRect(12, 35 + dy, 3, 1, s0);             // foot L
-            cv.FillRect(16, 35 + dy, 3, 1, s0);             // foot R
+            cv.FillEllipse(32, 30 + dy, 8, 9, s0);            // head
+            cv.FillRect(29, 39 + dy, 6, 5, s1);              // neck shadow
+            cv.FillRect(24, 44 + dy, 16, 17, s0);            // torso
+            cv.FillRect(20, 45 + dy, 4, 13, s0);             // arm L
+            cv.FillRect(40, 45 + dy, 4, 13, s0);             // arm R
+            cv.FillRect(26, 61 + dy, 5, 10, s1);             // leg L
+            cv.FillRect(33, 61 + dy, 5, 10, s1);             // leg R
+            cv.FillRect(25, 71 + dy, 6, 3, s0);              // foot L
+            cv.FillRect(33, 71 + dy, 6, 3, s0);              // foot R
             if (IsFront(dir))
             {
-                cv.FillRect(14, 18 + dy, 1, 1, Feature);    // eye L
-                cv.FillRect(17, 18 + dy, 1, 1, Feature);    // eye R
-                cv.FillRect(15, 20 + dy, 2, 1, Mouth);      // mouth
+                cv.FillRect(28, 36 + dy, 2, 2, Feature);     // eye L
+                cv.FillRect(34, 36 + dy, 2, 2, Feature);     // eye R
+                cv.FillRect(30, 40 + dy, 4, 1, Mouth);       // mouth
             }
         }
 
@@ -661,45 +661,45 @@ namespace CozyCafe.Core.Character
         {
             var hair = Canon(PartKind.Hair, data);
             Rgba h0 = hair[0], h1 = hair[1];
-            cv.FillEllipse(16, 13 + dy, 4.5, 3.5, h0);       // cap over crown
+            cv.FillEllipse(32, 27 + dy, 9, 7, h0);            // cap over crown
             if (!front)
             {
                 // Rear view: the back of the head is one mass of hair that
                 // fully covers the face zone — glasses painted beneath it
                 // stay occluded (direction-aware layering).
-                cv.FillRect(11, 13 + dy, 9, 9, h0);
-                cv.FillRect(11, 20 + dy, 9, 2, h1);
+                cv.FillRect(23, 26 + dy, 18, 18, h0);
+                cv.FillRect(23, 41 + dy, 18, 3, h1);
                 if (index == 2)
                 {
-                    cv.FillRect(11, 20 + dy, 2, 4, h0);
-                    cv.FillRect(19, 20 + dy, 2, 4, h0);
+                    cv.FillRect(22, 40 + dy, 4, 8, h0);
+                    cv.FillRect(38, 40 + dy, 4, 8, h0);
                 }
-                if (index == 3) cv.FillEllipse(16, 10 + dy, 2, 2, h1);
+                if (index == 3) cv.FillEllipse(32, 20 + dy, 4, 4, h1);
                 return;
             }
             switch (index % 4)
             {
                 case 0: // short cap + side tufts
-                    cv.FillRect(12, 15 + dy, 2, 4, h0);
-                    cv.FillRect(18, 15 + dy, 2, 4, h0);
-                    cv.FillRect(12, 16 + dy, 8, 1, h1);
+                    cv.FillRect(24, 30 + dy, 4, 8, h0);
+                    cv.FillRect(36, 30 + dy, 4, 8, h0);
+                    cv.FillRect(24, 33 + dy, 16, 2, h1);
                     break;
                 case 1: // fringe across the forehead
-                    cv.FillRect(12, 15 + dy, 2, 5, h0);
-                    cv.FillRect(18, 15 + dy, 2, 5, h0);
-                    cv.FillRect(13, 16 + dy, 6, 2, h0);
-                    cv.FillRect(15, 16 + dy, 2, 2, h1);
+                    cv.FillRect(24, 30 + dy, 4, 10, h0);
+                    cv.FillRect(36, 30 + dy, 4, 10, h0);
+                    cv.FillRect(26, 32 + dy, 12, 4, h0);
+                    cv.FillRect(30, 33 + dy, 4, 3, h1);
                     break;
                 case 2: // long sides
-                    cv.FillRect(11, 15 + dy, 2, 8, h0);
-                    cv.FillRect(18, 15 + dy, 2, 8, h0);
-                    cv.FillRect(11, 22 + dy, 2, 1, h1);
-                    cv.FillRect(18, 22 + dy, 2, 1, h1);
+                    cv.FillRect(23, 30 + dy, 4, 15, h0);
+                    cv.FillRect(37, 30 + dy, 4, 15, h0);
+                    cv.FillRect(23, 44 + dy, 4, 2, h1);
+                    cv.FillRect(37, 44 + dy, 4, 2, h1);
                     break;
                 default: // bun
-                    cv.FillRect(12, 15 + dy, 2, 4, h0);
-                    cv.FillRect(18, 15 + dy, 2, 4, h0);
-                    cv.FillEllipse(16, 10 + dy, 2, 2, h1);
+                    cv.FillRect(24, 30 + dy, 4, 8, h0);
+                    cv.FillRect(36, 30 + dy, 4, 8, h0);
+                    cv.FillEllipse(32, 20 + dy, 4, 4, h1);
                     break;
             }
         }
@@ -712,28 +712,28 @@ namespace CozyCafe.Core.Character
             switch (index % 3)
             {
                 case 0: // tee: torso + short sleeves + pants
-                    cv.FillRect(12, 22 + dy, 8, 8, o0);
-                    cv.FillRect(10, 22 + dy, 2, 3, o0);
-                    cv.FillRect(20, 22 + dy, 2, 3, o0);
-                    cv.FillRect(12, 28 + dy, 8, 2, o1);   // hem shadow
-                    cv.FillRect(13, 30 + dy, 6, 5, o1); // pants
-                    cv.FillRect(12, 35 + dy, 7, 1, o1);  // shoes
+                    cv.FillRect(24, 44 + dy, 16, 17, o0);
+                    cv.FillRect(20, 45 + dy, 4, 7, o0);
+                    cv.FillRect(40, 45 + dy, 4, 7, o0);
+                    cv.FillRect(24, 57 + dy, 16, 4, o1);   // hem shadow
+                    cv.FillRect(26, 61 + dy, 12, 10, o1); // pants
+                    cv.FillRect(25, 71 + dy, 14, 3, o1);  // shoes
                     break;
                 case 1: // long sleeves + pants
-                    cv.FillRect(12, 22 + dy, 8, 8, o0);
-                    cv.FillRect(10, 22 + dy, 2, 6, o0);
-                    cv.FillRect(20, 22 + dy, 2, 6, o0);
-                    cv.FillRect(10, 28 + dy, 2, 1, o1);   // cuffs
-                    cv.FillRect(20, 28 + dy, 2, 1, o1);
-                    cv.FillRect(13, 30 + dy, 6, 5, o1);
-                    cv.FillRect(12, 35 + dy, 7, 1, o1);
+                    cv.FillRect(24, 44 + dy, 16, 17, o0);
+                    cv.FillRect(20, 45 + dy, 4, 13, o0);
+                    cv.FillRect(40, 45 + dy, 4, 13, o0);
+                    cv.FillRect(20, 56 + dy, 4, 2, o1);   // cuffs
+                    cv.FillRect(40, 56 + dy, 4, 2, o1);
+                    cv.FillRect(26, 61 + dy, 12, 10, o1);
+                    cv.FillRect(25, 71 + dy, 14, 3, o1);
                     break;
                 default: // dress/vest: flared skirt
-                    cv.FillRect(12, 22 + dy, 8, 8, o0);
-                    cv.FillRect(11, 30 + dy, 10, 3, o0);  // skirt flare
-                    cv.FillRect(11, 32 + dy, 10, 1, o1);  // hem
-                    cv.FillRect(14, 22 + dy, 3, 8, o1);   // vest line
-                    cv.FillRect(12, 35 + dy, 7, 1, o1);
+                    cv.FillRect(24, 44 + dy, 16, 17, o0);
+                    cv.FillRect(22, 60 + dy, 20, 7, o0);  // skirt flare
+                    cv.FillRect(22, 65 + dy, 20, 2, o1);  // hem
+                    cv.FillRect(29, 44 + dy, 6, 17, o1);  // vest line
+                    cv.FillRect(25, 71 + dy, 14, 3, o1);
                     break;
             }
         }
@@ -741,11 +741,11 @@ namespace CozyCafe.Core.Character
         private static void PaintApron(SoftwareCanvas cv, int index, int dy)
         {
             if (index < 0) return;
-            cv.FillRect(15, 22 + dy, 2, 1, ApronShade);      // neck strap
-            cv.FillRect(13, 23 + dy, 5, 6, ApronBase);       // bib
-            cv.FillRect(15, 26 + dy, 2, 2, ApronShade);      // pocket
-            cv.FillRect(12, 29 + dy, 7, 2, ApronBase);       // waist band
-            cv.FillRect(12, 30 + dy, 7, 1, ApronShade);      // band shade
+            cv.FillRect(30, 44 + dy, 4, 3, ApronShade);      // neck strap
+            cv.FillRect(27, 47 + dy, 10, 12, ApronBase);     // bib
+            cv.FillRect(30, 52 + dy, 5, 5, ApronShade);      // pocket
+            cv.FillRect(25, 59 + dy, 14, 4, ApronBase);      // waist band
+            cv.FillRect(25, 61 + dy, 14, 2, ApronShade);     // band shade
         }
 
         private static void PaintGlasses(SoftwareCanvas cv, int index, int dy)
@@ -753,15 +753,15 @@ namespace CozyCafe.Core.Character
             if (index < 0) return;
             if (index % 2 == 0)
             {
-                cv.FillRect(13, 18 + dy, 2, 2, GlassesColor); // lens L
-                cv.FillRect(17, 18 + dy, 2, 2, GlassesColor); // lens R
-                cv.FillRect(15, 19 + dy, 2, 1, GlassesColor); // bridge
+                cv.FillRect(27, 37 + dy, 4, 3, GlassesColor); // lens L
+                cv.FillRect(34, 37 + dy, 4, 3, GlassesColor); // lens R
+                cv.FillRect(31, 38 + dy, 3, 1, GlassesColor); // bridge
             }
             else
             {
-                cv.FillRect(12, 18 + dy, 3, 2, GlassesColor);
-                cv.FillRect(16, 18 + dy, 3, 2, GlassesColor);
-                cv.FillRect(15, 18 + dy, 1, 1, GlassesColor);
+                cv.FillRect(25, 36 + dy, 6, 4, GlassesColor);
+                cv.FillRect(33, 36 + dy, 6, 4, GlassesColor);
+                cv.FillRect(31, 37 + dy, 2, 2, GlassesColor);
             }
         }
     }

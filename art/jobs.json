@@ -5,7 +5,13 @@
     "prompt_file": "art/prompts/tile_wood.txt",
     "raw_file": "art/generated/tile_wood/raw.png",
     "approval": "APPROVED",
-    "approved_cells": 1
+    "approved_cells": 1,
+    "sheet_policy": "uniform_grid",
+    "cell_asset_px": [
+      64,
+      64
+    ],
+    "batch_group": "tile"
   },
   {
     "id": "body_anchor",
@@ -13,7 +19,13 @@
     "prompt_file": "art/prompts/body_anchor.txt",
     "raw_file": "art/generated/body_anchor/raw.png",
     "approval": "APPROVED",
-    "approved_cells": 1
+    "approved_cells": 1,
+    "sheet_policy": "uniform_grid",
+    "cell_asset_px": [
+      64,
+      80
+    ],
+    "batch_group": "character"
   },
   {
     "id": "machine_espresso",
@@ -21,7 +33,13 @@
     "prompt_file": "art/prompts/machine_espresso.txt",
     "raw_file": "art/generated/machine_espresso/raw.png",
     "approval": "APPROVED",
-    "approved_cells": 1
+    "approved_cells": 1,
+    "sheet_policy": "uniform_grid",
+    "cell_asset_px": [
+      64,
+      64
+    ],
+    "batch_group": "machine"
   },
   {
     "id": "ui_style",
@@ -29,7 +47,13 @@
     "prompt_file": "art/prompts/ui_style.txt",
     "raw_file": "art/generated/ui_style/raw.png",
     "approval": "APPROVED",
-    "approved_cells": 1
+    "approved_cells": 1,
+    "sheet_policy": "uniform_grid",
+    "cell_asset_px": [
+      64,
+      64
+    ],
+    "batch_group": "ui"
   },
   {
     "id": "ui_icons",
@@ -37,7 +61,13 @@
     "prompt_file": "art/prompts/ui_icons.txt",
     "raw_file": "art/generated/ui_icons/raw.png",
     "approval": "APPROVED",
-    "approved_cells": 8
+    "approved_cells": 8,
+    "sheet_policy": "uniform_grid",
+    "cell_asset_px": [
+      64,
+      64
+    ],
+    "batch_group": "ui"
   },
   {
     "id": "table_square",
@@ -45,7 +75,13 @@
     "prompt_file": "art/prompts/table_square.txt",
     "raw_file": "art/generated/table_square/raw.png",
     "approval": "APPROVED",
-    "approved_cells": 1
+    "approved_cells": 1,
+    "sheet_policy": "uniform_grid",
+    "cell_asset_px": [
+      64,
+      64
+    ],
+    "batch_group": "furniture"
   },
   {
     "id": "chair",
@@ -53,6 +89,12 @@
     "prompt_file": "art/prompts/chair.txt",
     "raw_file": "art/generated/chair/raw.png",
     "approval": "APPROVED",
-    "approved_cells": 1
+    "approved_cells": 1,
+    "sheet_policy": "uniform_grid",
+    "cell_asset_px": [
+      64,
+      64
+    ],
+    "batch_group": "furniture"
   }
 ]

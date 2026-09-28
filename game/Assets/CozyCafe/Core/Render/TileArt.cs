@@ -4,12 +4,12 @@ using CozyCafe.Core.Iso;
 namespace CozyCafe.Core.Render
 {
     /// <summary>
-    /// Authored floor-tile art rasterized onto its 32x32 working canvas.
-    /// The 32x16 top face is anchored at canvas (0,0) so the painted slab
-    /// occupies canvas rows 0-15 exactly: apex flush at the top edge, bottom
-    /// vertex on the midline. The 2 px thickness is painted as thin side
+    /// Authored floor-tile art rasterized onto its 64x64 working canvas.
+    /// The 64x32 top face is anchored at canvas (0,0) so the painted slab
+    /// occupies canvas rows 0-31 exactly: apex flush at the top edge, bottom
+    /// vertex on the midline. The 4 px thickness is painted as thin side
     /// faces straddling the two lower (outer-contour) edges inside that band
-    /// — visual only, physical thickness stays 0, no 32x34 canvas.
+    /// — visual only, physical thickness stays 0, no 64x68 canvas.
     /// </summary>
     public static class TileArt
     {
@@ -26,18 +26,18 @@ namespace CozyCafe.Core.Render
             {
                 for (int x = 0; x < TileCanvasContract.WidthPx; x++)
                 {
-                    double nx = Math.Abs(x + 0.5 - 16.0) / 16.0;
-                    double ny = Math.Abs(y + 0.5 - 8.0) / 8.0;
+                    double nx = Math.Abs(x + 0.5 - 32.0) / 32.0;
+                    double ny = Math.Abs(y + 0.5 - 16.0) / 16.0;
                     if (nx + ny > 1.0) continue;
                     src.SetPixel(x, y, ((x + y) % 7 == 0) ? WoodGrain : WoodTop);
                 }
             }
             // Side faces over the top face: a band straddling each lower edge
-            // (~0.4 px inside the diamond plus ~0.25 px below the edge) reads
-            // as the slab's 2 px edge thickness while the silhouette stays
-            // inside canvas rows 0-15.
-            SideBand(src, 0, 8.0, 16, 16.0, SideLeft);
-            SideBand(src, 16, 16.0, 32, 8.0, SideRight);
+            // (~0.8 px inside the diamond plus ~0.5 px below the edge) reads
+            // as the slab's 4 px edge thickness while the silhouette stays
+            // inside canvas rows 0-31.
+            SideBand(src, 0, 16.0, 32, 32.0, SideLeft);
+            SideBand(src, 32, 32.0, 64, 16.0, SideRight);
             return src;
         }
 

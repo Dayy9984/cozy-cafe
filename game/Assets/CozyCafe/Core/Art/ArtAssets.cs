@@ -128,14 +128,18 @@ namespace CozyCafe.Core.Art
             return prov == null ? null : AsString(Get(prov, "requested_image_model"));
         }
 
-        /// The real backend model evidence: union of every generated job's
-        /// provenance.json effective_image_model (measured from PNG C2PA).
-        /// All jobs must agree on one value for it to report as a string;
-        /// missing provenance or disagreement reports BLOCKED verbatim.
+        /// The verified effective image model: union of every generated
+        /// job's provenance.json effective_image_model (measured from the PNG
+        /// C2PA claim) is reported only when it equals the requested model
+        /// and all jobs agree. A backend that produced a different model -
+        /// or missing/diverging provenance - means the requested-model
+        /// generation cannot be verified, so the key reports BLOCKED
+        /// verbatim instead of a model name that fails the request.
         public static string EffectiveImageModel()
         {
             var jobs = LoadJobs();
             if (jobs == null || jobs.Count == 0) return "BLOCKED";
+            string requested = RequestedImageModel();
             var seen = new HashSet<string>();
             foreach (var o in jobs)
             {
@@ -145,10 +149,17 @@ namespace CozyCafe.Core.Art
                 if (prov == null) return "BLOCKED";
                 string em = AsString(Get(prov, "effective_image_model"));
                 if (string.IsNullOrEmpty(em)) return "BLOCKED";
+                if (AsString(Get(prov, "model_verification")) != "VERIFIED")
+                {
+                    return "BLOCKED";
+                }
                 seen.Add(em);
             }
             if (seen.Count != 1) return "BLOCKED";
-            foreach (var s in seen) return s;
+            foreach (var s in seen)
+            {
+                return s == requested ? s : "BLOCKED";
+            }
             return "BLOCKED";
         }
 
@@ -304,7 +315,7 @@ namespace CozyCafe.Core.Art
         public static TileMeasure MeasureTile(SoftwareCanvas sheet, ArtFrame f)
         {
             var t = new TileMeasure();
-            for (int y = 0; y < f.H && y < 18; y++)
+            for (int y = 0; y < f.H && y < 36; y++)
             {
                 int rowW = 0;
                 for (int x = 0; x < f.W; x++)
@@ -318,8 +329,8 @@ namespace CozyCafe.Core.Art
                         t.SilhouetteBottomRow = y;
                     }
                 }
-                if (y < 16 && rowW > 0) t.TopFaceRows++;
-                if (y < 16 && rowW > t.MaxWidth)
+                if (y < 32 && rowW > 0) t.TopFaceRows++;
+                if (y < 32 && rowW > t.MaxWidth)
                 {
                     t.MaxWidth = rowW;
                     t.EquatorRow = y;
@@ -330,7 +341,7 @@ namespace CozyCafe.Core.Art
 
         /// The single effective lift for a furniture frame: manifest-declared
         /// baked alignment plus the runtime render offset the renderer adds.
-        /// Contract: authored unbaked (0,0) + renderer (0,-4) = -4 once.
+        /// Contract: authored unbaked (0,0) + renderer (0,-8) = -8 once.
         public static int EffectiveFurnitureOffsetY(ArtManifest m, out bool recorded)
         {
             recorded = false;

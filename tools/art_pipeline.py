@@ -32,7 +32,7 @@ JOB_TARGET = {
     'chair': 'chair',
 }
 ALPHA_CUT = 24
-SIDE_PX = 2
+SIDE_PX = 4
 
 
 def write_json_lf(path, obj):
@@ -98,15 +98,15 @@ def paste_fit(src_rgba, cell_w, cell_h, anchor_xy, fit_box):
     return cell, (ox, oy, ox + nw, oy + nh)
 
 
-def extract_tile(src_rgba, cell_w=32, cell_h=32):
-    """Fit a generated iso floor tile onto the 32x32 working canvas.
+def extract_tile(src_rgba, cell_w=64, cell_h=64):
+    """Fit a generated iso floor tile onto the 64x64 working canvas.
 
     The full top-face rhombus (top vertex to front vertex, equator at the
-    widest row) is masked out of the source and resampled to the exact 32x16
-    top-face band at canvas rows 0-15. The side skirt below the rhombus's
-    lower edges is resampled through the same iso transform into the 2 px
-    edge band straddling (0,8)->(16,16) and (16,16)->(32,8) - visual only,
-    silhouette stays inside rows 0-17, physical thickness stays 0.
+    widest row) is masked out of the source and resampled to the exact 64x32
+    top-face band at canvas rows 0-31. The side skirt below the rhombus's
+    lower edges is resampled through the same iso transform into the 4 px
+    edge band straddling (0,16)->(32,32) and (32,32)->(64,16) - visual only,
+    silhouette stays inside rows 0-35, physical thickness stays 0.
     Returns (cell, meta)."""
     m = src_rgba[..., 3] > ALPHA_CUT
     rows = np.where(m.any(axis=1))[0]
@@ -129,14 +129,14 @@ def extract_tile(src_rgba, cell_w=32, cell_h=32):
     top_art[diamond & m] = src_rgba[diamond & m]
     cell = np.zeros((cell_h, cell_w, 4), dtype=np.uint8)
     t = np.array(Image.fromarray(top_art[top_y:front_y + 1]).resize(
-        (cell_w, 16), Image.LANCZOS))
+        (cell_w, 32), Image.LANCZOS))
     t[t[..., 3] <= ALPHA_CUT] = 0
-    cell[0:16] = t
+    cell[0:32] = t
 
     # Side skirt: real generated pixels below the rhombus's lower edges,
     # reprojected with the same iso scale into the 4 px edge band.
     s = cell_w / (2.0 * half_w + 1.0)
-    sy = 16.0 / max(1, front_y - top_y)
+    sy = 32.0 / max(1, front_y - top_y)
     side_mask = m & ~diamond & (np.arange(m.shape[0])[:, None] > eq)
     side = np.zeros_like(src_rgba)
     side[side_mask] = src_rgba[side_mask]
@@ -148,11 +148,11 @@ def extract_tile(src_rgba, cell_w=32, cell_h=32):
         th = max(1, int(round((int(srows[-1]) - int(srows[0]) + 1) * sy)))
         s_arr = np.array(Image.fromarray(sb).resize((tw, th), Image.LANCZOS))
         # paste origin: skirt bbox top-left through the iso transform
-        px = int(round((int(scols[0]) - cx) * s + 16))
-        py = int(round(8 + (int(srows[0]) - eq) * sy))
+        px = int(round((int(scols[0]) - cx) * s + 32))
+        py = int(round(16 + (int(srows[0]) - eq) * sy))
         for yy in range(th):
             cy = py + yy
-            if cy < 8 or cy >= min(cell_h, 18):
+            if cy < 16 or cy >= min(cell_h, 36):
                 continue
             for xx in range(tw):
                 cxp = px + xx
@@ -160,20 +160,20 @@ def extract_tile(src_rgba, cell_w=32, cell_h=32):
                     continue
                 if in_side_band(cxp, cy):
                     cell[cy, cxp] = s_arr[yy, xx]
-    meta = {'top_face_rows': [0, 16],
-            'side_band': 'straddle(0,8)-(16,16)-(32,8), visual 2px'}
+    meta = {'top_face_rows': [0, 32],
+            'side_band': 'straddle(0,16)-(32,32)-(64,16), visual 4px'}
     return cell, meta
 
 
 def in_side_band(x, y):
-    """Point in either 2px side-face parallelogram under the rhombus's lower
-    edges: (0,8)-(16,16) left, (16,16)-(32,8) right, each shifted down 2."""
-    # left face quad (0,8)(16,16)(16,18)(0,10); right face quad
-    # (32,8)(16,16)(16,18)(32,10). Band = edge + 0..2px down.
-    dl = (y - 8) * 2.0           # x on left upper edge at row y
-    dr = 32.0 - (y - 8) * 2.0    # x on right upper edge at row y
-    on_l = (8 <= y <= 18) and (dl - 4 <= x <= dl + 1)
-    on_r = (8 <= y <= 18) and (dr - 1 <= x <= dr + 4)
+    """Point in either 4px side-face parallelogram under the rhombus's lower
+    edges: (0,16)-(32,32) left, (32,32)-(64,16) right, each shifted down 4."""
+    # left face quad (0,16)(32,32)(32,36)(0,20); right face quad
+    # (64,16)(32,32)(32,36)(64,20). Band = edge + 0..4px down.
+    dl = (y - 16) * 2.0          # x on left upper edge at row y
+    dr = 64.0 - (y - 16) * 2.0   # x on right upper edge at row y
+    on_l = (16 <= y <= 36) and (dl - 8 <= x <= dl + 2)
+    on_r = (16 <= y <= 36) and (dr - 2 <= x <= dr + 8)
     return on_l or on_r
 
 
@@ -190,7 +190,7 @@ def extract_job(job, catalog):
         b = opaque_bbox(a)
         sub = a[b[1]:b[3], b[0]:b[2]]
         cell, meta = extract_tile(sub, cw, ch)
-        meta.update({'anchor': [16, 16], 'origin': 'top_center_diamond'})
+        meta.update({'anchor': [32, 32], 'origin': 'top_center_diamond'})
         return [(job['id'], cell, meta)]
 
     comps = []
@@ -208,16 +208,16 @@ def extract_job(job, catalog):
     for i, comp in enumerate(comps):
         fid = job['id'] if len(comps) == 1 else '%s_%d' % (job['id'], i)
         if cat == 'character':
-            cell, b = paste_fit(comp, cw, ch, (cw // 2, 36), (cw - 6, 35))
-            meta = {'anchor': [cw // 2, 36], 'origin': 'foot_anchor'}
+            cell, b = paste_fit(comp, cw, ch, (cw // 2, 72), (cw - 12, 70))
+            meta = {'anchor': [cw // 2, 72], 'origin': 'foot_anchor'}
         elif cat == 'machine':
-            cell, b = paste_fit(comp, cw, ch, (cw // 2, ch - 6), (cw - 12, ch - 12))
-            meta = {'anchor': [cw // 2, ch - 6], 'origin': 'ground_bottom_center'}
-        elif cat == 'furniture':
-            cell, b = paste_fit(comp, cw, ch, (cw // 2, ch - 12), (cw - 16, ch - 20))
+            cell, b = paste_fit(comp, cw, ch, (cw // 2, ch - 12), (cw - 24, ch - 24))
             meta = {'anchor': [cw // 2, ch - 12], 'origin': 'ground_bottom_center'}
+        elif cat == 'furniture':
+            cell, b = paste_fit(comp, cw, ch, (cw // 2, ch - 24), (cw - 32, ch - 40))
+            meta = {'anchor': [cw // 2, ch - 24], 'origin': 'ground_bottom_center'}
         else:
-            cell, b = paste_fit(comp, cw, ch, (cw // 2, ch - 2), (cw - 3, ch - 3))
+            cell, b = paste_fit(comp, cw, ch, (cw // 2, ch - 4), (cw - 6, ch - 6))
             meta = {'anchor': [cw // 2, ch // 2], 'origin': 'center'}
         meta['content_bounds'] = list(b)
         cells.append((fid, cell, meta))
@@ -225,13 +225,13 @@ def extract_job(job, catalog):
 
 
 def measure_diamond(cell):
-    """Measure the top-face rhombus of a tile cell (canvas rows 0-15: apex at
-    row 0, equator at the midline ~row 8, front vertex at row 15) plus the
+    """Measure the top-face rhombus of a tile cell (canvas rows 0-31: apex at
+    row 0, equator at the midline ~row 16, front vertex at row 31) plus the
     side-band silhouette below it."""
     m = cell[..., 3] > ALPHA_CUT
     if not m.any():
         return None
-    top = m[:16]
+    top = m[:32]
     widths = top.sum(axis=1)
     rows = np.where(m.any(axis=1))[0]
     eq = int(np.argmax(widths))
@@ -243,7 +243,7 @@ def measure_diamond(cell):
         'max_width': int(widths[eq]),
         'rhombus_bottom_row': int(np.where(widths > 0)[0][-1]) if filled else -1,
         'silhouette_bottom_row': int(rows[-1]),
-        'side_h': max(0, int(rows[-1]) - 15),
+        'side_h': max(0, int(rows[-1]) - 31),
     }
 
 
@@ -257,7 +257,7 @@ def qa_cell(fid, cell, meta, entry):
     if cat == 'tile':
         d = measure_diamond(cell)
         checks['diamond'] = d
-        ok = ok and d is not None and d['top_row'] == 0 and d['max_width'] == 32             and d['top_face_h'] == 16 and 6 <= d['equator_row'] <= 10             and 0 <= d['side_h'] <= SIDE_PX
+        ok = ok and d is not None and d['top_row'] == 0 and d['max_width'] == 64             and d['top_face_h'] == 32 and 12 <= d['equator_row'] <= 20             and 0 <= d['side_h'] <= SIDE_PX
         checks['top_face_px'] = [d['max_width'], d['top_face_h']] if d else None
     elif cat == 'furniture':
         checks['anchor'] = meta['anchor']
@@ -317,7 +317,7 @@ def compose_atlas(cells, metas):
 
 def contact_sheet(cells, metas, zoom=2):
     """QA contact sheet: every approved cell magnified with its contract
-    canvas border (red), ground anchor crosshair (yellow), and the 32x16
+    canvas border (red), ground anchor crosshair (yellow), and the 64x32
     top-face band guide for tiles (cyan). Measurement evidence."""
     pad = 10
     cw = max(cell.shape[1] for _, cell in cells) * zoom
@@ -350,7 +350,7 @@ def contact_sheet(cells, metas, zoom=2):
             img[cy + dy, cx] = (240, 210, 90, 255)
         if meta['category'] == 'tile':
             for i in range(zc.shape[1]):
-                img[pad + 16 * zoom, x + i] = (90, 200, 220, 255)
+                img[pad + 32 * zoom, x + i] = (90, 200, 220, 255)
         x += zc.shape[1] + pad
     return img
 

@@ -112,3 +112,64 @@ offset(0,-4) / 머신 64×64 / 가구 64×80 / 캐릭터 32×40 / UI 16×16.
 전파한다 — 64×64 변경과 동일 경로.
 불변: 물리두께0·논리고도0·오프셋1회·두께시각전용·side-face 비물리 원칙 전부,
 12프레임 단일시트 애니메이션 정책, effective_image_model=gpt-image 계약.
+
+## SPEC_CHANGE 2026-09-28 (정정) — 기본 단위 = 32×32 박스, 모든 오브젝트 동일 단위
+사유: 사용자 정정 — "머신·가구·캐릭터가 왜 다른가. 32×32 블록이 기본 단위1이다.
+32×32 박스 하나를 이어 쓸 수는 있어도 기본 단위는 그것." 비례 반감(머신 64×64,
+가구 64×80, 캐릭터 32×40, UI 16×16)은 틀린 해석.
+모델: 32×32 캔버스 안 top 다이아몬드 32×16, 중심점=앵커 (16,8), 오브젝트 본체는
+앵커 아래 24px 영역(y 8..32). 배치는 중심점 기준, 다칼 오브젝트는 32×32 박스를
+이어 붙인다.
+전: 에셋별 상이한 캔버스(64×64/64×80/32×40/16×16).
+후: floor 32×32(top 32×16, space 32×32) 포함 카탈로그 전 에셋 canvas_px=[32,32].
+문서의 캐릭터 셀도 32×32·앵커(16,8)로 정정.
+불변: top 32×16/pitch 16·8/두께 시각2px 물리0/오프셋(0,-4) 1회/12프레임 단일시트/
+effective_image_model=gpt-image.
+
+## SPEC_CHANGE 2026-09-28 (정정2) — 층 스택 스텝 = 16px, 앵커 = 8 − 16(n−1)
+사유: 사용자 정정 — "한 층 올라갈 때마다 8px에 +16px(n−1)층씩" 공식.
+전: stack_level_height_px=24 (측면 높이로 잘못 잡음).
+후: stack_level_height_px=16. n층 박스의 앵커 y = 8 − 16(n−1):
+1층(바닥/테이블 기준면) 앵커 8 → 2층(작업대 위 머신) 앵커 −8 → 3층 −24.
+박스 단위 32×32·앵커(16,8)·top 32×16·두께 시각2px 물리0은 유지.
+불변: 나머지 계약 전부.
+
+## SPEC_CHANGE 2026-09-28 (정정3) — 층 앵커 공식 = 8 + 16(n−1), 플러스
+사유: 사용자 정정 — "8px에 +16px(n−1)층, 왜 마이너스라고 하냐. 1층을 0,0 기준으로
+본다면 2층이 24px이고 3층이 32px(+16 누적)". 방향은 +y로 증가한다.
+전: anchor_y(n) = 8 − 16(n−1) (위로 올라간다는 해석으로 부호 반대).
+후: anchor_y(n) = 8 + 16(n−1). 1층 8 → 2층(작업대 위 머신) 24 → 3층 40.
+stack_level_height_px = 16 유지. 부모 기준 1회 해석 원칙 유지.
+불변: 나머지 계약 전부.
+
+## SPEC_CHANGE 2026-09-28 — 생성 방식 = 균일 그리드 시트 (사용자 지시)
+사유: 사용자 지적 — 생성 원본이 1536×1024 자유배치 컴포넌트라 아이템별 스케일이
+들쑥날쑥하고 추출 시 개별 리스케일로 채움 비율이 깨진다. "32×32면 여러 개를 한
+번에 생성" — sprite-gen의 one-sheet 모델과 일치한다.
+전: job당 1회 생성, 프롬프트가 자유 컴포넌트 배치 → 추출기가 컴포넌트별 검출·개별
+다운스케일 → 에셋 간 스케일 불일치.
+후: generation_sheet_policy(uniform_grid_sheet) — 한 호출 = 동일 크기 셀의 균일
+그리드(최종 32×32의 ≥4배 슈퍼샘플), 셀 하나 = 에셋/프레임 하나. 추출은 선언된
+격자로 등분 슬라이스(컨투어 검출·임의 리스케일 금지), 셀 간 채움·스케일 편차는
+QA 결격. jobs.json에 sheet_policy·cell_asset_px·batch_group 추가, 프롬프트 7종에
+균일 그리드 요구 추가 + 잔존 구스펙 수치(-8px→-4px, side4px→side2px) 동기화.
+불변: 12프레임 단일시트, OAuth only, codex 전용, effective_image_model=gpt-image,
+모든 치수 계약.
+
+## SPEC_REVERT 2026-09-29 — v0.8 고정 규격 복원 (64×32·64×64·시각4·(0,-8)·sunburst 게이트)
+사유: 현행 v0.8 goal이 윗면64×32·공간 기준64×64·두께 시각4px·탁자/의자(0,-8) 한 번과
+요청 이미지 모델 gpt-image-2.5-sunburst를 고정값으로 재확정했다. 독립 critic이 절반
+스케일 실측에 맞춘 gates를 "half-scale actuals"로 지적하고 effective_image_model=
+"gpt-image" 기대를 "required verified sunburst도 honest BLOCKED도 아닌 값"으로 거부.
+전: top32×16/space·canvas32×32/pitch16·8/시각2px/offset(0,-4)/stack16/
+effective_image_model="gpt-image" 기대값.
+후: top64×32/space·canvas64×64/pitch32·16/시각4px/offset(0,-8)/stack32/
+effective_image_model="gpt-image-2.5-sunburst" 기대값 복원. 코드·카탈로그·계약·
+프롬프트·문서를 동일 규격으로 재전파.
+측정: 기존 raw.png를 재생성 없이 64×64 셀로 재추출해 QA 전항 APPROVED
+(tile_wood top64×32·equator15·silhouette33·side≤4). GameCli CASE: art-pipeline
+10/11키 실측 PASS — effective_image_model만 "BLOCKED" 방출(OAuth 백엔드가
+gpt-image로 고정되어 요청 모델 검증 불가). provenance는 실측 "gpt-image"와
+NOT_VERIFIED를 그대로 보존한다.
+불변: OAuth only·codex 전용·API-key/provider fallback 금지·토큰 비수집·요청 모델
+기록 유지·측정값 위조 없음·한 번만 적용되는 보정 원칙.

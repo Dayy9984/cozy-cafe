@@ -3,25 +3,25 @@
   "projection": "2.5D_pixel_isometric_user_dimensions",
   "tile": {
     "top_size": [
-      32,
-      16
+      64,
+      32
     ],
     "space_size": [
-      32,
-      32
+      64,
+      64
     ],
     "canvas": [
-      32,
-      32
+      64,
+      64
     ],
     "canvas_policy": "space_reference_canvas_no_thickness_addition",
-    "visual_thickness_px": 2,
+    "visual_thickness_px": 4,
     "thickness_mode": "visual_only",
     "physical_thickness": 0,
     "logical_elevation": 0,
     "anchor": [
-      16,
-      8
+      32,
+      16
     ],
     "anchor_space": "top_face_local_continuous_coordinates",
     "top_origin_in_canvas": [
@@ -30,31 +30,32 @@
     ],
     "top_origin_policy": "MVP_AUTHORING_DEFAULT; record actual shared top bounds and pivot, do not infer from canvas bottom",
     "grid_x_step": [
-      16,
-      8
+      32,
+      16
     ],
     "grid_y_step": [
-      -16,
-      8
+      -32,
+      16
     ],
     "grid_basis_status": "DERIVED_MVP_CONVENTION_NOT_USER_SPECIFIED_PITCH",
-    "grid_basis_note": "Use half of the specified 32x16 top for continuous projection; confirm raster alignment in the first visual gate.",
+    "grid_basis_note": "Use half of the specified 64x32 top for continuous projection; confirm raster alignment in the first visual gate.",
     "rounding": "keep_subpixel_coordinates_until_final_render_snap",
     "side_faces": "visual_overlay_on_visible_outer_boundary_only",
     "side_faces_affect_collision": false,
     "space_size_controls_grid_pitch": false,
-    "thickness_adds_canvas_height": false
+    "thickness_adds_canvas_height": false,
+    "stack_level_height_px": 32
   },
   "character": {
     "rigs": 1,
     "preset_count": 3,
     "cell": [
-      32,
-      40
+      64,
+      80
     ],
     "foot_anchor": [
-      16,
-      36
+      32,
+      72
     ],
     "directions": [
       "SW",
@@ -107,19 +108,19 @@
     "asset_render_offsets_px": {
       "table_square": [
         0,
-        -4
+        -8
       ],
       "table_round": [
         0,
-        -4
+        -8
       ],
       "chair": [
         0,
-        -4
+        -8
       ],
       "stool": [
         0,
-        -4
+        -8
       ]
     },
     "offset_provenance": {
@@ -142,6 +143,15 @@
     "affects_pathfinding": false,
     "depth_sort_anchor": "unshifted_logical_ground_anchor",
     "saved_instance_policy": "save logical cell and orientation; resolve render offset from asset contract without cumulative writes",
-    "attachment_policy": "resolve child from parent visual mount once; do not repeat parent alignment offset on child"
+    "attachment_policy": "resolve child from parent visual mount once; do not repeat parent alignment offset on child",
+    "stack_level_height_px": 32,
+    "stack_anchor_rule": "anchor_y(level n) = 16 + 32*(n-1); level 1 anchor = 16, each higher level = +32px in canvas y; resolved once from parent top mount"
+  },
+  "generation_sheet_policy": {
+    "model": "uniform_grid_sheet",
+    "rule": "one generation call produces ONE uniform grid sheet; every cell identical pixel size (supersampled >=4x of final 64x64); each cell contains exactly one asset or one animation frame; extraction slices the FIXED GRID (no contour detection) then scales each cell to final 64x64; per-component arbitrary rescale forbidden; cell fill ratio must be consistent across all cells",
+    "static_jobs": "batch multiple 64x64 assets per sheet where practical",
+    "animation_jobs": "one sheet per (asset,state): all 12 frames x required directions on a single uniform grid (existing 12-frame single-sheet policy)",
+    "extraction": "grid-slice by declared rows/cols; reject sheets whose cells differ in size or whose subject scale varies beyond tolerance"
   }
 }
