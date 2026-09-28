@@ -278,3 +278,13 @@ BLOCKED_DECLARED(증거 기반). gates.json·기대값·CASE 계약·provenance
 정상 일치로 전환된다.
 불변: OAuth only·codex 전용·API키/provider fallback 금지·토큰 비수집·
 측정값 위조 금지·gates.json 고정.
+
+## GATE_ADD 2026-09-28 — 아틀라스 실측 프레임 32×32 게이트 추가
+사유: 사용자 지적 — 통합된 atlas_manifest 프레임이 64×64/64×80 구 규격 그대로였다.
+기존 tile_canvas_height 등의 키는 코드/계약 상수를 읽어 통과했으나 실제 아틀라스
+프레임 치수를 검증하는 키가 없어 갭이 생겼다.
+추가: art-pipeline 게이트에 atlas_all_frames_32x32=true, atlas_frames_present=true.
+StageCases는 manifest frames의 w/h 실측값에서 계산해야 한다(모든 에셋 = 32×32
+단위 박스). ui-local-ugc의 회귀체크가 art-pipeline을 포함하므로 다음 평가에서
+즉시 재검증된다.
+불변: 기존 키 전부, expected 값 약화 없음(추가만).
