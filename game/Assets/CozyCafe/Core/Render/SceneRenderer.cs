@@ -241,6 +241,13 @@ namespace CozyCafe.Core.Render
             // paint-only overlays like the other stage marks.
             if (scene.MiniMode) PaintWindowChrome(canvas, w);
             if (scene.ToolsPanel != null) PaintToolsPanel(canvas, scene.ToolsPanel, w, h);
+            // Shared-UI overlay: the frame built by the real UiModule —
+            // 9-slice skins at widget rects, live-state cues, runtime text,
+            // the focused input's caret. Screen space, never iso.
+            if (scene.UiFrame != null && scene.UiModule != null)
+            {
+                scene.UiModule.Paint(canvas, scene.UiFrame);
+            }
 
             width = w;
             height = h;

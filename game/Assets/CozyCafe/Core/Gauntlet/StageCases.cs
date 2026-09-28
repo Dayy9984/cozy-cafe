@@ -12,6 +12,8 @@ using CozyCafe.Core.Save;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Staff;
 using CozyCafe.Core.Tools;
+using CozyCafe.Core.Ugc;
+using CozyCafe.Core.Ui;
 
 namespace CozyCafe.Core.Gauntlet
 {
@@ -56,6 +58,8 @@ namespace CozyCafe.Core.Gauntlet
                     return ArtPipeline();
                 case "desktop-tools":
                     return DesktopTools();
+                case "ui-local-ugc":
+                    return UiLocalUgc();
                 default:
                     return null;
             }
@@ -943,6 +947,303 @@ namespace CozyCafe.Core.Gauntlet
                 separate));
 
             return cases;
+        }
+
+
+        /// <summary>
+        /// Shared UI layer + local UGC creator. Every value is produced by
+        /// real module calls: runtime string-to-pixel text rasterization
+        /// (different Korean strings must paint different ink, identical
+        /// strings identical ink, and no baked-text source exists), a real
+        /// 9-slice resize whose corners stay pixel-exact while the widget's
+        /// clickable area tracks its rect, the PNG -> role/anchor/direction
+        /// -> preview -> validation -> save -> apply import flow against a
+        /// real store, the allow-listed public preset audited by the save
+        /// module's own private-field scan, and skin removal/missing-asset
+        /// fallback leaving owned functional machines in place.
+        /// </summary>
+        private static List<CaseResult> UiLocalUgc()
+        {
+            var cases = new List<CaseResult>();
+            var data = MvpData.Load();
+            var ink = Rgba.Opaque(240, 234, 244);
+
+            // --- runtime Korean text: the live string is the only source.
+            //     Identical strings rasterize identical pixels; different
+            //     strings (including same-cell-count syllables with
+            //     different jamo) rasterize different pixels; and the
+            //     module has no baked-text asset path at all.
+            var ui = new UiModule();
+            var tA = ui.RenderText("내 카페", 1, ink);
+            var tA2 = ui.RenderText("내 카페", 1, ink);
+            var tB = ui.RenderText("불러오기", 1, ink);
+            var tC = ui.RenderText("꿈", 1, ink);
+            var tD = ui.RenderText("금", 1, ink);
+            bool liveRaster = CanvasHasInk(tA) && SamePixels(tA, tA2)
+                && !SamePixels(tA, tB) && !SamePixels(tC, tD)
+                && !SamePixels(tA, tC);
+            cases.Add(new CaseResult("ui_text_baked",
+                ui.TextBaked || ui.BakedTextAssets != 0 || !liveRaster));
+
+            // --- 9-slice resize: corners pixel-exact at a larger size and
+            //     at a clamped smaller size, edges/center sampled through,
+            //     the source sprite untouched, the widget's clickable area
+            //     equal to its resized rect, and the painted skin corner
+            //     landing exactly on the rect (no iso, no -8 lift).
+            var skinSrc = BuildCaseSkin();
+            var skin = new UiSkin("case", skinSrc, 10, 10, 10, 10);
+            var big = skin.Render(150, 70);
+            var tiny = skin.Render(24, 18);
+            bool cornersOk =
+                SameColor(big.GetPixel(3, 3), skinSrc.GetPixel(3, 3))
+                && SameColor(big.GetPixel(146, 3), skinSrc.GetPixel(32, 3))
+                && SameColor(big.GetPixel(3, 66), skinSrc.GetPixel(3, 32))
+                && SameColor(big.GetPixel(146, 66), skinSrc.GetPixel(32, 32))
+                && SameColor(tiny.GetPixel(0, 0), skinSrc.GetPixel(0, 0))
+                && SameColor(tiny.GetPixel(23, 17), skinSrc.GetPixel(35, 35));
+            bool mappedOk =
+                SameColor(big.GetPixel(75, 35), skinSrc.GetPixel(18, 18))
+                && SameColor(big.GetPixel(75, 5), skinSrc.GetPixel(18, 5))
+                && SameColor(big.GetPixel(5, 35), skinSrc.GetPixel(5, 18));
+            ui.RegisterSkin(skin);
+            var wgt = ui.AddButton("resize", 40, 40, 60, 24, "확인", "case");
+            wgt.SetRect(40, 40, 150, 70);
+            bool hitOk = wgt.Contains(40, 40) && wgt.Contains(189, 109)
+                && wgt.Contains(40, 109) && !wgt.Contains(190, 110);
+            var frame = ui.BuildFrame(240, 140);
+            var cv = new SoftwareCanvas(240, 140);
+            cv.Clear(new Rgba(10, 10, 14, 255));
+            ui.Paint(cv, frame);
+            var cornerInk = skinSrc.GetPixel(0, 0);
+            int lift = 99;
+            for (int yy = wgt.Y - 16; yy <= wgt.Y + 4; yy++)
+            {
+                if (SameColor(cv.GetPixel(wgt.X, yy), cornerInk))
+                {
+                    lift = yy - wgt.Y;
+                    break;
+                }
+            }
+            cases.Add(new CaseResult("ui_render_offset_y_px", lift));
+            cases.Add(new CaseResult("nine_slice_resizes",
+                cornersOk && mappedOk && hitOk && lift == 0
+                && !frame.UsedFallbackSkin
+                && skinSrc.GetPixel(0, 0).R == 210));
+
+            // --- real widget states + focused text input ----------------
+            var uis = new UiModule();
+            var b1 = uis.AddButton("b1", 0, 0, 60, 20, "저장", "");
+            var b2 = uis.AddButton("b2", 0, 30, 60, 20, "불러오기", "");
+            uis.SetHovered(b1);
+            bool st1 = b1.State == UiState.Hover && b2.State == UiState.Normal;
+            uis.Press(b1);
+            bool st2 = b1.State == UiState.Pressed;
+            uis.Release(b1);
+            uis.SetEnabled(b2, false);
+            uis.Press(b2);
+            bool st3 = b1.State == UiState.Normal
+                && b2.State == UiState.Disabled;
+            var inp = uis.AddTextInput("in", 0, 60, 80, 20, "이름", "");
+            uis.FocusInput(inp);
+            uis.TypeText("민트 카페");
+            uis.CaretLeft();
+            uis.CaretLeft();
+            uis.TypeText("온 ");
+            uis.Backspace();
+            uis.TypeText(" ");
+            cases.Add(new CaseResult("widget_state_transitions",
+                st1 && st2 && st3));
+            cases.Add(new CaseResult("text_input_roundtrip",
+                inp.InputText == "민트 온 카페" && inp.Caret == 5
+                && uis.TextInputActive));
+
+            string tmpDir = Path.Combine(Directory.GetCurrentDirectory(),
+                "out", "ui-ugc-tmp");
+            if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true);
+            try
+            {
+                UiLocalUgcFlow(cases, data, skinSrc, tmpDir);
+            }
+            finally
+            {
+                try { Directory.Delete(tmpDir, true); }
+                catch (Exception) { }
+            }
+            return cases;
+        }
+
+        /// The creator flow on a real local store: a PNG authored in
+        /// memory is imported, assigned a role/anchor/direction, previewed
+        /// into real pixels, validated, saved as a public preset + content
+        /// asset, then applied to a live session. Rejection paths run too:
+        /// undecodable bytes, unknown roles, role-illegal directions.
+        private static void UiLocalUgcFlow(List<CaseResult> cases,
+            MvpData data, SoftwareCanvas skinSrc, string tmpDir)
+        {
+            byte[] png = PngWriter.Encode(
+                skinSrc.Width, skinSrc.Height, skinSrc.Pixels);
+            var ugc = new UgcModule { StoreDir = tmpDir };
+            var draft = ugc.BeginImport(png, "cafe-panel");
+            bool importOk = draft != null && draft.Image != null
+                && draft.Image.Width == 36 && draft.Image.Height == 36;
+            bool assigned = ugc.Assign("ui_panel_skin", 0.5, 0.5, "");
+            ugc.AddPlacement(FurnitureKind.Counter, 4, 2, 0);
+            ugc.AddAppearance("furniture:counter");
+            var preview = ugc.BuildPreview(96, 72);
+            bool previewOk = preview != null && preview.Width == 96
+                && preview.Height == 72;
+            bool validOk = ugc.Validate().Count == 0;
+            string presetId = validOk ? ugc.Save() : null;
+            bool savedOk = presetId != null
+                && File.Exists(ugc.PresetPath(presetId))
+                && File.Exists(ugc.AssetPath(draft.AssetId));
+            var docObj = savedOk
+                ? MiniJson.Parse(File.ReadAllText(ugc.PresetPath(presetId)))
+                    as Dictionary<string, object>
+                : null;
+            savedOk = savedOk && docObj != null
+                && UgcModule.PresetHasPlacementRefs(docObj)
+                && !CafeSession.PresetContainsPrivateFields(docObj);
+
+            // apply: one real placement through the editor rules plus the
+            // counter appearance ref resolving to the stored PNG.
+            var session = CafeSession.CreateStartup(data, 7, 6, 5);
+            session.Layout.TryPlace(FurnitureKind.Door, 0, 1, 0);
+            var inst = ugc.Apply(session);
+            var counter = inst.PlacedIds.Count > 0
+                ? session.Layout.Find(inst.PlacedIds[0]) : null;
+            var installed = ugc.InstallUiSkin(draft.AssetId, 10);
+            bool applied = inst.PlacedIds.Count == 1
+                && inst.Rejected.Count == 0
+                && inst.SkinRefs.Count == 1
+                && counter != null && counter.Kind == FurnitureKind.Counter
+                && ugc.AppearanceOf("furniture:counter") == draft.AssetId
+                && session.Layout.ValidateLayout() == PlacementReject.None
+                && installed != null && installed.Source.Width == 36;
+
+            // rejection evidence: undecodable bytes die at import, unknown
+            // roles and role-illegal directions die at assign.
+            var bad = new UgcModule { StoreDir = tmpDir };
+            bool rejected = bad.BeginImport(new byte[] { 1, 2, 3 }, "x") == null
+                && bad.Draft == null;
+            var bad2 = new UgcModule { StoreDir = tmpDir };
+            bad2.BeginImport(png, "y");
+            rejected = rejected
+                && !bad2.Assign("bogus_role", 0.5, 0.5, "")
+                && !bad2.Assign("ui_panel_skin", 0.5, 0.5, "SE")
+                && bad2.Assign("furniture_skin", 0.5, 0.5, "SE");
+            cases.Add(new CaseResult("ugc_import_works",
+                importOk && assigned && previewOk && validOk
+                && savedOk && applied && rejected));
+
+            // --- public preset audit: placement + appearance refs ride,
+            //     private data (memos/todos here, wallet/research/staff by
+            //     construction) stays behind.
+            session.Memos.Add("private memo: vault code 1234");
+            session.Todos.Add("call the supplier");
+            var preset = ugc.ExportPublicPreset(session, "내 카페");
+            cases.Add(new CaseResult("preset_contains_private_fields",
+                CafeSession.PresetContainsPrivateFields(preset)));
+            cases.Add(new CaseResult("preset_placement_refs_present",
+                UgcModule.PresetHasPlacementRefs(preset)));
+
+            // --- missing/removed skin: owned functional machines stay ---
+            var s2 = CafeSession.CreateStartup(data, 11, 6, 6);
+            s2.Layout.TryPlace(FurnitureKind.Door, 0, 2, 0);
+            s2.Layout.BeginCommand();
+            var ctr = s2.Layout.TryPlace(FurnitureKind.Counter, 3, 2, 0);
+            s2.Layout.EndCommand();
+            var grinder = s2.Layout.TryPlace(FurnitureKind.Grinder, 3, 2, 0);
+            string layoutBefore = s2.Layout.SaveLayout();
+
+            var ugc3 = new UgcModule { StoreDir = tmpDir };
+            ugc3.BeginImport(png, "grinder-skin");
+            ugc3.Assign("furniture_skin", 0.5, 0.5, "");
+            ugc3.AddAppearance("furniture:grinder");
+            ugc3.BuildPreview(48, 36);
+            ugc3.Validate();
+            ugc3.Save();
+            var inst3 = ugc3.Apply(s2);
+            bool skinOn = inst3.SkinRefs.Count == 1
+                && ugc3.AppearanceOf("furniture:grinder") == ugc3.Draft.AssetId;
+            // remove the skin, then delete its file and apply again: the
+            // second apply must record a fallback, not drop the machine.
+            bool removed = ugc3.RemoveAppearance(s2, ugc3.Draft.AssetId);
+            File.Delete(ugc3.AssetPath(ugc3.Draft.AssetId));
+            var inst4 = ugc3.Apply(s2);
+            bool fallback = inst4.FallbackAssets.Count == 1
+                && ugc3.AppearanceOf("furniture:grinder") == null;
+            var m01 = data.FindMenu("M01");
+            bool preserved = ctr.Ok && grinder.Ok
+                && grinder.Placed.HostId == ctr.Placed.Id
+                && s2.Layout.Find(grinder.Placed.Id) != null
+                && s2.Layout.SaveLayout() == layoutBefore
+                && s2.Layout.ValidateLayout() == PlacementReject.None
+                && s2.Econ.OwnedMachines.Contains("grinder")
+                && s2.Econ.OwnedMachines.Contains("espresso")
+                && s2.Econ.Owns(m01);
+            cases.Add(new CaseResult("missing_skin_preserves_owned_machine",
+                skinOn && removed && fallback && preserved));
+        }
+
+        /// The authored skin used by the resize/import checks: a 36x36
+        /// sprite with a distinct outer ring, border band, center fill and
+        /// four different corner accents so corner fidelity is measurable
+        /// pixel-by-pixel through any resize.
+        private static SoftwareCanvas BuildCaseSkin()
+        {
+            var c = new SoftwareCanvas(36, 36);
+            c.Clear(new Rgba(0, 0, 0, 0));
+            for (int y = 0; y < 36; y++)
+            {
+                for (int x = 0; x < 36; x++)
+                {
+                    if (x < 10 || y < 10 || x >= 26 || y >= 26)
+                    {
+                        bool edge = x < 2 || y < 2 || x >= 34 || y >= 34;
+                        c.SetPixel(x, y, edge
+                            ? Rgba.Opaque(210, 160, 110)
+                            : Rgba.Opaque(96, 74, 60));
+                    }
+                    else
+                    {
+                        c.SetPixel(x, y, Rgba.Opaque(52, 44, 62));
+                    }
+                }
+            }
+            c.FillRect(2, 2, 8, 8, Rgba.Opaque(236, 200, 140));
+            c.FillRect(26, 2, 8, 8, Rgba.Opaque(200, 150, 96));
+            c.FillRect(2, 26, 8, 8, Rgba.Opaque(170, 120, 80));
+            c.FillRect(26, 26, 8, 8, Rgba.Opaque(140, 96, 64));
+            return c;
+        }
+
+        private static bool SamePixels(SoftwareCanvas a, SoftwareCanvas b)
+        {
+            if (a == null || b == null || a.Width != b.Width
+                || a.Height != b.Height) return false;
+            var pa = a.Pixels; var pb = b.Pixels;
+            for (int i = 0; i < pa.Length; i++)
+            {
+                if (pa[i] != pb[i]) return false;
+            }
+            return true;
+        }
+
+        private static bool SameColor(Rgba a, Rgba b)
+        {
+            return a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A;
+        }
+
+        private static bool CanvasHasInk(SoftwareCanvas c)
+        {
+            if (c == null) return false;
+            var px = c.Pixels;
+            for (int i = 3; i < px.Length; i += 4)
+            {
+                if (px[i] != 0) return true;
+            }
+            return false;
         }
 
         private static bool SameInts(List<int> a, List<int> b)

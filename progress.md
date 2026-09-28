@@ -762,3 +762,42 @@ byte-identical(staged copy 실행).
 유료 API키. 게이트는 위조 없이 정직한 BLOCKED를 증거 기반 선언 통과로
 보고한다. 계정이 실제 sunburst 백엔드를 노출하면 동일 경로가 VERIFIED로
 전환되어 정상 일치한다.
+
+## ui-local-ugc — 공유 UI·로컬 창작툴 실구현
+구축: Core/Ui 신규(UiModule). UiText는 실제 문자열→픽셀 스트로크
+래스터라이저(초성·중성·종성 자모 결합+ASCII, scale 파라미터) —
+문자열이 유일한 소스이며 이미지에 구운 텍스트 자산 경로 자체가 없다.
+UiSkin은 소스 스프라이트 9-slice 렌더: 코너 1:1 비스케일, 가장자리·
+중앙 최근접 샘플, 테두리 합보다 작은 대상에는 비례 클램프. UiWidget은
+rect=클릭 영역이 리사이즈에 그대로 따라가고 normal/hover/pressed/
+disabled/focus 5상태·실제 텍스트입력(캐럿·삭제·삽입)을 가진다.
+UiModule.Paint가 위젯 프레임을 스크린 좌표로 도색 — iso 투영 없고
+가구 -8px 보정도 없다(실측 lift 0).
+Core/Ugc 신규(UgcModule): PNG 디코드(PngReader)→역할/앵커/방향 지정
+(알 수 없는 역할·역할불가 방향·범위 밖 앵커 즉시 거부)→실픽셀 프리뷰
+(이미지 핏+앵커 크로스헤어+역할 띠)→검증(디코드·크기·불투명·이름·
+역할·앵커·방향)→로컬 스토어 저장(콘텐츠id PNG+공개 프리셋 JSON)→
+세션 적용(배치는 LayoutModule 실검증, 어피어런스는 대상→에셋 바인딩).
+공개 프리셋은 allow-list만(version·kind·name·assets·placements·
+appearances·sha256) — coins·research·staff·memos·path·auth가 구조상
+들어갈 수 없고 CafeSession.PresetContainsPrivateFields로 재감사.
+스킨 제거·파일 소실은 AppearanceByTarget=null 폴백+FallbackAssets
+기록 — 배치 가구·소유 머신·지갑 불변.
+배선: Modules.cs의 스텁 UgcModule 제거, GameBootstrap에 ui/ugc 실모듈
+등록(Probe 실호출), GameScene.UiFrame·UiModule 필드 추가,
+SceneRenderer가 프레임을 그대로 도색, StageCases "ui-local-ugc"에
+9키 실측 케이스, StageScenes에 수입 스킨으로 그린 창작 패널 장면.
+검증: dotnet build Release 경고0·오류0. check_stage ui-local-ugc →
+CASE 9키 전부 실모듈 결과: ui_text_baked false·ui_render_offset_y_px
+0·nine_slice_resizes true·widget_state_transitions true·
+text_input_roundtrip true·ugc_import_works true·
+preset_contains_private_fields false·preset_placement_refs_present
+true·missing_skin_preserves_owned_machine true — 5/5 게이트 일치.
+회귀: desktop-tools 6/6·save-offline 6/6·art-pipeline 10/11+선언
+BLOCKED 유지·project-boot 2/2. capture_game.py → Unity 6000.6.3f1
+CaptureShot 실카메라 경로로 out/captures/ui_local_ugc.png 520×360 —
+실방+수입PNG 스킨 패널·런타임 한글 텍스트·hover/pressed/disabled/
+focus 큐·입력 캐럿·크리에이터 프리뷰가 실제로 표시됨.
+수정: UiSkin.Render의 y축 코너 판정이 ch 대신 cw를 사용해 중앙행이
+붕괴하는 크기(h<테두리합)에서 범위 초과 — stage check 실실행으로
+발견 후 수정.

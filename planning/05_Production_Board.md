@@ -14,7 +14,7 @@
 |save-offline|저장·복귀·시간경계|research-staff,layout-editor|검증완료(리뷰대기)|
 |character-rig|소수 파츠·팔레트·랜덤 손님|iso-grid,research-staff|READY|
 |art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트 exit0: 10/11 실측일치+요청모델키 선언형 BLOCKED 통과·서명C2PA+세션sha256 결합검증 완료)|
-|ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|READY|
+|ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|검증완료(리뷰대기)|
 |integration|무개입 카페 통합|ui-local-ugc|READY|
 |native-release|실제 Mac/Windows 빌드·검증|integration|READY|
 
@@ -63,3 +63,14 @@ v0.8.2 save-offline 통합본 재검증: merge 17fd7d4(integration→HEAD, .cs 0
 build 경고0·save-offline 6/6·research-staff 8/8·idle-economy 8/8·
 layout-editor 22/22·project-boot 2/2·desktop-tools 6/6·character-rig 5/5.
 iso-grid는 iso/art 스트림 미착수 SPEC_CHANGE로 실측 FAIL 유지(소유 외).
+
+v0.8.8 ui-local-ugc 실구현 (2026-09-29): Core/Ui(런타임 한글 스트로크
+래스터라이저 UiText·9-slice UiSkin·위젯 5상태·실제 텍스트입력)·Core/Ugc
+(PNG import→역할/앵커/방향→실픽셀 프리뷰→검증→로컬 저장→세션 적용,
+공개 프리셋 allow-list·사유필드 재감사, 스킨 제거/소실 시 소유 머신 보존
+폴백). GameBootstrap 등록·StageCases ui-local-ugc 9키 실측·StageScenes
+장면·SceneRenderer UI 도색. check ui-local-ugc 5/5 게이트 일치,
+desktop-tools 6/6·save-offline 6/6·art-pipeline 10/11+선언BLOCKED·
+project-boot 2/2 회귀 유지. Unity CaptureShot 실카메라
+out/captures/ui_local_ugc.png(520×360) — 수입 스킨 패널·런타임 한글
+텍스트·상태 큐·프리뷰 실표시.

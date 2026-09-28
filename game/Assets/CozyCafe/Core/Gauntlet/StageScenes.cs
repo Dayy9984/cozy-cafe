@@ -1,9 +1,12 @@
+using System.IO;
 using CozyCafe.Core.Art;
 using CozyCafe.Core.Layout;
 using CozyCafe.Core.Character;
 using CozyCafe.Core.Render;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Tools;
+using CozyCafe.Core.Ugc;
+using CozyCafe.Core.Ui;
 
 namespace CozyCafe.Core.Gauntlet
 {
@@ -29,6 +32,8 @@ namespace CozyCafe.Core.Gauntlet
                     return ArtPipelineSheet();
                 case "desktop-tools":
                     return DesktopToolsMini();
+                case "ui-local-ugc":
+                    return UiLocalUgc();
                 default:
                     return DefaultBoot();
             }
@@ -152,6 +157,127 @@ namespace CozyCafe.Core.Gauntlet
             s.AnchorX = 230;
             s.AnchorY = 72;
             return s;
+        }
+
+        /// <summary>
+        /// Shared-UI + UGC scene: a small real cafe on the left, and on
+        /// the right the creator panel skinned entirely by a PNG that just
+        /// went through the real import pipeline (import -> role/anchor/
+        /// direction -> preview -> validation -> save -> install as a
+        /// 9-slice UiSkin). Every widget shows live state — a hovered,
+        /// pressed and disabled button, a focused text input with real
+        /// Korean text mid-caret, and the creator's own preview render.
+        /// Runtime-drawn text only; nothing is baked into art.
+        /// </summary>
+        private static GameScene UiLocalUgc()
+        {
+            var s = new GameScene();
+            s.Room = new RoomGrid(4, 3);
+            var ed = new LayoutModule(s);
+            ed.TryPlace(FurnitureKind.Door, 0, 1, 0);
+            ed.BeginCommand();
+            ed.TryPlace(FurnitureKind.Table, 1, 1, 0);
+            ed.TryPlace(FurnitureKind.Chair, 1, 0, 0);
+            ed.TryPlace(FurnitureKind.Counter, 3, 0, 0);
+            ed.EndCommand();
+            ed.TryPlace(FurnitureKind.Grinder, 3, 0, 0);
+            s.Agents.Add(new Agent
+            {
+                Name = "staff_0",
+                PresetId = 0,
+                GridX = 2.5,
+                GridY = 2.5,
+                IsStaff = true
+            });
+
+            // The real creator flow drives the skin this dialog draws: a
+            // PNG authored in memory is imported, assigned its role and
+            // anchor, previewed, validated, saved into the local store and
+            // installed as a shared 9-slice skin — then the panel and all
+            // its controls use exactly that skin.
+            string store = Path.Combine(Directory.GetCurrentDirectory(),
+                "out", "ugc-store");
+            var ugc = new UgcModule { StoreDir = store };
+            ugc.BeginImport(BuildUgcPanelPng(), "cafe-panel");
+            ugc.Assign("ui_panel_skin", 0.5, 0.5, "");
+            var preview = ugc.BuildPreview(72, 54);
+            if (ugc.Validate().Count == 0)
+            {
+                ugc.Save();
+            }
+            var ui = new UiModule();
+            var imported = ugc.Draft != null
+                ? ugc.InstallUiSkin(ugc.Draft.AssetId, 10) : null;
+            if (imported != null) ui.RegisterSkin(imported);
+            string skinId = imported != null ? imported.Id : "";
+
+            var panel = ui.AddPanel("creator", 258, 20, 250, 320,
+                "내 카페 꾸미기", skinId);
+            var save = ui.AddButton("save", 272, 60, 68, 24, "저장", skinId);
+            var load = ui.AddButton("load", 348, 60, 68, 24, "불러오기", skinId);
+            var apply = ui.AddButton("apply", 424, 60, 68, 24, "적용", skinId);
+            var locked = ui.AddButton("locked", 272, 92, 68, 24, "잠금", skinId);
+            ui.AddButton("export", 348, 92, 68, 24, "내보내기", skinId);
+            ui.SetHovered(load);
+            ui.Press(apply);
+            ui.SetEnabled(locked, false);
+            ui.AddLabel("role", 272, 130, 220, 14, "역할: ui_panel_skin");
+            var name = ui.AddTextInput("cafe-name", 272, 152, 220, 26,
+                "카페 이름", skinId);
+            ui.FocusInput(name);
+            ui.TypeText("민트 초코 카페");
+            ui.AddLabel("pv-cap", 272, 190, 120, 14, "미리보기");
+            if (preview != null)
+            {
+                ui.AddPreview("ugc", 272, 208, 84, 62, preview, skinId);
+            }
+            ui.AddLabel("anchor", 368, 208, 130, 14,
+                "앵커 (0.50, 0.50)");
+            ui.AddLabel("dir", 368, 226, 130, 14, "방향: 없음");
+            ui.AddLabel("state", 368, 244, 130, 14,
+                ugc.Draft != null && ugc.Draft.PresetId != null
+                    ? "상태: 저장됨" : "상태: 초안");
+
+            s.UiModule = ui;
+            s.UiFrame = ui.BuildFrame(520, 360);
+            s.IsLoaded = s.Validate();
+            s.FixedViewport = true;
+            s.ViewportW = 520;
+            s.ViewportH = 360;
+            s.AnchorX = 122;
+            s.AnchorY = 62;
+            return s;
+        }
+
+        /// The PNG the creator imports for this scene: a 36x36 9-slice
+        /// panel skin in a cool palette so the imported skin is plainly
+        /// visible next to the default furniture art.
+        private static byte[] BuildUgcPanelPng()
+        {
+            var c = new SoftwareCanvas(36, 36);
+            c.Clear(new Rgba(0, 0, 0, 0));
+            for (int y = 0; y < 36; y++)
+            {
+                for (int x = 0; x < 36; x++)
+                {
+                    if (x < 10 || y < 10 || x >= 26 || y >= 26)
+                    {
+                        bool edge = x < 2 || y < 2 || x >= 34 || y >= 34;
+                        c.SetPixel(x, y, edge
+                            ? Rgba.Opaque(150, 220, 225)
+                            : Rgba.Opaque(64, 130, 140));
+                    }
+                    else
+                    {
+                        c.SetPixel(x, y, Rgba.Opaque(26, 40, 52));
+                    }
+                }
+            }
+            c.FillRect(2, 2, 8, 8, Rgba.Opaque(255, 230, 150));
+            c.FillRect(26, 2, 8, 8, Rgba.Opaque(230, 190, 110));
+            c.FillRect(2, 26, 8, 8, Rgba.Opaque(200, 160, 90));
+            c.FillRect(26, 26, 8, 8, Rgba.Opaque(170, 130, 70));
+            return PngWriter.Encode(36, 36, c.Pixels);
         }
 
         /// <summary>

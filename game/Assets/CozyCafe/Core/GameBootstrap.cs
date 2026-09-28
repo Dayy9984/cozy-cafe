@@ -6,6 +6,8 @@ using CozyCafe.Core.Research;
 using CozyCafe.Core.Staff;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Tools;
+using CozyCafe.Core.Ugc;
+using CozyCafe.Core.Ui;
 
 namespace CozyCafe.Core
 {
@@ -73,6 +75,7 @@ namespace CozyCafe.Core
             r.Register(new PlatformModule());
             r.Register(new SaveModule(scene));
             r.Register(new UgcModule());
+            r.Register(new UiModule());
             var mvp = MvpData.TryLoad();
             var econ = mvp != null
                 ? EconomyModule.CreateStartup(mvp, 0)

@@ -207,6 +207,11 @@ namespace CozyCafe.Core.Scene
         /// hints only — window state lives in Tools.ToolsModule.
         public bool MiniMode;
         public CozyCafe.Core.Tools.ToolPanel ToolsPanel;
+        /// Shared-UI stage view: a laid-out widget frame built by the real
+        /// UiModule (panels, state buttons, focused text input, imported
+        /// UGC skin + preview). Paint only — screen space, never iso.
+        public CozyCafe.Core.Ui.UiFrame UiFrame;
+        public CozyCafe.Core.Ui.UiModule UiModule;
         /// Art-pipeline stage view: render the approved atlas cells with
         /// their contract borders, anchors and the furniture -8 px lift.
         public bool ArtContactView;

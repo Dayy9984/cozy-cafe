@@ -187,16 +187,8 @@ namespace CozyCafe.Core.Modules
         }
     }
 
-    /// <summary>Local UGC preset registry (private fields stay separate).</summary>
-    public sealed class UgcModule : ModuleBase
-    {
-        public override string Name { get { return "ugc"; } }
-
-        public readonly List<string> LocalPresets = new List<string>();
-
-        protected override bool OnProbe()
-        {
-            return LocalPresets != null;
-        }
-    }
+    // The real local UGC creator lives in CozyCafe.Core.Ugc
+    // (Ugc/UgcModule.cs): PNG import, role/anchor/direction assignment,
+    // preview, validation, save and apply with placement/appearance-only
+    // public presets.
 }
