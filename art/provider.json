@@ -9,5 +9,18 @@
   "sprite_gen_repo": "https://github.com/aldegad/sprite-gen.git",
   "upstream_observed_skill_version": "1.58.0",
   "installed_commit": "b725baa5aad026f183e2083275b441f2db225c48",
-  "status": "GENERATED_MODEL_NOT_VERIFIED"
+  "status": "GENERATED_MODEL_NOT_VERIFIED",
+  "model_verification_probe": {
+    "checked_at": "2026-09-28",
+    "session": "existing codex ChatGPT OAuth via local relay 127.0.0.1:10100 (no token read or copied)",
+    "probes": [
+      "POST /v1/images/generations model=gpt-image-2.5-sunburst -> HTTP 200, PNG C2PA software agent ChatGPT/gpt-image",
+      "POST /v1/images/generations model=gpt-image-1-mini -> HTTP 200, C2PA gpt-image",
+      "POST /v1/images/generations model=<invalid name> -> HTTP 200 + image (backend ignores the body model field)",
+      "POST /v1/responses tools=[{type:image_generation, model:gpt-image-2.5-sunburst}] -> upstream normalized tool model to gpt-image-2-codex; PNG C2PA gpt-image",
+      "POST /v1/responses tools=[{type:image_generation, model:gpt-image-1}] -> upstream again normalized tool model to gpt-image-2-codex"
+    ],
+    "finding": "The codex ChatGPT image surface is pinned to one backend image model (upstream name gpt-image-2-codex; vendor-signed C2PA version gpt-image). The requested gpt-image-2.5-sunburst cannot be selected, produced, or verified on this account; the only model-selectable image path is the paid OPENAI_API_KEY CLI fallback, which is forbidden.",
+    "verification": "NOT_VERIFIED"
+  }
 }

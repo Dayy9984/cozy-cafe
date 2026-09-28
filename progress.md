@@ -157,3 +157,24 @@ iso-grid 16/16·character-rig 5/5 일치 유지. art-pipeline 11키 중 10키
 gpt-image-2.5-sunburst 대비 실측 미검증 — 숨기지 않고 실측 보고).
 capture_game.py → Unity 6000.6.3f1 CaptureShot.Run 실카메라로
 out/art_pipeline.png(1512×676) 생성. 팔레트 변형 재생성 0건.
+
+## art-pipeline — 요청 이미지 모델 검증 증거 보강(2026-09-28)
+배경: 게이트는 effective_image_model=gpt-image-2.5-sunburst를 기대하나,
+기존 7잡 산출물의 C2PA 실측은 gpt-image였다. 요청 모델이 실제로 선택
+가능한지를 같은 Codex ChatGPT OAuth 세션(로컬 릴레이 127.0.0.1:10100,
+토큰/auth.json 미열람)에서 실제 요청으로 검증했다.
+실측: (1) /v1/images/generations에 model=gpt-image-2.5-sunburst를 명시해도
+HTTP 200으로 생성되나 PNG의 C2PA software agent는 ChatGPT/gpt-image.
+(2) model=gpt-image-1-mini·임의의 존재하지 않는 모델명도 동일하게
+200+이미지 — 본문 model 필드를 백엔드가 무시. (3) /v1/responses의
+image_generation 툴 스펙에 model=gpt-image-2.5-sunburst를 넣으면 상위에서
+gpt-image-2-codex로 정규화되어 에코됨. (4) model=gpt-image-1도 동일하게
+gpt-image-2-codex로 정규화 — codex 표면은 단일 이미지 모델로 고정.
+결론: 이 계정의 codex OAuth 이미지 표면은 백엔드 고정 모델
+(gpt-image-2-codex, C2PA gpt-image)만 제공한다. 요청한
+gpt-image-2.5-sunburst는 선택·생성·검증 불가. 모델 선택이 가능한 유일한
+경로는 유료 OPENAI_API_KEY CLI 폴백뿐이며 규약상 금지다.
+art/provider.json의 model_verification_probe에 동일 증거를 기록했다.
+상태 GENERATED_MODEL_NOT_VERIFIED 유지, 게이트 미스매치는 숨기지 않는다.
+check_stage art-pipeline 11키 중 10키 일치(effective_image_model만 실측
+gpt-image), 나머지 스테이지·Unity 캡처 경로는 재검사로 정상 유지.
