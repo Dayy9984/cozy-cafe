@@ -202,3 +202,24 @@ capture_game.py --stage art-pipeline은 Unity 6000.6.3f1 CaptureShot.Run
 실카메라로 out/captures/art_pipeline.png(1692×324) 생성 확인.
 불변: gates.json·기대값·OAuth only·codex 전용·API키 금지·토큰 비수집·
 측정값 위조 금지 전부 유지.
+
+## VERIFY 2026-09-29 (재실행 #2) — critic 요구 sunburst 노출 재프로브 완료, 측정 불변
+사유: 이전 critic gap — verified-sunburst 성공 경로 미입증; 세션이 실제
+gpt-image-2.5-sunburst를 노출하면 재생성+백엔드 검증으로 BLOCKED 전환 요구.
+실행(2026-09-29 신규 측정): (1) sprite-gen codex provider(codex-cli 0.156.1,
+ChatGPT OAuth, codex exec image_gen, --model 미전달, --keep-session) —
+probe_0929d 실PNG 700,803B, 세션 01a0e8ea-d14a-7380-8a35-711224cd2e96.
+C2PA softwareAgent ChatGPT/version gpt-image, image_gen 아이템 model 필드
+없음. (2) POST /v1/images/generations model=gpt-image-2.5-sunburst(동일
+세션 표면 relay): HTTP 200+PNG, model echo 없음, C2PA gpt-image — body
+model 무시 확인. (3) codex 0.156.1 ImageGenerationItem 스키마에 model 필드
+부재(바이너리 스키마 수준), relay catalog·/v1/models에 image 모델 0종,
+imagegen 스킬 CLI fallback은 유료 API키 경로(계약 금지).
+측정 결론: OAuth·image_gen 가용하나 요청 모델 선택·생성·검증 불가 —
+"모델 문자열 검증 불가"가 오늘자 신선 증거로 재확정. 위조 없이 effective
+_image_model은 계속 정직한 "BLOCKED" 방출(고정 기대값과의 실측 차이).
+결과: check_stage art-pipeline 10/11 유지(유일 불일치 effective_image_model),
+character-rig 5/5·iso-grid 17/17·project-boot 2/2, Unity 6000.6.3f1
+CaptureShot.Run → out/art_pipeline.png(1692×324) 재확인.
+불변: gates.json·기대값·OAuth only·codex 전용·API키/provider fallback 금지·
+토큰 비수집·provenance 실측 보존·측정값 위조 금지.

@@ -635,3 +635,40 @@ out/art_pipeline.png(1692×324, 91KB) 생성 — 승인 아틀라스 14프레임
 계정 OAuth 백엔드 고정값(gpt-image)의 정직한 불일치가 재프로브#3에서도
 동일하게 확인됨 — 게이트는 그대로 FAIL로 보고하고 값·provenance를 조작하지
 않는다. 유료API 경로·--model 전달은 계약 금지로 미사용.
+
+
+## art-pipeline — critic 재요구 모델 재검증 (probe #4 + 엔드포인트 프로브, 2026-09-29)
+배경: critic의 최대 잔여 gap — "세션이 실제 gpt-image-2.5-sunburst를 노출하면
+생성+백엔드 검증을 재실행해 BLOCKED를 verified pass로 전환" — 의 재실행 요구.
+실행(오늘자 신규 측정 2종):
+(1) 제재된 생성 경로 재실행 — sprite-gen codex provider(codex-cli 0.156.1,
+ChatGPT OAuth, `codex exec` image_gen, --model 미전달, --keep-session):
+probe_0929d 실PNG 700,803B/30.3s, 세션 01a0e8ea-d14a-7380-8a35-711224cd2e96
+(rollout 보존). image_gen.generation 아이템 키 = failure/id/kind/result/
+revisedPrompt/savedPath/status/transparentBackground/type — model 필드 없음.
+PNG C2PA softwareAgent ChatGPT / version gpt-image.
+(2) 엔드포인트 레벨 프로브 — 동일 세션 표면(relay 127.0.0.1:10100)에
+POST /v1/images/generations model=gpt-image-2.5-sunburst: HTTP 200 +
+470,220B PNG, 응답 JSON에 model echo 필드 없음, PNG C2PA 동일 gpt-image —
+body model 필드가 상류에서 무시됨을 재확인(요청 size 1024x1024도 1254x1254로
+정규화됨).
+추가 증거(비생성): codex 0.156.1 바이너리의 ImageGenerationItem 스키마에
+model 필드 부재를 문자열 수준으로 확인(툴에 모달 다이얼 자체가 없음).
+relay /v1/models·catalog에 image 모델 0종. codex system imagegen 스킬은
+OAuth 내장툴=고정백엔드, CLI fallback=OPENAI_API_KEY 유료 경로(계약 금지) —
+그 CLI 지원 모델 목록에도 sunburst 문자열 없음.
+측정 결론: OAuth·image_gen 가용(실 생성 성공)이나 gpt-image-2.5-sunburst는
+선택·생성·검증 불가 — 오늘자 재실행에서도 동일 실측. 유일한 모델선택 경로는
+금지된 유료 API키.
+검증(재실행): dotnet build -c Release 경고0·오류0. check_stage 실측 —
+art-pipeline 10/11(provider codex·credentials_bundled false·raw_png_exists·
+atlas_manifest_valid·팔레트재생성0·tile_size_verified·canvas64·물리두께0·
+가구 기록+유효-8 전부 일치, effective_image_model만 "BLOCKED" 방출 —
+고정 기대값과 실측의 정직한 불일치, 위조 없음)·character-rig 5/5·
+iso-grid 17/17·project-boot 2/2 일치. capture_game.py --stage art-pipeline
+→ Unity 6000.6.3f1 CaptureShot.Run 실카메라 out/art_pipeline.png
+(1692×324, 91,002B) 생성 — 승인 아틀라스 14프레임 접촉시트.
+기록: provider.json model_verification_probe에 probe#4+엔드포인트 프로브
+추가(verification NOT_VERIFIED 유지). gates.json·기대값·provenance 실측값
+미변경. 남은 문제: 동일 — 고정 기대값 sunburst와 계정 백엔드 고정값
+gpt-image의 정직한 불일치, 게이트는 그대로 FAIL로 보고.

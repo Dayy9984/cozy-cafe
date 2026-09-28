@@ -1,0 +1,16 @@
+{
+  "provider": "codex",
+  "purpose": "live capability probe (not a job, not for approval)",
+  "requested_image_model": "gpt-image-2.5-sunburst",
+  "effective_image_model": "gpt-image",
+  "model_evidence": {
+    "c2pa": "gpt-image",
+    "rollout": null
+  },
+  "model_verification": "NOT_VERIFIED",
+  "raw_sha256": "06845ccc7da3c80d084ea1ea650be036f03c92724defafd27eef860dfb6ef120",
+  "session_id": "01a0e8ea-d14a-7380-8a35-711224cd2e96",
+  "elapsed_seconds": 30.292,
+  "game_asset_approval": "NOT_APPLICABLE",
+  "note": "2026-09-29 live re-probe #4 (post-critic rerun through the sanctioned path): sprite-gen codex provider on existing ChatGPT OAuth (codex-cli 0.156.1, codex exec image_gen, no --model). Real PNG produced; vendor-signed C2PA softwareAgent ChatGPT version gpt-image; image_gen.generation item carries no model field. Direct POST /v1/images/generations model=gpt-image-2.5-sunburst on the same session surface (relay 127.0.0.1:10100) returned HTTP 200 + PNG with C2PA gpt-image and no model echo - the endpoint ignores the body model. gpt-image-2.5-sunburst remains unselectable/unverifiable on this account surface."
+}
