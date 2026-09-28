@@ -9,5 +9,95 @@
   "model_verification": "NOT_VERIFIED",
   "raw_sha256": "0bb0b812cc5ee4c2c8a15e6d277c62f68319f1f1562839bda5a2a2cce9270114",
   "game_asset_approval": "PENDING",
-  "note": "Read actual tool/provider metadata before claiming Sunburst. Raw is not an atlas or approved asset."
+  "note": "Read actual tool/provider metadata before claiming Sunburst. Raw is not an atlas or approved asset.",
+  "independent_verification": {
+    "verified_at": "2026-09-29",
+    "verifier": "tools/verify_provenance.py",
+    "signed_claim": {
+      "present": true,
+      "claim_generator": "OpenAI Media Service API",
+      "claim_generator_spec": "2.2.0",
+      "instance_id": "xmp:iid:9cdcae35-ead1-4686-bf69-1c9b6eb5d438",
+      "dc_title": "image.png",
+      "alg": "sha256",
+      "created_assertions": [
+        "self#jumbf=c2pa.assertions/c2pa.icon",
+        "self#jumbf=c2pa.assertions/c2pa.actions.v2",
+        "self#jumbf=c2pa.assertions/c2pa.hash.data"
+      ],
+      "software_agent": "ChatGPT",
+      "software_agent_version": "gpt-image",
+      "digital_source_type": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+      "signed_at": "2026-09-28T03:12:27.765531624Z",
+      "signature": {
+        "present": true,
+        "cose_tag": "tag18",
+        "alg": "PS256",
+        "bytes": 256,
+        "detached_payload": true,
+        "cert_count": 2,
+        "cert_chain": [
+          {
+            "subject": "C=US, O=OpenAI OpCo, LLC, CN=OpenAI Media Service",
+            "issuer": "CN=SSL.com C2PA ICA R1 2025, O=SSL Corporation, C=US"
+          },
+          {
+            "subject": "CN=SSL.com C2PA ICA R1 2025, O=SSL Corporation, C=US",
+            "issuer": "CN=SSL.com C2PA RSA Root CA 2025, O=SSL Corporation, C=US"
+          }
+        ],
+        "cert_chain_verified": true,
+        "signature_valid": true,
+        "tsa_tokens": 1,
+        "tsa_times": [
+          "20260928031227.772171Z",
+          "21260409174626Z",
+          "21260409174625Z",
+          "260408174626Z",
+          "370709174626Z",
+          "260408174626Z",
+          "260408174625Z"
+        ]
+      },
+      "file_data_hash": {
+        "alg": "sha256",
+        "exclusions": [
+          [
+            33,
+            23666
+          ]
+        ],
+        "name": "jumbf manifest",
+        "verified": true
+      }
+    },
+    "codex_session_binding": {
+      "session_id": "01a0e5ff-4736-73c1-a337-f9e18a3f98e6",
+      "rollout_found": true,
+      "raw_sha256": "0bb0b812cc5ee4c2c8a15e6d277c62f68319f1f1562839bda5a2a2cce9270114",
+      "rollout_file": "rollout-2026-09-28T12-11-47-01a0e5ff-4736-73c1-a337-f9e18a3f98e6.jsonl",
+      "image_gen_item_kind": "image_gen.generation",
+      "image_gen_item_status": "completed",
+      "tool_item_keys": [
+        "failure",
+        "id",
+        "kind",
+        "result",
+        "revisedPrompt",
+        "savedPath",
+        "status",
+        "transparentBackground",
+        "type"
+      ],
+      "tool_schema_has_model_field": false,
+      "result_sha256": [
+        "0bb0b812cc5ee4c2c8a15e6d277c62f68319f1f1562839bda5a2a2cce9270114"
+      ],
+      "matches_raw_bytes": true
+    },
+    "model_verification_basis": "vendor-signed C2PA softwareAgent.version + rollout sha256",
+    "requested_image_model": "gpt-image-2.5-sunburst",
+    "signed_model_matches_request": false
+  },
+  "session_id": "01a0e5ff-4736-73c1-a337-f9e18a3f98e6"
 }

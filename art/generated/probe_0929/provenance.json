@@ -12,5 +12,94 @@
   "session_id": "01a0e8ca-e8bd-7ba2-8e7d-6393f7016165",
   "elapsed_seconds": 33.009,
   "game_asset_approval": "NOT_APPLICABLE",
-  "note": "2026-09-29 live re-probe through the codex ChatGPT OAuth provider (no --model flag). Backend model measured from the vendor-signed PNG C2PA claim; the image_gen item carries no model field. Prompt asked for gpt-image-2.5-sunburst; backend still reports gpt-image, so the requested model remains unverifiable on this surface."
+  "note": "2026-09-29 live re-probe through the codex ChatGPT OAuth provider (no --model flag). Backend model measured from the vendor-signed PNG C2PA claim; the image_gen item carries no model field. Prompt asked for gpt-image-2.5-sunburst; backend still reports gpt-image, so the requested model remains unverifiable on this surface.",
+  "independent_verification": {
+    "verified_at": "2026-09-29",
+    "verifier": "tools/verify_provenance.py",
+    "signed_claim": {
+      "present": true,
+      "claim_generator": "OpenAI Media Service API",
+      "claim_generator_spec": "2.2.0",
+      "instance_id": "xmp:iid:412960f2-dd67-4b8d-9892-c6e38ce1c3dc",
+      "dc_title": "image.png",
+      "alg": "sha256",
+      "created_assertions": [
+        "self#jumbf=c2pa.assertions/c2pa.icon",
+        "self#jumbf=c2pa.assertions/c2pa.actions.v2",
+        "self#jumbf=c2pa.assertions/c2pa.hash.data"
+      ],
+      "software_agent": "ChatGPT",
+      "software_agent_version": "gpt-image",
+      "digital_source_type": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+      "signed_at": "2026-09-28T16:13:54.594638873Z",
+      "signature": {
+        "present": true,
+        "cose_tag": "tag18",
+        "alg": "ES256",
+        "bytes": 64,
+        "detached_payload": true,
+        "cert_count": 2,
+        "cert_chain": [
+          {
+            "subject": "C=US, O=OpenAI OpCo, LLC, CN=OpenAI Media Service",
+            "issuer": "C=US, ST=New York, L=New York, O=Trufo Inc., OU=CA Division, emailAddress=ca@trufo.ai, CN=Trufo C2PA Claim Signing CA (2025)"
+          },
+          {
+            "subject": "C=US, ST=New York, L=New York, O=Trufo Inc., OU=CA Division, emailAddress=ca@trufo.ai, CN=Trufo C2PA Claim Signing CA (2025)",
+            "issuer": "C=US, ST=New York, L=New York, O=Trufo Inc., OU=CA Division, emailAddress=ca@trufo.ai, CN=Trufo C2PA Root CA (2025, ECC P384)"
+          }
+        ],
+        "cert_chain_verified": true,
+        "signature_valid": true,
+        "tsa_tokens": 1,
+        "tsa_times": [
+          "20260928161354.601554Z",
+          "21260409174626Z",
+          "21260409174625Z",
+          "260408174626Z",
+          "370709174626Z",
+          "260408174626Z",
+          "260408174625Z"
+        ]
+      },
+      "file_data_hash": {
+        "alg": "sha256",
+        "exclusions": [
+          [
+            33,
+            21893
+          ]
+        ],
+        "name": "jumbf manifest",
+        "verified": true
+      }
+    },
+    "codex_session_binding": {
+      "session_id": "01a0e8ca-e8bd-7ba2-8e7d-6393f7016165",
+      "rollout_found": true,
+      "raw_sha256": "c61fc4711f489ce4b7d0b756172bdfc33a0ad6311143c9035681bbd9e711bb34",
+      "rollout_file": "rollout-2026-09-29T01-13-27-01a0e8ca-e8bd-7ba2-8e7d-6393f7016165.jsonl",
+      "image_gen_item_kind": "image_gen.generation",
+      "image_gen_item_status": "completed",
+      "tool_item_keys": [
+        "failure",
+        "id",
+        "kind",
+        "result",
+        "revisedPrompt",
+        "savedPath",
+        "status",
+        "transparentBackground",
+        "type"
+      ],
+      "tool_schema_has_model_field": false,
+      "result_sha256": [
+        "c61fc4711f489ce4b7d0b756172bdfc33a0ad6311143c9035681bbd9e711bb34"
+      ],
+      "matches_raw_bytes": true
+    },
+    "model_verification_basis": "vendor-signed C2PA softwareAgent.version + rollout sha256",
+    "requested_image_model": "gpt-image-2.5-sunburst",
+    "signed_model_matches_request": false
+  }
 }

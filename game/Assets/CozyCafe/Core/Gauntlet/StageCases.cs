@@ -1151,6 +1151,10 @@ namespace CozyCafe.Core.Gauntlet
                 ArtAssets.PaletteVariantGenerations(manifest)));
             cases.Add(new CaseResult("tile_size_verified", tileOk));
             cases.Add(new CaseResult("effective_image_model", effective));
+            cases.Add(new CaseResult("signed_claim_software_agent",
+                manifest.SignedAgent ?? "NONE"));
+            cases.Add(new CaseResult("provenance_session_bound",
+                ArtAssets.ProvenanceSessionBound()));
             cases.Add(new CaseResult("thickness_physical_geometry_generated",
                 physicalThickness));
             cases.Add(new CaseResult("tile_canvas_height", tileCanvasH));

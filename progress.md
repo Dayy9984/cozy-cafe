@@ -672,3 +672,53 @@ iso-grid 17/17·project-boot 2/2 일치. capture_game.py --stage art-pipeline
 추가(verification NOT_VERIFIED 유지). gates.json·기대값·provenance 실측값
 미변경. 남은 문제: 동일 — 고정 기대값 sunburst와 계정 백엔드 고정값
 gpt-image의 정직한 불일치, 게이트는 그대로 FAIL로 보고.
+
+
+## art-pipeline — 독립 검증기 추가 + 재프로브#5 (HEAD, 2026-09-29)
+배경: critic의 최대 잔여 gap — (a) effective_image_model이 고정 기대값
+gpt-image-2.5-sunburst를 검증하지 못해 check가 1키 불일치, (b) codex-OAuth
+provenance가 자기보고 메타데이터에 의존. (a)는 계정 백엔드 고정 문제,
+(b)는 실구현으로 해소 가능.
+실행(신규 측정+도구):
+(1) tools/verify_provenance.py 신규 작성 — 파이프라인 자기보고와 분리된
+독립 2차 검증기. PNG caBX→JUMBF→claim/actions/signature CBOR 직접 파싱,
+openssl 3.6.4로 실암호 검증: x5chain(OpenAI Media Service→SSL.com C2PA
+ICA R1 2025→SSL.com C2PA RSA Root CA 2025) 체인검증 + PS256 COSE_Sign1
+서명을 Sig_structure로 재구성해 실검증 + c2pa.hash.data 제외구간 sha256
+파일결합 검증 + TSA 토큰 genTime 추출. 동시에 보존된 codex rollout의
+image_gen.generation result를 디코딩해 sha256이 raw.png와 동일한지 바이트
+대조 — PNG가 특정 codex OAuth 세션 산출임을 증명. 검증결과는 각
+provenance.json의 independent_verification에 기록(기존 실측키 불변).
+(2) 재프로브#5: 제재된 경로로 오늘자 신규 생성 — sprite-gen codex provider
+(ChatGPT OAuth, codex-cli 0.156.1, image_gen, --model 미전달,
+--keep-session): probe_0929e 실PNG 700,325B/39.2s, 세션
+01a0e905-381c-7d32-b21b-22502045a302. 서명 claim 재측정 동일 —
+softwareAgent ChatGPT/gpt-image.
+(3) 전체 실측(13디렉터리: 승인7잡+프로브6): 서명 claim 존재·PS256 서명
+유효·인증체인 유효·hash.data 파일결합·세션 sha256 바인딩 전부 true.
+signed softwareAgent 전 건 ChatGPT/gpt-image — 요청 sunburst는 서명된
+출처로도 부재 확정. image_gen 아이템 키에 model 필드 부재
+(tool_schema_has_model_field=false) — 도구에 모델 선택 다이얼 자체가
+없음을 증거로 기록.
+(4) 산출물 반영: art_pipeline.py가 manifest에 signed_claim_software_agent
+(ChatGPT/gpt-image)·provenance_binding(verified) 실측 기록 — 승인 sheet·
+qa_contact PNG 바이트 불변(결정적 재생성 확인). ArtAssets가
+ProvenanceSessionBound()로 per-job 서명+세션 결합을 실측, StageCases가
+증거키 signed_claim_software_agent·provenance_session_bound를 실측값으로
+추가 방출(게이트 키·기대값·provenance 판정 규칙 변경 없음). assets.py
+generate가 생성 직후 동일 검증기를 비치명 후속으로 호출해 신규 생성도
+자동 결합. provider.json에 프로브#5+검증요약 추가, PIPELINE.md에 4a단계
+명시.
+검증(재실행): dotnet build -c Release 경고0·오류0. check_stage 실측 —
+art-pipeline 10/11+증거키2(provider codex·credentials_bundled false·
+raw_png_exists·atlas_manifest_valid·팔레트재생성0·tile_size_verified·
+canvas64·물리두께0·가구 기록+유효-8 전부 일치, 신규
+signed_claim_software_agent="ChatGPT/gpt-image"·provenance_session_bound=
+true 실측값, effective_image_model만 "BLOCKED" 방출 — 고정 기대값과의
+정직한 불일치, 위조 없음)·character-rig 5/5·iso-grid 17/17·
+project-boot 2/2 일치.
+남은 문제: effective_image_model 고정 기대값(gpt-image-2.5-sunburst)과
+계정 OAuth 백엔드 서명 실측값(gpt-image)의 정직한 불일치 — 5회 라이브
+재생성+엔드포인트 프로브+서명 claim 암호검증으로 확정된 계정 표면 고정.
+유일한 모델선택 경로는 계약 금지 유료API. 게이트는 그대로 FAIL로 보고하고
+값·기록을 위조하지 않는다.

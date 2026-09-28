@@ -382,11 +382,46 @@ def job_provenance_model(jobs):
     return eff, ver
 
 
+def job_provenance_binding(jobs):
+    """Independent-verification union across jobs (written by
+    tools/verify_provenance.py into provenance.json): returns
+    (signed_agent, binding) where signed_agent is the vendor-signed
+    'name/version' string common to every job ('DIVERGENT' when they
+    disagree, None when any job lacks the verified record) and binding is
+    'verified' only when every job's signed claim checks (signature,
+    cert chain, file hash) and its session sha256 binding all pass."""
+    agents, all_ok, any_ok = set(), True, False
+    for job in jobs:
+        p = ART / 'generated' / job['id'] / 'provenance.json'
+        try:
+            pr = json.loads(p.read_text(encoding='utf8'))
+        except (OSError, ValueError):
+            return None, 'unverified'
+        iv = pr.get('independent_verification') or {}
+        sc = iv.get('signed_claim') or {}
+        sig = sc.get('signature') or {}
+        cb = iv.get('codex_session_binding') or {}
+        if sc.get('present'):
+            agents.add('%s/%s' % (sc.get('software_agent'),
+                                  sc.get('software_agent_version')))
+        ok = (sc.get('present') is True
+              and sig.get('signature_valid') is True
+              and sig.get('cert_chain_verified') is True
+              and (sc.get('file_data_hash') or {}).get('verified') is True
+              and cb.get('matches_raw_bytes') is True)
+        any_ok = any_ok or ok
+        all_ok = all_ok and ok
+    agent = next(iter(agents)) if len(agents) == 1 else 'DIVERGENT'
+    binding = 'verified' if all_ok else ('partial' if any_ok else 'unverified')
+    return agent, binding
+
+
 def build():
     catalog = load_catalog()
     jobs = json.loads((ART / 'jobs.json').read_text(encoding='utf8'))
     provider = json.loads((ART / 'provider.json').read_text(encoding='utf8'))
     eff_model, model_ver = job_provenance_model(jobs)
+    signed_agent, prov_binding = job_provenance_binding(jobs)
     APPROVED.mkdir(parents=True, exist_ok=True)
 
     cells, metas, qa = [], [], {}
@@ -425,6 +460,8 @@ def build():
         'requested_image_model': provider.get('requested_image_model'),
         'effective_image_model': eff_model,
         'model_verification': model_ver,
+        'signed_claim_software_agent': signed_agent,
+        'provenance_binding': prov_binding,
         'palette_variants_generated': 0,
         'frames': frames,
     }

@@ -223,3 +223,33 @@ character-rig 5/5·iso-grid 17/17·project-boot 2/2, Unity 6000.6.3f1
 CaptureShot.Run → out/art_pipeline.png(1692×324) 재확인.
 불변: gates.json·기대값·OAuth only·codex 전용·API키/provider fallback 금지·
 토큰 비수집·provenance 실측 보존·측정값 위조 금지.
+
+
+## VERIFY 2026-09-29 (재실행 #3) — 독립 암호검증기 + 재프로브#5, provenance 비자기보고화
+사유: 이전 critic gap — (a) verified-sunburst 불가가 계속, (b) PNG의
+codex-OAuth provenance가 자기보고 메타데이터에 의존. (b)는 실구현으로
+해소 가능해 신규 검증 경로를 추가.
+실행(2026-09-29 신규 측정+도구): tools/verify_provenance.py 신규 —
+생성도구와 무관하게 PNG를 직접 파싱(caBX→JUMBF→claim/actions/signature
+CBOR)하고 openssl 3.6.4로 x5chain 체인검증·COSE_Sign1 서명을
+Sig_structure로 재구성해 실검증·c2pa.hash.data 제외구간 sha256 파일결합
+검증·TSA genTime 추출. 보존된 codex rollout의 image_gen.generation
+result를 디코딩해 sha256(raw.png)와 바이트 대조. 결과를 각
+provenance.json의 independent_verification에 기록. 재프로브#5 —
+sprite-gen codex provider(ChatGPT OAuth, --model 미전달):
+probe_0929e 실PNG 700,325B/39.2s, 세션 01a0e905-381c-7d32-b21b-
+22502045a302. 신규 probe는 ES256+Trufo C2PA 체인(이전 PS256+SSL.com과
+서명자 로테이션)으로도 동일 검증 통과, signed softwareAgent 동일 gpt-image.
+측정 결과(13디렉터리=승인7+프로브6 전건): 서명 claim 존재·서명 유효·
+체인 유효·hash.data 결합·세션 sha256 바인딩 전부 true, signed model 전건
+ChatGPT/gpt-image, image_gen 아이템에 model 필드 부재(도구 스키마상
+선택 다이얼 자체 없음). manifest에 signed_claim_software_agent=
+ChatGPT/gpt-image·provenance_binding=verified 실측 기록(승인 PNG 바이트
+불변). StageCases 증거키 signed_claim_software_agent·
+provenance_session_bound 실측 방출 추가(게이트 키·기대값 불변).
+결과: check_stage art-pipeline 10/11+증거키2 — effective_image_model만
+정직한 "BLOCKED" 방출(고정 기대값 sunburst vs 서명실측 gpt-image, 위조
+없음). character-rig 5/5·iso-grid 17/17·project-boot 2/2, Unity
+CaptureShot.Run → out/art_pipeline.png 재생성 확인.
+불변: gates.json·기대값·OAuth only·codex 전용·API키/provider fallback 금지·
+토큰 비수집·provenance 실측 보존·측정값 위조 금지.

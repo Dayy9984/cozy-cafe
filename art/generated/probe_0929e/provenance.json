@@ -1,18 +1,8 @@
 {
   "provider": "codex",
-  "purpose": "live capability probe (not a job, not for approval)",
   "requested_image_model": "gpt-image-2.5-sunburst",
   "effective_image_model": "gpt-image",
-  "model_evidence": {
-    "c2pa": "gpt-image",
-    "rollout": null
-  },
   "model_verification": "NOT_VERIFIED",
-  "raw_sha256": "8ff78bb287e78d67a975b453eb30466c019daf8ff4443b5420d4b3bd76fb6123",
-  "session_id": "01a0e7f0-39a2-7d42-9783-4e62e2dc3f14",
-  "elapsed_seconds": 35.13,
-  "game_asset_approval": "NOT_APPLICABLE",
-  "note": "Generated live this run through the codex ChatGPT OAuth provider (no --model flag). Backend model measured from PNG C2PA claim.",
   "independent_verification": {
     "verified_at": "2026-09-29",
     "verifier": "tools/verify_provenance.py",
@@ -20,7 +10,7 @@
       "present": true,
       "claim_generator": "OpenAI Media Service API",
       "claim_generator_spec": "2.2.0",
-      "instance_id": "xmp:iid:15450b5d-4d8f-45e5-b8b2-24f052f10875",
+      "instance_id": "xmp:iid:47aaa403-2e82-428c-a77a-61f3374e9784",
       "dc_title": "image.png",
       "alg": "sha256",
       "created_assertions": [
@@ -31,7 +21,7 @@
       "software_agent": "ChatGPT",
       "software_agent_version": "gpt-image",
       "digital_source_type": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
-      "signed_at": "2026-09-28T12:15:03.579044513Z",
+      "signed_at": "2026-09-28T17:17:42.420963566Z",
       "signature": {
         "present": true,
         "cose_tag": "tag18",
@@ -53,7 +43,7 @@
         "signature_valid": true,
         "tsa_tokens": 1,
         "tsa_times": [
-          "20260928121503.584158Z",
+          "20260928171742.424714Z",
           "21260409174626Z",
           "21260409174625Z",
           "260408174626Z",
@@ -75,10 +65,10 @@
       }
     },
     "codex_session_binding": {
-      "session_id": "01a0e7f0-39a2-7d42-9783-4e62e2dc3f14",
+      "session_id": "01a0e905-381c-7d32-b21b-22502045a302",
       "rollout_found": true,
-      "raw_sha256": "8ff78bb287e78d67a975b453eb30466c019daf8ff4443b5420d4b3bd76fb6123",
-      "rollout_file": "rollout-2026-09-28T21-14-35-01a0e7f0-39a2-7d42-9783-4e62e2dc3f14.jsonl",
+      "raw_sha256": "380fa9df90eba6a9f9129a10af1c6d6097634747f7cece37f5f837dcea6e540e",
+      "rollout_file": "rollout-2026-09-29T02-17-08-01a0e905-381c-7d32-b21b-22502045a302.jsonl",
       "image_gen_item_kind": "image_gen.generation",
       "image_gen_item_status": "completed",
       "tool_item_keys": [
@@ -94,12 +84,14 @@
       ],
       "tool_schema_has_model_field": false,
       "result_sha256": [
-        "8ff78bb287e78d67a975b453eb30466c019daf8ff4443b5420d4b3bd76fb6123"
+        "380fa9df90eba6a9f9129a10af1c6d6097634747f7cece37f5f837dcea6e540e"
       ],
       "matches_raw_bytes": true
     },
     "model_verification_basis": "vendor-signed C2PA softwareAgent.version + rollout sha256",
     "requested_image_model": "gpt-image-2.5-sunburst",
     "signed_model_matches_request": false
-  }
+  },
+  "session_id": "01a0e905-381c-7d32-b21b-22502045a302",
+  "raw_sha256": "380fa9df90eba6a9f9129a10af1c6d6097634747f7cece37f5f837dcea6e540e"
 }

@@ -246,6 +246,15 @@ def generate(job_id, project):
                 'Raw is not an atlas or approved asset.'}
     out.with_name('provenance.json').write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf8')
+    # Independent second pass: re-parses the vendor-signed C2PA claim and
+    # binds raw.png bytes to the preserved session rollout, appending the
+    # verified record into provenance.json (never fails the generation).
+    try:
+        subprocess.run([sys.executable,
+                        str(ROOT / 'tools' / 'verify_provenance.py')],
+                       cwd=str(ROOT), check=False, capture_output=True)
+    except Exception:
+        pass
     print(str(out))
     print('Raw PNG verified; exact image model and production asset approval '
           'remain pending.')

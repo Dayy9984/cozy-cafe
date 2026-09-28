@@ -13,7 +13,7 @@
 |research-staff|연구·메뉴·직원|idle-economy|READY|
 |save-offline|저장·복귀·시간경계|research-staff,layout-editor|검증완료(리뷰대기)|
 |character-rig|소수 파츠·팔레트·랜덤 손님|iso-grid,research-staff|READY|
-|art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트10/11·요청모델키 BLOCKED 보고)|
+|art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트10/11·요청모델키 BLOCKED 보고·서명C2PA+세션sha256 결합검증 완료)|
 |ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|READY|
 |integration|무개입 카페 통합|ui-local-ugc|READY|
 |native-release|실제 Mac/Windows 빌드·검증|integration|READY|

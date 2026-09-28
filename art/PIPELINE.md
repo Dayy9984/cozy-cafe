@@ -4,6 +4,7 @@
 2. codex login / codex login status : 사용자가 직접 로그인. 패키지는 토큰을 열거나 저장하지 않음.
 3. python tools/assets.py generate tile_wood --allow-generation : 명시 codex provider로 raw 생성.
 4. raw+report 존재/PNG 검증. 모델은 요청값과 실제 확인값을 분리. main Codex 모델을 Sunburst로 바꾸지 않음.
+4a. python tools/verify_provenance.py : 독립 2차 검증. 서명된 C2PA claim을 직접 파싱(openssl로 PS256 서명·인증체인·hash.data 파일결합 검증)하고 보존된 codex rollout의 image_gen 결과 sha256과 raw.png를 바이트 대조해 provenance.json의 independent_verification에 기록한다.
 5. 로컬 설치 SKILL/docs/gen을 읽고 승인 idle anchor→state rows→extract→compose 경로 실행.
 6. geometry/alpha/palette/rig QA와 curation 후 approved 에만 채택. 생성성공=게임자산승인 아님.
 

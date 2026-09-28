@@ -31,6 +31,8 @@ namespace CozyCafe.Core.Art
         public string SheetFile;
         public string Provider;
         public string RequestedImageModel;
+        public string SignedAgent;
+        public string ProvenanceBinding;
         public int PhysicalThickness = -1;
         public int PaletteVariantsGenerated = -1;
         public bool Valid;
@@ -229,6 +231,8 @@ namespace CozyCafe.Core.Art
             m.SheetFile = AsString(Get(d, "sheet"));
             m.Provider = AsString(Get(d, "provider"));
             m.RequestedImageModel = AsString(Get(d, "requested_image_model"));
+            m.SignedAgent = AsString(Get(d, "signed_claim_software_agent"));
+            m.ProvenanceBinding = AsString(Get(d, "provenance_binding"));
             var size = AsList(Get(d, "sheet_size"));
             if (size != null && size.Count == 2)
             {
@@ -356,6 +360,36 @@ namespace CozyCafe.Core.Art
             }
             recorded = eff != null;
             return eff ?? 0;
+        }
+
+        /// Independent-verification union across declared jobs: true only
+        /// when every job's provenance.json carries a complete
+        /// independent_verification record - vendor-signed C2PA claim
+        /// present, openssl-verified signature, cert chain and file-data
+        /// hash - and its codex session rollout sha256 byte match.
+        public static bool ProvenanceSessionBound()
+        {
+            var jobs = LoadJobs();
+            if (jobs == null || jobs.Count == 0) return false;
+            foreach (var o in jobs)
+            {
+                var job = AsDict(o);
+                string id = AsString(Get(job, "id"));
+                var prov = LoadJsonDict("art/generated/" + id + "/provenance.json");
+                if (prov == null) return false;
+                var iv = AsDict(Get(prov, "independent_verification"));
+                if (iv == null) return false;
+                var sc = AsDict(Get(iv, "signed_claim"));
+                var cb = AsDict(Get(iv, "codex_session_binding"));
+                if (sc == null || !AsBool(Get(sc, "present"))) return false;
+                var sig = AsDict(Get(sc, "signature"));
+                if (sig == null || !AsBool(Get(sig, "signature_valid"))
+                    || !AsBool(Get(sig, "cert_chain_verified"))) return false;
+                var fdh = AsDict(Get(sc, "file_data_hash"));
+                if (fdh == null || !AsBool(Get(fdh, "verified"))) return false;
+                if (cb == null || !AsBool(Get(cb, "matches_raw_bytes"))) return false;
+            }
+            return true;
         }
 
         /// Palette variants must recolor shared art, never regenerate sheets:

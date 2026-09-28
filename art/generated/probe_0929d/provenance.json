@@ -12,5 +12,94 @@
   "session_id": "01a0e8ea-d14a-7380-8a35-711224cd2e96",
   "elapsed_seconds": 30.292,
   "game_asset_approval": "NOT_APPLICABLE",
-  "note": "2026-09-29 live re-probe #4 (post-critic rerun through the sanctioned path): sprite-gen codex provider on existing ChatGPT OAuth (codex-cli 0.156.1, codex exec image_gen, no --model). Real PNG produced; vendor-signed C2PA softwareAgent ChatGPT version gpt-image; image_gen.generation item carries no model field. Direct POST /v1/images/generations model=gpt-image-2.5-sunburst on the same session surface (relay 127.0.0.1:10100) returned HTTP 200 + PNG with C2PA gpt-image and no model echo - the endpoint ignores the body model. gpt-image-2.5-sunburst remains unselectable/unverifiable on this account surface."
+  "note": "2026-09-29 live re-probe #4 (post-critic rerun through the sanctioned path): sprite-gen codex provider on existing ChatGPT OAuth (codex-cli 0.156.1, codex exec image_gen, no --model). Real PNG produced; vendor-signed C2PA softwareAgent ChatGPT version gpt-image; image_gen.generation item carries no model field. Direct POST /v1/images/generations model=gpt-image-2.5-sunburst on the same session surface (relay 127.0.0.1:10100) returned HTTP 200 + PNG with C2PA gpt-image and no model echo - the endpoint ignores the body model. gpt-image-2.5-sunburst remains unselectable/unverifiable on this account surface.",
+  "independent_verification": {
+    "verified_at": "2026-09-29",
+    "verifier": "tools/verify_provenance.py",
+    "signed_claim": {
+      "present": true,
+      "claim_generator": "OpenAI Media Service API",
+      "claim_generator_spec": "2.2.0",
+      "instance_id": "xmp:iid:32e3e8b1-9d84-4a50-81b0-3ddd67cc1cad",
+      "dc_title": "image.png",
+      "alg": "sha256",
+      "created_assertions": [
+        "self#jumbf=c2pa.assertions/c2pa.icon",
+        "self#jumbf=c2pa.assertions/c2pa.actions.v2",
+        "self#jumbf=c2pa.assertions/c2pa.hash.data"
+      ],
+      "software_agent": "ChatGPT",
+      "software_agent_version": "gpt-image",
+      "digital_source_type": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+      "signed_at": "2026-09-28T16:48:44.560939311Z",
+      "signature": {
+        "present": true,
+        "cose_tag": "tag18",
+        "alg": "PS256",
+        "bytes": 256,
+        "detached_payload": true,
+        "cert_count": 2,
+        "cert_chain": [
+          {
+            "subject": "C=US, O=OpenAI OpCo, LLC, CN=OpenAI Media Service",
+            "issuer": "CN=SSL.com C2PA ICA R1 2025, O=SSL Corporation, C=US"
+          },
+          {
+            "subject": "CN=SSL.com C2PA ICA R1 2025, O=SSL Corporation, C=US",
+            "issuer": "CN=SSL.com C2PA RSA Root CA 2025, O=SSL Corporation, C=US"
+          }
+        ],
+        "cert_chain_verified": true,
+        "signature_valid": true,
+        "tsa_tokens": 1,
+        "tsa_times": [
+          "20260928164844.567295Z",
+          "21260409174626Z",
+          "21260409174625Z",
+          "260408174626Z",
+          "370709174626Z",
+          "260408174626Z",
+          "260408174625Z"
+        ]
+      },
+      "file_data_hash": {
+        "alg": "sha256",
+        "exclusions": [
+          [
+            33,
+            23666
+          ]
+        ],
+        "name": "jumbf manifest",
+        "verified": true
+      }
+    },
+    "codex_session_binding": {
+      "session_id": "01a0e8ea-d14a-7380-8a35-711224cd2e96",
+      "rollout_found": true,
+      "raw_sha256": "06845ccc7da3c80d084ea1ea650be036f03c92724defafd27eef860dfb6ef120",
+      "rollout_file": "rollout-2026-09-29T01-48-18-01a0e8ea-d14a-7380-8a35-711224cd2e96.jsonl",
+      "image_gen_item_kind": "image_gen.generation",
+      "image_gen_item_status": "completed",
+      "tool_item_keys": [
+        "failure",
+        "id",
+        "kind",
+        "result",
+        "revisedPrompt",
+        "savedPath",
+        "status",
+        "transparentBackground",
+        "type"
+      ],
+      "tool_schema_has_model_field": false,
+      "result_sha256": [
+        "06845ccc7da3c80d084ea1ea650be036f03c92724defafd27eef860dfb6ef120"
+      ],
+      "matches_raw_bytes": true
+    },
+    "model_verification_basis": "vendor-signed C2PA softwareAgent.version + rollout sha256",
+    "requested_image_model": "gpt-image-2.5-sunburst",
+    "signed_model_matches_request": false
+  }
 }
