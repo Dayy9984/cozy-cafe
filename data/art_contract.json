@@ -43,7 +43,8 @@
     "side_faces": "visual_overlay_on_visible_outer_boundary_only",
     "side_faces_affect_collision": false,
     "space_size_controls_grid_pitch": false,
-    "thickness_adds_canvas_height": false
+    "thickness_adds_canvas_height": false,
+    "stack_level_height_px": 16
   },
   "character": {
     "rigs": 1,
@@ -142,6 +143,15 @@
     "affects_pathfinding": false,
     "depth_sort_anchor": "unshifted_logical_ground_anchor",
     "saved_instance_policy": "save logical cell and orientation; resolve render offset from asset contract without cumulative writes",
-    "attachment_policy": "resolve child from parent visual mount once; do not repeat parent alignment offset on child"
+    "attachment_policy": "resolve child from parent visual mount once; do not repeat parent alignment offset on child",
+    "stack_level_height_px": 16,
+    "stack_anchor_rule": "anchor_y(level n) = 8 + 16*(n-1); level 1 anchor = 8, each higher level = +16px in canvas y; resolved once from parent top mount"
+  },
+  "generation_sheet_policy": {
+    "model": "uniform_grid_sheet",
+    "rule": "one generation call produces ONE uniform grid sheet; every cell identical pixel size (supersampled >=4x of final 32x32); each cell contains exactly one asset or one animation frame; extraction slices the FIXED GRID (no contour detection) then scales each cell to final 32x32; per-component arbitrary rescale forbidden; cell fill ratio must be consistent across all cells",
+    "static_jobs": "batch multiple 32x32 assets per sheet where practical",
+    "animation_jobs": "one sheet per (asset,state): all 12 frames x required directions on a single uniform grid (existing 12-frame single-sheet policy)",
+    "extraction": "grid-slice by declared rows/cols; reject sheets whose cells differ in size or whose subject scale varies beyond tolerance"
   }
 }

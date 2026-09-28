@@ -153,8 +153,8 @@
     "id": "machine_grinder",
     "category": "machine",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -172,8 +172,8 @@
     "id": "machine_espresso",
     "category": "machine",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -191,8 +191,8 @@
     "id": "machine_steam",
     "category": "machine",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -210,8 +210,8 @@
     "id": "machine_ice",
     "category": "machine",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -229,8 +229,8 @@
     "id": "machine_blender",
     "category": "machine",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -248,8 +248,8 @@
     "id": "counter_straight",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -266,8 +266,8 @@
     "id": "counter_corner",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -284,8 +284,8 @@
     "id": "shelf",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -302,8 +302,8 @@
     "id": "table_square",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -330,8 +330,8 @@
     "id": "table_round",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -358,8 +358,8 @@
     "id": "chair",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -386,8 +386,8 @@
     "id": "stool",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -414,8 +414,8 @@
     "id": "plant_small",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -432,8 +432,8 @@
     "id": "plant_large",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -450,8 +450,8 @@
     "id": "lamp",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -468,8 +468,8 @@
     "id": "wall_picture",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -486,8 +486,8 @@
     "id": "sign",
     "category": "furniture",
     "canvas_px": [
-      64,
-      80
+      32,
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -505,7 +505,7 @@
     "category": "character",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -523,7 +523,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -538,7 +538,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -553,7 +553,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -568,7 +568,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -583,7 +583,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -601,7 +601,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -619,7 +619,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -637,7 +637,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -655,7 +655,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -670,7 +670,7 @@
     "category": "character_layer",
     "canvas_px": [
       32,
-      40
+      32
     ],
     "directions": 4,
     "states_frames": {
@@ -684,8 +684,8 @@
     "id": "menu_M01",
     "category": "menu_icon",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -699,8 +699,8 @@
     "id": "menu_M02",
     "category": "menu_icon",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -714,8 +714,8 @@
     "id": "menu_M03",
     "category": "menu_icon",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -729,8 +729,8 @@
     "id": "menu_M04",
     "category": "menu_icon",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -744,8 +744,8 @@
     "id": "menu_M05",
     "category": "menu_icon",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -759,8 +759,8 @@
     "id": "menu_M06",
     "category": "menu_icon",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -774,8 +774,8 @@
     "id": "menu_M07",
     "category": "menu_icon",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -789,8 +789,8 @@
     "id": "menu_M08",
     "category": "menu_icon",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -804,8 +804,8 @@
     "id": "ui_panel",
     "category": "ui_skin",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -823,8 +823,8 @@
     "id": "ui_button",
     "category": "ui_skin",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -842,8 +842,8 @@
     "id": "ui_tab",
     "category": "ui_skin",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -861,8 +861,8 @@
     "id": "ui_toggle",
     "category": "ui_skin",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -880,8 +880,8 @@
     "id": "ui_input",
     "category": "ui_skin",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -899,8 +899,8 @@
     "id": "ui_tooltip",
     "category": "ui_skin",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -918,8 +918,8 @@
     "id": "ui_card",
     "category": "ui_skin",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -937,8 +937,8 @@
     "id": "ui_slot",
     "category": "ui_skin",
     "canvas_px": [
-      16,
-      16
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {

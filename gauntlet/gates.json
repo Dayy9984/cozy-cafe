@@ -23,7 +23,8 @@
     "interior_side_faces": 0,
     "roundtrip_error": 0,
     "tile_seam_or_overlap_pixels": 0,
-    "fixed_sizes_and_default_pitch_distinguished": true
+    "fixed_sizes_and_default_pitch_distinguished": true,
+    "stack_level_height_px": 16
   },
   "layout-editor": {
     "one_tile_changed": 1,
