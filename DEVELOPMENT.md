@@ -74,7 +74,7 @@ Unity 6 계열이며 호스트 실제 설치본과 동일 버전; 6000.0.51f1 �
 `Packages/manifest.json`에 필요 모듈만 둔다. URP/HDRP 미사용 — Built-in 2D.
 
 ### 하네스 계약 (gates 값 불변)
-- `tools/game_adapter.py <stage>` → Unity `-batchmode -projectPath game -executeMethod CozyCafe.Editor.GauntletEntry.Run -quit`.
+- `tools/game_adapter.py <stage>` → Unity `-batchmode -projectPath <staged copy of game>` -executeMethod CozyCafe.Editor.GauntletEntry.Run -quit`. 어댑터는 추적 game/을 임시 사본으로 복사해 에디터를 실행한다 — Unity는 프로젝트를 열 때 추적 파일을 in-place로 재작성하므로 평가 대상 트리는 byte-identical을 유지해야 한다.
 - 진입점은 `static void Run()`으로, `GAUNTLET_STAGE` env로 스테이지 id를 읽고
   `GAUNTLET_RESULTS`(절대경로)에 `CASE<TAB>key<TAB>json` 라인을 쓴다.
   실패 시 `EditorApplication.Exit(2)`. CASE 값은 반드시 실제 게임 모듈 호출 결과.
@@ -85,6 +85,7 @@ Unity 6 계열이며 호스트 실제 설치본과 동일 버전; 6000.0.51f1 �
 
 ### Unity 배치 주의
 - 배치모드에서도 `-nographics`를 쓰지 않는다(렌더가 필요한 캡처 게이트 때문).
+- 에디터 호스트(capture/case)는 항상 stage_unity_project()가 만든 임시 사본을 -projectPath로 연다. 추적 트리를 직접 열지 않는다. env로 넘기는 경로는 네이티브 형태여야 한다(MSYS는 env 값을 경로 변환하지 않음).
 - 첫 실행은 Library 임포트+컴파일로 수 분 걸릴 수 있다 — 어댑터는 30분 타임아웃.
 - 한글 IME·투명·항상위·DPI·복귀는 네이티브 빌드 검증(native-release)에서 다룬다.
 - Windows 빌드는 macOS 에디터의 Windows Standalone 모듈로 cross-build 후 Windows에서 실행 검증.

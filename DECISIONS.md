@@ -68,3 +68,14 @@ tools/capture_game.py에 버전 불일치 에디터 실행 금지 가드 추가 
 GameCli 폴백(동일 장면 상태의 실제 래스터 PNG), 케이스 호스트는 BLOCKED로 보고해
 향후 불일치 에디터의 추적 소스 무단 변경을 차단한다.
 불변: Unity 6 엔진 결정, gates.json 기대값, CASE<TAB>key<TAB>json 계약.
+
+## INFRA 2026-09-28 — Unity 호스트는 항상 스테이징 사본에서 실행 (추적 소스 불변)
+사유: 버전 일치만으로는 부족했다. 에디터가 추적 트리를 -projectPath로 여는 한
+패키지 lock·settings·버전 파일이 언제든 in-place로 재작성될 수 있고, 독립 critic이
+"capture/check 명령이 추적 소스를 변경"했다고 재지적했다.
+결정: tools/game_adapter.py의 stage_unity_project()가 추적 game/을 임시
+디렉터리로 복사하고(생성물 제외) Unity는 그 사본만 연다. GAUNTLET_*·
+COZYCAFE_MVP_JSON 환경 경로는 cygpath -w 네이티브 형태로 전달(MSYS env 값은
+자동 변환되지 않음). 전후: 전 - 추적 트리를 직접 열어 덮어씀 → 후 - 사본만
+변형되고 종료 후 삭제, git status 변경 0 실측.
+불변: Unity 6 엔진 결정, gates.json 기대값, CASE 계약, editor 버전 핀 6000.6.3f1.

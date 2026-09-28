@@ -6,8 +6,10 @@ Host order:
      RenderTexture -> ReadPixels) when a licensed editor is installed and the
      project entry exists. Env: GAUNTLET_CAPTURE_STAGE / GAUNTLET_CAPTURE_OUTPUT.
      The Unity host is skipped when the found editor's version differs from
-     ProjectSettings/ProjectVersion.txt m_EditorVersion: a mismatched editor
-     silently rewrites tracked project files on open.
+     ProjectSettings/ProjectVersion.txt m_EditorVersion, and it always runs
+     on a staged temp copy of game/ (stage_unity_project): any editor open
+     rewrites tracked project files in place, so the committed tree is
+     evaluated byte-identical and never mutated.
   2. GameCli `render <stage> <abs.png>` which software-rasterizes the same
      shared game state — for machines without an editor license.
 
@@ -16,6 +18,8 @@ fabricated: BLOCKED is reported instead.
 """
 import argparse
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -24,7 +28,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from game_adapter import (find_dotnet, find_unity,  # noqa: E402
-                          project_editor_version, unity_editor_version,
+                          native_path, project_editor_version,
+                          stage_unity_project, unity_editor_version,
                           unity_matches_project)
 
 CAPTURE_METHOD = "CozyCafe.Editor.CaptureShot.Run"
@@ -55,19 +60,32 @@ def try_unity(stage, output):
     if not list((ROOT / "game").glob("Assets/**/Editor/CaptureShot.cs")):
         print("capture: Editor/CaptureShot.cs not present; skipping Unity host")
         return False
+    # Unity rewrites project files on open; run it on a staged copy so the
+    # tracked tree stays exactly as committed.
+    try:
+        staged_root, staged_game = stage_unity_project()
+    except OSError as e:
+        print("capture: could not stage Unity project copy: %s" % e)
+        return False
     env = os.environ.copy()
     env["GAUNTLET_CAPTURE_STAGE"] = stage
-    env["GAUNTLET_CAPTURE_OUTPUT"] = str(output)
+    env["GAUNTLET_CAPTURE_OUTPUT"] = native_path(output)
+    # Staged copy lives outside the workspace and Unity chdirs into it;
+    # without this the modules' ancestor search for data/mvp.json fails.
+    env["COZYCAFE_MVP_JSON"] = native_path(ROOT / "data" / "mvp.json")
     fd, log_path = tempfile.mkstemp(prefix="gauntlet-capture-log-", suffix=".txt")
     os.close(fd)
-    cmd = [engine, "-batchmode", "-projectPath", str(ROOT / "game"),
-           "-executeMethod", CAPTURE_METHOD, "-quit", "-logFile", log_path]
+    cmd = [engine, "-batchmode", "-projectPath", native_path(staged_game),
+           "-executeMethod", CAPTURE_METHOD, "-quit",
+           "-logFile", native_path(log_path)]
     print("capture: UNITY_ARGV %s" % cmd)
     try:
         rc = subprocess.run(cmd, cwd=str(ROOT), env=env, timeout=1800).returncode
     except subprocess.TimeoutExpired:
         print("capture: Unity host timed out (log %s)" % log_path)
         return False
+    finally:
+        shutil.rmtree(staged_root, ignore_errors=True)
     if rc == 0 and valid_png(output):
         return True
     print("capture: Unity host failed rc=%d (log %s)" % (rc, log_path))
@@ -79,11 +97,14 @@ def try_gamecli(stage, output):
     if not dotnet:
         print("capture: .NET SDK not found; skipping GameCli host")
         return False
+    env = os.environ.copy()
+    env["COZYCAFE_MVP_JSON"] = native_path(ROOT / "data" / "mvp.json")
     cmd = [dotnet, "run", "-c", "Release", "--project",
-           str(ROOT / "game" / "GameCli"), "--", "render", stage, str(output)]
+           str(ROOT / "game" / "GameCli"), "--", "render", stage,
+           native_path(output)]
     print("capture: DOTNET_ARGV %s" % cmd)
     try:
-        rc = subprocess.run(cmd, cwd=str(ROOT), timeout=900).returncode
+        rc = subprocess.run(cmd, cwd=str(ROOT), env=env, timeout=900).returncode
     except subprocess.TimeoutExpired:
         print("capture: GameCli render timed out")
         return False
@@ -99,7 +120,18 @@ def main():
     ap.add_argument("--output", required=True)
     a = ap.parse_args()
 
-    output = Path(a.output)
+    out_arg = a.output
+    # A native Windows absolute path (C:\...) is not absolute under a
+    # cygwin/msys Path - translate it to the POSIX view for local checks,
+    # children still receive native_path() forms.
+    if sys.platform in ("cygwin", "msys") and re.match(
+            r"^[A-Za-z]:[\\/]", out_arg):
+        try:
+            out_arg = subprocess.check_output(
+                ["cygpath", "-u", out_arg], text=True).strip()
+        except (OSError, subprocess.CalledProcessError):
+            pass
+    output = Path(out_arg)
     if not output.is_absolute():
         print("capture: --output must be an absolute path", file=sys.stderr)
         return 2

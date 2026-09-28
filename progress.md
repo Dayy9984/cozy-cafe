@@ -118,3 +118,25 @@ research-staff 8/8 전부 실제 코어 계산값 일치. dotnet build Release
 경고0·오류0.
 남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 —
 코어 API와 StageView 그리기만 구현. 이전 항목과 동일.
+
+## layout-editor — Unity 호스트를 스테이징 사본에서 실행 (critic 재지적 반영)
+문제: 이전 조치(버전 핀 일치 + 버전가드)로는 부족했다 — 에디터가 열리는 한
+-projectPath 대상인 추적 트리는 언제든 덮어써질 수 있다(critic: "capture/check
+명령이 추적 소스를 변경. 커밋된 제품을 변경 없이 평가하라").
+조치: tools/game_adapter.py에 stage_unity_project() 추가 — 추적 game/을
+임시 디렉터리로 복사(Library/Temp/Logs/obj/bin/UserSettings 제외, 동일
+소스)하고 Unity의 -projectPath는 항상 그 사본이다. 자식 종료 후 사본 삭제.
+추가 수정: MSYS 파이썬에서 mkdtemp·mkstemp는 POSIX 경로를 반환하고 argv는
+자동 변환되지만 env 값은 변환되지 않으므로 Unity에 넘기는 모든 경로를
+cygpath -w로 네이티브화(native_path). 또한 스테이징 사본 밖에는 data/ 조상이
+없고 Unity가 CWD를 -projectPath로 바꾸므로 COZYCAFE_MVP_JSON을 실제
+data/mvp.json으로 명시 — 안 하면 MvpData.TryLoad가 null이라
+test_entry_calls_real_modules=false로 회귀(실측으로 확인 후 수정).
+검증(실측): capture_game.py --stage layout-editor → Unity 6000.6.3f1이
+사본 프로젝트에서 CaptureShot.Run으로 실제 PNG 9429B 생성, git status
+신규 변경 0, 사본 잔여물 0. game_adapter.run_unity('project-boot') →
+사본에서 CASE 2/2(true·true) 방출. check_stage 5종 재검사:
+layout-editor 22/22·iso-grid 16/16·project-boot 2/2·idle-economy 8/8·
+research-staff 8/8. GameCli render 폴백도 실측 PNG 생성(504403B).
+남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 — 코어
+API와 StageView 그리기만 구현. 이전 항목과 동일.
