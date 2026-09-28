@@ -50,3 +50,8 @@ v0.8.2 save-offline 잔여구멍 보강: gen_seed 복원 누락(후보 스트림
 8/8·idle-economy 8/8·layout-editor 22/22·project-boot 2/2·desktop-tools
 6/6·character-rig 5/5. iso-grid는 SPEC_CHANGE 적용이 iso/art 스트림
 미착수라 이 병합본에서 실측 FAIL로 남음 — 상세는 progress.md 해당 절.
+v0.8.2 save-offline 통합본 재검증: merge 17fd7d4(integration→HEAD, .cs 0파일
+변경·gates에 stack_level_height_px 추가) 후 save-offline 게이트 실재검증 —
+build 경고0·save-offline 6/6·research-staff 8/8·idle-economy 8/8·
+layout-editor 22/22·project-boot 2/2·desktop-tools 6/6·character-rig 5/5.
+iso-grid는 iso/art 스트림 미착수 SPEC_CHANGE로 실측 FAIL 유지(소유 외).

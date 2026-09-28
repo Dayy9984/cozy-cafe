@@ -362,3 +362,25 @@ save-offline 6/6(신규 증거키 2개 포함 CASE 전부 실계산값)·researc
 TileArt vs fe53fc2 SPEC_CHANGE의 32px 기대값 불일치. 픽셀 계약 파일은
 iso-grid/art 작업 스트림 소유이므로 본 작업에서는 미변경·실측 FAIL로 기록.
 Unity 뷰 계층 autosave·프리셋 공유 버튼은 이전과 동일하게 미착수.
+
+## save-offline — 통합본 재검증 (merge 17fd7d4 기준)
+배경: critic 지적 "다른 스트림이 통합 산출물을 바꿨다 — 동기화·검사·재판정".
+이번 run은 통합 merge(17fd7d4, integration→HEAD) 이후 HEAD를 대상으로
+save-offline 게이트를 실재검증한다. merge는 .cs 0파일 변경 — gates.json에
+iso-grid expected `stack_level_height_px:16` 추가·data/art_contract.json에
+stack_anchor/grid_sheet 정책 추가·art/ 프롬프트·카탈로그만 갱신. 따라서
+저장 모듈 코드·수치 변경 없이 외부 gate 변경분만 재검증 대상.
+검증(재실행, 전부 GameCli 실모듈 실파일 경로): dotnet build -c Release
+game/GameCli 경고0·오류0. check_stage — save-offline 6/6
+(offline_online_difference 0·research_cost_charged_once true·
+time_backwards_reward 0·restored_layout_equal true·duplicate_credit 0·
+save_backup_recovers true — 백업failover·v1마이그레이션·24h캡·역행시계·
+의미사망primary·스큐플러시 증거키 전부 실측값), 의존단계 재확인 —
+research-staff 8/8·idle-economy 8/8·layout-editor 22/22·project-boot 2/2,
+비의존 회귀 확인 — desktop-tools 6/6·character-rig 5/5.
+남은 문제(소유 외, 변경 없음): iso-grid는 이 통합본에서 계속 FAIL —
+구64px IsoMath/TileArt 상수 vs 현 gates의 32×16/32×32/두께2px 기대값
+불일치(stack_level_height_px 포함 9키 불일치+1키 누락). 픽셀 계약
+구현은 iso-grid/art 스트림 소유로 본 작업범위 밖 — 미변경·실측 FAIL
+유지. Unity 뷰 계층 autosave·프리셋 공유 버튼은 이전 기록과 동일하게
+미착수(코어 계약+게이트 경로만 검증됨).
