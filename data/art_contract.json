@@ -158,5 +158,12 @@
     "rule": "final 32x32 cells must be real pixel art: palette-quantized and pixel-snapped. A smooth resampled render downscaled to fit is a defect.",
     "max_unique_colors_per_cell": 64,
     "required_steps": "sprite-gen pixel_snap_scale + palette quantize/recolor before approval; plain LANCZOS downscale alone is REJECTED"
+  },
+  "reference_conformance": {
+    "model": "reference_guided_production",
+    "rule": "raw generations are REFERENCES, not sources to shrink. Final 32x32 cells are produced by deterministic code path (sprite-gen pixel_snap+quantize/recolor, or code-drawn raster like TileArt) and must measure conformant to their reference before approval.",
+    "metric": "per-cell silhouette IoU vs reference + palette/color match; score recorded in provenance per approved cell",
+    "min_silhouette_iou": 0.55,
+    "provenance_field": "reference_similarity"
   }
 }

@@ -298,3 +298,14 @@ StageCases는 manifest frames의 w/h 실측값에서 계산해야 한다(모든 
 계약: pixel_quality 정책 — 승인 전 sprite-gen pixel_snap_scale + 팔레트
 양자화/recolor 필수, 순수 LANCZOS 축소만으로는 REJECT.
 불변: 기존 키 전부(추가만), 색 상한 64는 스펙 변경 시 데이터 원본에서만 수정.
+
+## SPEC_CHANGE 2026-09-28 — 참조 정합성 metric으로 승인 (사용자 지시)
+사유: 사용자 지시 — "재생성하도록 만들어야지. 코드로 도트 찍는 게 더 빠르고,
+이미지를 레퍼런스로 보고 정합성 비교를 metric으로 해야 32×32가 정확하게 나온다."
+전: 생성 원본을 컴포넌트별 축소해 승인 — 크기만 맞으면 통과해 품질 무보증.
+후: 원시 생성물은 레퍼런스. 최종 32×32 셀은 결정적 코드 경로(sprite-gen
+pixel_snap+양자화/recolor 또는 TileArt식 코드 래스터)로 생산하고, 승인 전
+셀↔참조 정합도(실루엣 IoU≥0.55 + 팔레트 일치)를 실측·provenance
+(reference_similarity)에 기록한다. 게이트 reference_conformance_ok=true가
+실측값을 요구한다 — 픽셀 경로를 실제로 돌리지 않으면 PASS 불가.
+불변: 기존 키 전부(추가만), OAuth only, codex 전용, 12프레임 단일시트.
