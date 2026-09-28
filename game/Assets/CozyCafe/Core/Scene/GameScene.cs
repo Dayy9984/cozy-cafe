@@ -184,6 +184,12 @@ namespace CozyCafe.Core.Scene
         /// Paint-time only — logical geometry never reads it.
         public int Zoom = 1;
 
+        /// Mini window mode: the desktop-tools stage draws the small
+        /// always-on-top chrome plus the real tool panel snapshot. Paint
+        /// hints only — window state lives in Tools.ToolsModule.
+        public bool MiniMode;
+        public CozyCafe.Core.Tools.ToolPanel ToolsPanel;
+
         public bool Validate()
         {
             if (Room == null || Room.Width <= 0 || Room.Height <= 0) return false;

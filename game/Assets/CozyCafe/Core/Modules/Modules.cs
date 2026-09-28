@@ -131,31 +131,9 @@ namespace CozyCafe.Core.Modules
 
 namespace CozyCafe.Core.Modules
 {
-    /// <summary>
-    /// Desktop tool state: memos, todos and the pause timer. Probe performs a
-    /// real add/remove round-trip on module state.
-    /// </summary>
-    public sealed class ToolsModule : ModuleBase
-    {
-        public override string Name { get { return "tools"; } }
-
-        public readonly List<string> Memos = new List<string>();
-        public readonly List<string> Todos = new List<string>();
-        public double PauseRemainingSeconds { get; private set; }
-
-        public void SetPause(double seconds)
-        {
-            PauseRemainingSeconds = seconds < 0 ? 0 : seconds;
-        }
-
-        protected override bool OnProbe()
-        {
-            Memos.Add("__probe__");
-            bool roundTrip = Memos.Contains("__probe__");
-            Memos.Remove("__probe__");
-            return roundTrip && !Memos.Contains("__probe__");
-        }
-    }
+    // The real desktop-tools module lives in CozyCafe.Core.Tools
+    // (Tools/ToolsModule.cs): window modes, memo/todo persistence, the
+    // focus timer + records, and the local music deck.
 
     /// <summary>Desktop platform capabilities negotiated at boot.</summary>
     public sealed class PlatformModule : ModuleBase

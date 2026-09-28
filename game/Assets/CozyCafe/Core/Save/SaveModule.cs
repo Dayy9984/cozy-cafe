@@ -260,6 +260,29 @@ namespace CozyCafe.Core.Save
                 return false;
             }
         }
+
+        /// Every failover candidate in order — primary first, then
+        /// backup — each already screened by the store's content
+        /// validator. Callers whose acceptance check is deeper than
+        /// document shape (a full module restore) walk this list so a
+        /// structurally valid but semantically dead primary can never
+        /// keep the backup from being tried.
+        public List<KeyValuePair<LoadSource, string>> ReadCandidates()
+        {
+            var l = new List<KeyValuePair<LoadSource, string>>();
+            string t;
+            if (TryReadFile(PrimaryPath, out t))
+            {
+                l.Add(new KeyValuePair<LoadSource, string>(
+                    LoadSource.Primary, t));
+            }
+            if (TryReadFile(BackupPath, out t))
+            {
+                l.Add(new KeyValuePair<LoadSource, string>(
+                    LoadSource.Backup, t));
+            }
+            return l;
+        }
     }
 
     /// <summary>
@@ -347,6 +370,13 @@ namespace CozyCafe.Core.Save
 
             var doc = new SaveDocument();
             doc.SettlementId = SaveDoc.Str(SaveDoc.Get(raw, "settlement_id"));
+            // A checkpoint without an id could never be deduped — every
+            // settle would credit again. Reject it like any other corrupt
+            // field so the store falls back to the backup.
+            if (string.IsNullOrEmpty(doc.SettlementId))
+            {
+                throw new FormatException("save: missing settlement_id");
+            }
             doc.CheckpointUtc = SaveDoc.Long(SaveDoc.Get(raw, "checkpoint_utc"));
             doc.RuntimeClock = SaveDoc.Double(SaveDoc.Get(raw, "runtime_clock"));
             doc.SaveSeq = SaveDoc.Long(SaveDoc.Get(raw, "save_seq"));
@@ -357,7 +387,7 @@ namespace CozyCafe.Core.Save
             doc.Economy = SaveDoc.Dict(SaveDoc.Get(raw, "economy"));
             doc.Research = SaveDoc.Dict(SaveDoc.Get(raw, "research"));
             doc.Staff = SaveDoc.Dict(SaveDoc.Get(raw, "staff"));
-            doc.Layout = SaveDoc.Get(raw, "layout");
+            doc.Layout = SaveDoc.Dict(SaveDoc.Get(raw, "layout"));
             doc.Memos = SaveDoc.List(SaveDoc.GetOr(raw, "memos", new List<object>()));
             doc.Todos = SaveDoc.List(SaveDoc.GetOr(raw, "todos", new List<object>()));
             return doc;
@@ -529,7 +559,25 @@ namespace CozyCafe.Core.Save
                 double dr = Lab.NextCompletionDelta();
                 if (ds < step) step = ds;
                 if (dr < step) step = dr;
-                if (step <= 0) break; // pending events are strictly future-dated
+                if (step <= 0)
+                {
+                    // A boundary dated at-or-before now is already due —
+                    // only reachable when a restored record skews an event
+                    // instant behind its own clock. Flush it at the
+                    // current instant; an event that still cannot clear is
+                    // a data defect the timeline cannot survive, never a
+                    // silent partial advance.
+                    Econ.SimulateSeconds(0);
+                    Lab.SimulateStep(0);
+                    Lab.TryStartQueued();
+                    if (Econ.NextSaleDelta() <= 0.0
+                        || Lab.NextCompletionDelta() <= 0.0)
+                    {
+                        throw new InvalidOperationException(
+                            "session advance stalled on an unclearable event");
+                    }
+                    continue;
+                }
                 // Wallet events run first so a same-instant completion or
                 // queue start already sees the credited coins; the lab
                 // anchors queue starts at the step's end boundary.
@@ -610,6 +658,42 @@ namespace CozyCafe.Core.Save
             foreach (var t in doc.Todos) Todos.Add(t);
         }
 
+        /// Restores through the store's failover with end-to-end proof:
+        /// every candidate must parse as a document AND restore cleanly
+        /// into a scratch session before it is applied here, so a file
+        /// that is structurally valid but semantically dead (unknown
+        /// menu/research ids, mistyped records) can neither half-apply
+        /// nor keep the backup from being tried. Returns the source that
+        /// restored, or None when nothing does — and a total failure
+        /// leaves this session untouched.
+        public SaveStore.LoadSource RestoreThroughStore(SaveStore store)
+        {
+            foreach (var cand in store.ReadCandidates())
+            {
+                SaveDocument d;
+                try
+                {
+                    d = SaveDocument.Parse(cand.Value);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+                try
+                {
+                    var probe = CreateStartup(Data, 0, 1, 1);
+                    probe.Restore(d);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+                Restore(d);
+                return cand.Key;
+            }
+            return SaveStore.LoadSource.None;
+        }
+
         /// Applies the document's pending offline interval under its
         /// settlement id, at most once per id: elapsed UTC is measured from
         /// the stored checkpoint, a backwards clock yields zero reward, the
@@ -623,9 +707,16 @@ namespace CozyCafe.Core.Save
             long settle = elapsed <= 0 ? 0 : Math.Min(elapsed, OfflineCapSeconds);
             r.Seconds = settle;
             if (settle <= 0) return r;
+            // A document with no settlement id cannot be deduplicated —
+            // refusing it keeps "applied at most once" airtight.
+            if (doc.SettlementId == null)
+            {
+                throw new InvalidOperationException(
+                    "settle requires a document settlement id");
+            }
             // The id is marked before applying so a crash mid-settle can
             // never let the same checkpoint credit twice.
-            if (doc.SettlementId != null && !applied.Add(doc.SettlementId))
+            if (!applied.Add(doc.SettlementId))
             {
                 r.Duplicate = true;
                 r.Seconds = 0;
@@ -749,6 +840,7 @@ namespace CozyCafe.Core.Save
                 }
             }
             diff += SetDifference(Lab.UnlockedFlags, other.Lab.UnlockedFlags);
+            if (Staff.GenerationSeed != other.Staff.GenerationSeed) diff++;
             if (Staff.Roster.Count != other.Staff.Roster.Count) diff++;
             else
             {

@@ -5,6 +5,7 @@ using CozyCafe.Core.Modules;
 using CozyCafe.Core.Research;
 using CozyCafe.Core.Staff;
 using CozyCafe.Core.Scene;
+using CozyCafe.Core.Tools;
 
 namespace CozyCafe.Core
 {

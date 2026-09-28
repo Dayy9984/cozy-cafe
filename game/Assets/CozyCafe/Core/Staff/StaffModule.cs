@@ -63,7 +63,7 @@ namespace CozyCafe.Core.Staff
         public override string Name { get { return "staff"; } }
 
         public readonly Economy.EconomyModule Econ;
-        public readonly long GenerationSeed;
+        public long GenerationSeed { get; private set; }
         public readonly List<StaffCandidate> Candidates = new List<StaffCandidate>();
         public readonly List<StaffCandidate> Roster = new List<StaffCandidate>();
         public bool PanelOpen { get; private set; }
@@ -200,10 +200,14 @@ namespace CozyCafe.Core.Staff
             return r;
         }
 
-        /// Replaces the whole office state: candidates are re-rolled from
-        /// their persisted seeds so stats and appearance land identically.
+        /// Replaces the whole office state: the persisted generation seed
+        /// comes back too, so post-restore refills roll the identical stream
+        /// the saved timeline would have produced; candidates are re-rolled
+        /// from their persisted seeds so stats and appearance land
+        /// identically.
         public void RestoreState(Dictionary<string, object> d)
         {
+            GenerationSeed = SaveDoc.Long(SaveDoc.Get(d, "gen_seed"));
             nextCandidateId = (int)SaveDoc.Long(SaveDoc.Get(d, "next_id"));
             PanelOpen = SaveDoc.Bool(SaveDoc.Get(d, "panel"));
             Roster.Clear();

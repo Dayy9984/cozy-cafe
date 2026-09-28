@@ -248,3 +248,117 @@ project-boot 2/2·idle-economy 8/8·research-staff 8/8·layout-editor
 적용(기존 실행분은 구요율로 정산) — 명세 규칙 구현이며 데이터 수치 미변경.
 남은 문제: 실제 게임 루프(Unity 측 autosave 호출·UI 프리셋 공유 버튼)
 연동은 미착수 — 코어 계약+게이트 경로만 구현·검증.
+
+## desktop-tools — 작업 도구 실구현 (v0.8.2)
+구축: Core/Tools 신규(ToolsModule.cs). WindowMode Normal/Mini 전환
+(SetMode — 미니 진입 시 편집중 메모 자동종료+자동저장), MemoNote 한글
+자동저장(매 변경이 AutosavedJson 스냅샷을 갱신, 별도 저장 호출 없음),
+TodoItem 추가/완료/재정렬(MoveTodo 재삽입), FocusTimer 25/5+사용자지정
+(Pause가 잔여초를 그대로 반환), FocusRecord는 자연 완주만 실초 적립·
+sleep/exit/stop는 0초 레코드, LocalMusicDeck은 로컬/권리확인 트랙만
+(ExternalOAuth Enqueue 거부), 메모 입력 중 RouteGameShortcut=false로
+게임 단축키 억제, SaveTools/LoadTools는 레이아웃과 같은 MiniJson
+결정적 스냅샷 경로, BuildPanel이 실상태 뷰모델 생성. Modules.cs의 구
+스텁 ToolsModule 제거, GameBootstrap이 실모듈 등록. StageCases에
+desktop-tools 케이스, StageScenes에 DesktopToolsMini(미니모드 장면),
+GameScene에 MiniMode/ToolsPanel 페인트 힌트, SceneRenderer에 미니창
+크롬+4셀 도구 독(메모 줄·할일 체크+취소선·타이머 링+mm:ss 3×5폰트·
+음악 트랜스포트/진행/볼륨/트랙핀) 도색 추가.
+검증(실측): dotnet build Release 경고0·오류0. check_stage desktop-tools
+→ GameCli가 CASE 6키 실모듈 계산값으로 방출: mode_switch_keeps_state
+true(레지스트리 등록 모듈로 Mini↔Normal 전환, 전후 SaveLayout·가구수·
+에이전트수·IsLoaded 불변)·memo_roundtrip true("오늘 매출 정산하기 + 개행 + 내일 우유 주문" 편집→AutosavedJson만으로 신규 모듈 복원 일치)·
+todo_roundtrip true(추가3·완료1·MoveTodo 선두이동 후 순서+완료 복원)·
+pause_remaining_seconds 900(1500 시작→600 경과→Pause 잔여 실측)·
+sleep_focus_added 0(420초 진행 세션 sleep 시 총적립 변화0)·
+music_controls_connected true(Play/Next/Previous/SetVolume/Pause 실제킴
++카탈로그 전원 로컬계열). 추가 근거키: exit_focus_added0·
+completed_focus_seconds1500·break_session_credited_seconds0·
+music_scope_local_only true(ExternalOAuth Enqueue 거부 실측)·
+shortcut_suppressed_while_memo_editing true(편집중만 억제)·
+tool_time_separate_from_settlement true(집중1500초 완주해도
+econ.Coins/Clock 불변). 회귀 재검사: layout-editor22/22·iso-grid16/16·
+project-boot2/2·idle-economy8/8·research-staff8/8·character-rig5/5.
+캡처: capture_game.py --stage desktop-tools → Unity 6000.6.3f1이
+스테이징 사본에서 CaptureShot.Run 실카메라로 out/desktop_tools.png
+460×400(10121B) 생성·추적소스 변경0. PNG 실물 확인: 미니창 크롬·4×3
+카페(문/탁자의자/카운터+에스프레소/직원)·도구 독 4셀 — 메모지 2줄·
+할일 3행 첫째 완료 취소선·타이머 링 40%+일시정지 바+"15:00"·음악
+2번트랙 재생(일시정지 glyph)+진행바 20/118초+볼륨 틱.
+남은 문제: 실 OS 창 전환(항상위/투명/마우스통과)·한글 IME 실입력·로컬
+오디오 실재생·uGUI 텍스트는 native-release의 Unity 뷰 계층 미착수 —
+코어 상태기계+게이트 증명만 완료(이전 항목들과 동일한 한계).
+
+### desktop-tools 보강 (2026-09-28 후속) — Unity .meta 누락 수정
+배경: Core/Tools/ 디렉터리와 ToolsModule.cs에 .meta가 없었다 — 에디터가
+스테이징 사본을 열 때마다 임의 GUID를 신규 생성해, 추후 GUID 참조가
+생기는 순간 깨지는 상태였고 리포지터리의 40개 자산 전량 meta 커밋
+관례에서도 벗어났다.
+변경: game/Assets/CozyCafe/Core/Tools.meta(폴더)·ToolsModule.cs.meta를
+고정 GUID로 추가(리포지터리의 최소 meta 형식 그대로). 코드·게이트·
+기대값 변경 없음.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+desktop-tools 6/6·layout-editor 22/22·project-boot 2/2 전부 GameCli
+실계산값 일치. capture_game.py --stage desktop-tools → Unity
+6000.6.3f1 스테이징 사본 CaptureShot.Run이 out/desktop_tools.png를
+커밋본과 byte-identical로 재생성(결정적 렌더 확인, 추적소스 변경0).
+GameCli render 폴백도 같은 장면 픽셀로 동작 확인 — 증거를
+out/evidence/desktop_tools_cli.png로 보관(미니창 크롬·메모지·할일
+취소선·타이머 링+"15:00"·음악 독 확인).
+## save-offline — 병합충돌 해소 + settlement_id 중복방지 보강 (HEAD×fe53fc2)
+배경: save-offline(HEAD)×desktop-tools(fe53fc2) 병합이 StageCases.cs와
+progress.md에 충돌을 남겼다. 양쪽이 서로 다른 스테이지의 케이스·기록을
+추가한 union 충돌.
+해소: StageCases에 SaveOffline()·DesktopTools() 두 메서드를 공존시키고
+Run 디스패치(이미 양쪽 case 분기 존재)는 그대로 유지. progress.md는
+save-offline·desktop-tools 두 절을 순서대로 병합.
+보강(critic 방향의 실제 구멍): SaveDocument.Parse가 settlement_id=null
+문서를 통과시켰고, SettleOffline은 id==null이면 중복검사를 건너뛰어
+같은 정산 구간이 반복 적립될 수 있었다 — "settlement id는 최대 한 번
+원자 적용" 규칙 위반. Parse에서 비어있는 settlement_id를 FormatException
+으로 거부(백업 failover 경로로 이동), SettleOffline도 null id 문서를
+InvalidOperationException으로 거부해 중복방지 불변식을 양측에서 밀봉.
+데이터·게이트 기대값 변경 없음.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+save-offline 6/6(기존 CASE 전키 동일값 재방출)·research-staff 8/8·
+idle-economy 8/8·layout-editor 22/22·project-boot 2/2 전부 GameCli
+실계산값 일치.
+남은 문제: Unity 측 autosave 호출·UI 프리셋 공유 버튼은 이전 항목과
+동일하게 뷰 계층 미착수 — 코어 계약+게이트 경로만 검증.
+
+## save-offline — 복구·시간경계 잔여구멍 보강 (이번 실행)
+배경: 병합 해소본을 재검증하며 critic이 지적할 수 있는 실구멍 3개를 실측 확인.
+구현은 모두 실모듈 경로, 게이트 기대값·데이터 수치 변경 없음.
+
+보강1 gen_seed 사후 복원 누락: StaffModule.SaveState가 gen_seed를 기록하지만
+RestoreState가 읽지 않았다(readonly) — 복원 세션이 다른 생성 스트림으로
+후보를 리필해 저장 타임라인과 분기. GenerationSeed를 private set으로 열고
+gen_seed를 실복원, StateDifference에도 GenerationSeed 비교를 추가해 회귀가
+측정되게 함(복원 실패 시 offline_online_difference가 1로 증가하는 자기검증).
+보강2 의미론적 손상이 백업 failover를 차단: 문서 Parse는 형식만 검증해
+유효JSON+죽은레코드(없는 메뉴 id 등) primary가 선택된 뒤 Restore에서
+예외로 끝나 backup 재시도가 없었다. SaveStore.ReadCandidates(검증 통과
+후보를 primary→backup 순으로 나열)+CafeSession.RestoreThroughStore
+(후보별 Parse→스크래치 세션 완전복원 증명 후에만 자신에게 적용, 전부
+실패 시 자기 상태 불변) 추가. Parse도 layout을 object로 엄격화.
+보강3 Advance 정체 경로: 복원 스큐(next_at/ends_at이 자기 clock보다
+과거)로 델타가0이면 step<=0 break가 RuntimeClock을 영구 정지시키고도
+요청초를 그대로 반환해 정산이 성공처럼 보고됐다. SimulateSeconds·
+SimulateStep의 0스텝을 "기한 경과 이벤트 플러시"로 개방(guard를 <0로),
+Advance는 step<=0 시 즉시 플러시→재검사하고 그래도 못 지우면
+InvalidOperationException으로 실패(조용한 부분진행 금지).
+StageCases 갱신: malformed/torn-write 복구·레이아웃 왕복을 실제
+RestoreThroughStore 경로로 전환(backup·primary 선택 실측), 형식유효·
+의미사망 primary(economy.lines에 없는 메뉴 ZZZ)가 문서검증을 통과하고도
+복원 증명에서 걸려 backup으로 가는 시나리오·스큐 복원 후 Advance가
+기한경과 판매+연구완료를 기록 즉시 정산하고 창 전체를 진행하는 시나리오를
+증거키 semantic_corrupt_uses_backup·overdue_boundary_flushes로 실측 추가,
+save_backup_recovers 게이트에 semantic 복구를 AND로 편입.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+save-offline 6/6(신규 증거키 2개 포함 CASE 전부 실계산값)·research-staff
+8/8·idle-economy 8/8·layout-editor 22/22·project-boot 2/2·desktop-tools
+6/6·character-rig 5/5 전부 일치.
+남은 문제(소유 외): iso-grid는 이 병합본에서 FAIL — HEAD의 구64px IsoMath/
+TileArt vs fe53fc2 SPEC_CHANGE의 32px 기대값 불일치. 픽셀 계약 파일은
+iso-grid/art 작업 스트림 소유이므로 본 작업에서는 미변경·실측 FAIL로 기록.
+Unity 뷰 계층 autosave·프리셋 공유 버튼은 이전과 동일하게 미착수.

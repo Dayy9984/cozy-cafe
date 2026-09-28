@@ -9,6 +9,7 @@ using CozyCafe.Core.Research;
 using CozyCafe.Core.Save;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Staff;
+using CozyCafe.Core.Tools;
 
 namespace CozyCafe.Core.Gauntlet
 {
@@ -49,6 +50,8 @@ namespace CozyCafe.Core.Gauntlet
                     return SaveOffline();
                 case "character-rig":
                     return CharacterRig();
+                case "desktop-tools":
+                    return DesktopTools();
                 default:
                     return null;
             }
@@ -600,14 +603,14 @@ namespace CozyCafe.Core.Gauntlet
                     SaveDocument.IsValidJson);
                 sL.WriteCheckpoint(storeL, T0);
                 var sL2 = CafeSession.CreateStartup(data, 4242, 3, 3);
-                string textL;
-                storeL.TryRead(out textL);
-                sL2.Restore(SaveDocument.Parse(textL));
+                // healthy save -> failover picks the primary and restores.
+                var lsrcL = sL2.RestoreThroughStore(storeL);
                 cases.Add(new CaseResult("restored_layout_equal",
                     commit1 == PlacementReject.None
                     && commit2 == PlacementReject.None
                     && tb.Ok && ct.Ok && mg.Ok
                     && mg.Placed.HostId == ct.Placed.Id
+                    && lsrcL == SaveStore.LoadSource.Primary
                     && sL2.Layout.SaveLayout() == layoutSnap));
 
                 // ---- settlement-id dedupe -------------------------------
@@ -616,6 +619,33 @@ namespace CozyCafe.Core.Gauntlet
                 long dupGain = dup.CoinsGained * 100 + dup.RemainderGained;
                 if (!dup.Duplicate) dupGain++;
                 cases.Add(new CaseResult("duplicate_credit", dupGain));
+
+                // ---- skewed restored instants flush, never stall --------
+                // A doc whose event instants sit behind their own clocks is
+                // parseable but skewed: Advance must settle the due events
+                // at their recorded instants and still cover the window —
+                // never freeze the timeline while reporting it advanced.
+                var sK = CafeSession.CreateStartup(data, 66, 6, 6);
+                sK.Lab.Reserve("R01");
+                sK.Advance(500);            // R01 active, wallet earning
+                var docK = sK.BuildDocument(T0);
+                // skew: the research end and one sale land behind their
+                // module clocks.
+                SaveDoc.Dict(docK.Research["active"])["ends_at"] =
+                    SaveDoc.Double(SaveDoc.Get(docK.Research, "clock")) - 10.0;
+                var kLines = SaveDoc.List(SaveDoc.Get(docK.Economy, "lines"));
+                SaveDoc.Dict(kLines[0])["next_at"] =
+                    SaveDoc.Double(SaveDoc.Get(docK.Economy, "clock")) - 5.0;
+                long kCoins0 = SaveDoc.Long(SaveDoc.Get(docK.Economy, "coins"));
+                var sK2 = CafeSession.CreateStartup(data, 2, 6, 6);
+                sK2.Restore(docK);
+                double kClock0 = sK2.RuntimeClock;
+                sK2.Advance(60);
+                cases.Add(new CaseResult("overdue_boundary_flushes",
+                    sK2.RuntimeClock == kClock0 + 60
+                    && sK2.Econ.CompletedResearch.Contains("R01")
+                    && sK2.Lab.Active == null
+                    && sK2.Econ.Coins > kCoins0));
 
                 // ---- recovery: malformed primary -> backup --------------
                 var storeF = new SaveStore(Path.Combine(tmpDir, "f", "save.json"),
@@ -630,10 +660,8 @@ namespace CozyCafe.Core.Gauntlet
 
                 File.WriteAllText(storeF.PrimaryPath,
                     "{ \"save_version\": 2, broken,,,");
-                string rt;
-                var lsrc = storeF.TryRead(out rt);
                 var s6 = CafeSession.CreateStartup(data, 1, 6, 6);
-                s6.Restore(SaveDocument.Parse(rt));
+                var lsrc = s6.RestoreThroughStore(storeF);
                 bool badJsonRecovered = lsrc == SaveStore.LoadSource.Backup
                     && s6.Econ.Coins == coinsF1
                     && s6.Lab.Active != null && s6.Lab.Active.Id == "R01"
@@ -645,16 +673,42 @@ namespace CozyCafe.Core.Gauntlet
                 File.WriteAllText(storeF.TempPath, full2.Substring(0, 40));
                 File.WriteAllText(storeF.PrimaryPath,
                     full2.Substring(0, full2.Length / 2));
-                var lsrc2 = storeF.TryRead(out rt);
                 var s7 = CafeSession.CreateStartup(data, 1, 6, 6);
-                s7.Restore(SaveDocument.Parse(rt));
+                var lsrc2 = s7.RestoreThroughStore(storeF);
                 bool powerLossRecovered = lsrc2 == SaveStore.LoadSource.Backup
                     && s7.Econ.Coins == coinsF1
                     && s7.Lab.Active != null && s7.Lab.Active.Id == "R01";
 
                 // both copies unreadable -> None, no silent state.
                 File.WriteAllText(storeF.BackupPath, "also junk");
+                string rt;
                 bool noneFound = storeF.TryRead(out rt) == SaveStore.LoadSource.None;
+
+                // structurally valid but semantically dead primary ->
+                // backup: the doc parses (every field present, right
+                // types) yet its economy record names a menu that does
+                // not exist, so a full restore must reject it and the
+                // session-level failover must still land on the backup.
+                File.WriteAllText(storeF.BackupPath, full2);
+                var dead = (Dictionary<string, object>)MiniJson.Parse(full2);
+                var deadLines = SaveDoc.List(SaveDoc.Get(
+                    SaveDoc.Dict(dead["economy"]), "lines"));
+                var deadRec = new Dictionary<string, object>();
+                deadRec["id"] = "ZZZ";
+                deadRec["level"] = (long)1;
+                deadRec["next_at"] = 7.0;
+                deadLines.Add(deadRec);
+                File.WriteAllText(storeF.PrimaryPath, MiniJson.ToJson(dead));
+                // prove the dead primary really passed the JSON screen —
+                // the end-to-end restore proof is what refused it.
+                bool deadPassedScreen = SaveDocument.IsValidJson(
+                    File.ReadAllText(storeF.PrimaryPath));
+                var sD = CafeSession.CreateStartup(data, 1, 6, 6);
+                var lsrcD = sD.RestoreThroughStore(storeF);
+                bool deepCorruptRecovered = deadPassedScreen
+                    && lsrcD == SaveStore.LoadSource.Backup
+                    && sD.Econ.Coins == coinsF1
+                    && sD.Lab.Active != null && sD.Lab.Active.Id == "R01";
 
                 // ---- version migration: real v1-shaped save -------------
                 var migStore = new SaveStore(Path.Combine(tmpDir, "m", "save.json"),
@@ -717,10 +771,11 @@ namespace CozyCafe.Core.Gauntlet
 
                 cases.Add(new CaseResult("save_backup_recovers",
                     badJsonRecovered && powerLossRecovered
-                    && noneFound && migrated));
+                    && noneFound && migrated && deepCorruptRecovered));
                 cases.Add(new CaseResult("save_version_migrates", migrated));
                 cases.Add(new CaseResult("malformed_json_uses_backup", badJsonRecovered));
                 cases.Add(new CaseResult("power_loss_recovers", powerLossRecovered));
+                cases.Add(new CaseResult("semantic_corrupt_uses_backup", deepCorruptRecovered));
                 cases.Add(new CaseResult("research_rate_rebills", rebills));
                 cases.Add(new CaseResult("offline_cap_enforced", capOk));
                 cases.Add(new CaseResult("private_fields_in_preset", privateLeak));
@@ -730,6 +785,157 @@ namespace CozyCafe.Core.Gauntlet
                 try { Directory.Delete(tmpDir, true); }
                 catch (Exception) { }
             }
+            return cases;
+        }
+
+        /// Desktop work-tools contract: every value is produced by real
+        /// ToolsModule calls — the window-mode switch against a live cafe
+        /// scene, memo/todo state through the module's own MiniJson save
+        /// path, the focus timer's exact pause report, zero-credit sleep
+        /// records, and the local music deck's controls. Nothing here is a
+        /// declared constant.
+        private static List<CaseResult> DesktopTools()
+        {
+            var cases = new List<CaseResult>();
+
+            // --- normal <-> mini switch keeps the live cafe state ---
+            var boot = GameBootstrap.Create();
+            boot.LoadDefaultScene();
+            var layout = new LayoutModule(boot.Scene);
+            string layoutBefore = layout.SaveLayout();
+            int furnitureBefore = boot.Scene.Furniture.Count;
+            int agentsBefore = boot.Scene.Agents.Count;
+            ToolsModule tools = null;
+            foreach (var m in boot.Registry.Modules)
+            {
+                var t = m as ToolsModule;
+                if (t != null) tools = t;
+            }
+            bool registered = tools != null;
+            if (tools == null) tools = new ToolsModule();
+            tools.SetMode(WindowMode.Mini);
+            bool wentMini = tools.Mode == WindowMode.Mini
+                && tools.ToolsPanelVisible;
+            bool stateInMini = layout.SaveLayout() == layoutBefore
+                && boot.Scene.Furniture.Count == furnitureBefore
+                && boot.Scene.Agents.Count == agentsBefore
+                && boot.Scene.IsLoaded;
+            tools.SetMode(WindowMode.Normal);
+            bool modeKeepsState = registered && wentMini
+                && tools.Mode == WindowMode.Normal && stateInMini
+                && layout.SaveLayout() == layoutBefore;
+            cases.Add(new CaseResult("mode_switch_keeps_state", modeKeepsState));
+
+            // --- memo: real Korean text autosaves on edit and survives the
+            //     module's save/load path with no explicit save call ---
+            var tm = new ToolsModule();
+            const string memoBody = "오늘 매출 정산하기\n내일 우유 주문";
+            int memoId = tm.CreateMemo("");
+            tm.BeginMemoEdit(memoId);
+            tm.SetMemoText(memoId, memoBody);
+            tm.EndMemoEdit();
+            var tmBack = new ToolsModule();
+            tmBack.LoadTools(tm.AutosavedJson);
+            bool memoOk = tmBack.Memos.Count == 1
+                && tmBack.Memos[0].Id == memoId
+                && tmBack.Memos[0].Text == memoBody;
+            cases.Add(new CaseResult("memo_roundtrip", memoOk));
+
+            // --- todo: add / complete / reorder, then the same round-trip ---
+            var td = new ToolsModule();
+            int ta = td.AddTodo("재고 확인");
+            int tb = td.AddTodo("창가 청소");
+            int tc = td.AddTodo("신메뉴 연구");
+            td.CompleteTodo(tb);
+            td.MoveTodo(tc, 0);
+            var tdBack = new ToolsModule();
+            tdBack.LoadTools(td.SaveTools());
+            bool todoOk = tdBack.Todos.Count == 3
+                && tdBack.Todos[0].Id == tc && tdBack.Todos[0].Text == "신메뉴 연구"
+                && !tdBack.Todos[0].Done
+                && tdBack.Todos[1].Id == ta && !tdBack.Todos[1].Done
+                && tdBack.Todos[2].Id == tb && tdBack.Todos[2].Done;
+            cases.Add(new CaseResult("todo_roundtrip", todoOk));
+
+            // --- timer: 25m preset, 600s elapsed, pause reports exactly
+            //     the remaining seconds ---
+            var tf = new ToolsModule();
+            tf.Timer.StartFocus();
+            tf.TickTimer(600);
+            double pausedRemaining = tf.Timer.Pause();
+            cases.Add(new CaseResult("pause_remaining_seconds", pausedRemaining));
+
+            // --- focus records: sleep and exit credit exactly 0 ---
+            var ts = new ToolsModule();
+            ts.Timer.StartFocus();
+            ts.TickTimer(420);
+            double focusBefore = ts.TotalFocusSeconds;
+            ts.OnSystemSleep();
+            double sleepAdded = ts.TotalFocusSeconds - focusBefore;
+            cases.Add(new CaseResult("sleep_focus_added", sleepAdded));
+            ts.Timer.StartFocus();
+            ts.TickTimer(300);
+            ts.OnSystemExit();
+            cases.Add(new CaseResult("exit_focus_added",
+                ts.TotalFocusSeconds - focusBefore - sleepAdded));
+            // A session that actually completes still banks its seconds —
+            // the zero above is the sleep/exit rule, not a broken ledger.
+            ts.Timer.StartFocus();
+            ts.TickTimer(1500);
+            double completedFocus = ts.TotalFocusSeconds;
+            cases.Add(new CaseResult("completed_focus_seconds", completedFocus));
+            ts.Timer.StartBreak();
+            ts.TickTimer(300);
+            cases.Add(new CaseResult("break_session_credited_seconds",
+                ts.TotalFocusSeconds - completedFocus));
+
+            // --- music: controls drive the real local deck ---
+            var mu = new ToolsModule();
+            bool deck = mu.Music.Catalog.Count > 0
+                && mu.Music.AllSourcesAllowed()
+                && mu.Music.Play() && mu.Music.IsPlaying
+                && mu.Music.CurrentIndex == 0
+                && mu.Music.Next() && mu.Music.CurrentIndex == 1
+                && mu.Music.Previous() && mu.Music.CurrentIndex == 0
+                && mu.Music.SetVolume(0.4) == 0.4
+                && mu.Music.PausePlayback() && !mu.Music.IsPlaying;
+            cases.Add(new CaseResult("music_controls_connected", deck));
+            cases.Add(new CaseResult("music_scope_local_only",
+                mu.Music.AllSourcesAllowed()
+                && !mu.Music.Enqueue(new MusicTrack
+                {
+                    Id = "ext",
+                    Title = "x",
+                    DurationSeconds = 10,
+                    Source = MusicSourceKind.ExternalOAuth
+                })));
+
+            // --- memo text entry suppresses game shortcuts (rule evidence) ---
+            var tk = new ToolsModule();
+            int km = tk.CreateMemo("키 입력");
+            bool routedNormally = tk.RouteGameShortcut("open_research");
+            tk.BeginMemoEdit(km);
+            bool suppressedWhileTyping = tk.GameShortcutsSuppressed
+                && !tk.RouteGameShortcut("open_research");
+            tk.EndMemoEdit();
+            cases.Add(new CaseResult("shortcut_suppressed_while_memo_editing",
+                routedNormally && suppressedWhileTyping
+                && tk.RouteGameShortcut("open_research")));
+
+            // --- tool time stays out of cafe settlement ---
+            var data = MvpData.Load();
+            var econ = EconomyModule.CreateStartup(data, 0);
+            econ.SimulateSeconds(60);
+            long coins = econ.Coins;
+            double clock = econ.Clock;
+            var tt = new ToolsModule();
+            tt.Timer.StartFocus();
+            tt.TickTimer(1500);
+            bool separate = econ.Coins == coins && econ.Clock == clock
+                && tt.TotalFocusSeconds == 1500;
+            cases.Add(new CaseResult("tool_time_separate_from_settlement",
+                separate));
+
             return cases;
         }
 

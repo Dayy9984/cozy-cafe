@@ -257,10 +257,13 @@ namespace CozyCafe.Core.Economy
         /// Advances the idle clock. Every owned menu completes sale events on
         /// its own cycle (first sale after one full cycle); each event goes
         /// through the once-only settlement path. Layout edits never reach
-        /// this loop, so editing can neither throttle nor boost sales.
+        /// this loop, so editing can neither throttle nor boost sales. A
+        /// zero-length step still settles every sale already due — the
+        /// session uses it to flush boundary events dated at-or-before the
+        /// current clock instead of stalling on a skewed record.
         public void SimulateSeconds(double seconds)
         {
-            if (seconds <= 0) return;
+            if (seconds < 0) return;
             double horizon = Clock + seconds;
             while (true)
             {

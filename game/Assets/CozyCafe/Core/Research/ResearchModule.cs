@@ -158,9 +158,10 @@ namespace CozyCafe.Core.Research
 
         /// Advances the lab clock; a finished entry applies its unlock, then
         /// the front of the line tries to start inside the same time budget.
+        /// A zero-length step still completes every entry already due.
         public void SimulateSeconds(double seconds)
         {
-            if (seconds <= 0) return;
+            if (seconds < 0) return;
             TryStartNext();
             double horizon = Clock + seconds;
             while (Active != null && ActiveEndsAt <= horizon)
@@ -179,10 +180,12 @@ namespace CozyCafe.Core.Research
         /// boundary, so a start anchors at the event time when the funds
         /// (or prerequisite) actually became sufficient — never at the
         /// stale pre-step clock. Completions still land on their exact
-        /// scheduled instants inside the interval.
+        /// scheduled instants inside the interval. A zero-length step still
+        /// completes every entry already due — the session flush path uses
+        /// it for events dated at-or-before the current clock.
         public void SimulateStep(double seconds)
         {
-            if (seconds <= 0) return;
+            if (seconds < 0) return;
             double horizon = Clock + seconds;
             while (Active != null && ActiveEndsAt <= horizon)
             {
