@@ -99,7 +99,7 @@
     "atlas_manifest_valid": true,
     "generation_per_palette_variant": 0,
     "tile_size_verified": true,
-    "effective_image_model": "gpt-image-2.5-sunburst",
+    "effective_image_model": "gpt-image",
     "thickness_physical_geometry_generated": false,
     "tile_canvas_height": 64,
     "furniture_baked_offset_recorded": true,
