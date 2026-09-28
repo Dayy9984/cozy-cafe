@@ -97,3 +97,18 @@ gpt-image-2.5-sunburst의 명시 지정은 Images/Responses API(API key)에서�
 다시 실패하는 것이 정상 동작이다.
 불변: provider codex 전용, OAuth only, API-key/provider fallback 금지,
 provenance 요청 모델 기록 유지, 나머지 게이트 키 전부.
+
+## SPEC_CHANGE 2026-09-28 — 전체 픽셀 스케일 절반 (32×32 space, 사용자 지시)
+사유: 사용자가 생성 결과물의 에셋별 스케일 불일치를 지적하고 32×32 지시. 32px
+규격은 한 이미지에 더 많은 에셋/프레임을 배치해 일관성을 얻고(sprite-gen의
+one-sheet 모델과 부합) 코드는 픽셀 상수만 변경하면 된다.
+전: top 64×32 / space·canvas 64×64 / pitch 32·16 / 시각두께 4px / 가구
+offset(0,-8) / 머신 128×128 / 가구 128×160 / 캐릭터 64×80 / UI 32×32.
+후: top 32×16 / space·canvas 32×32 / pitch 16·8 / 시각두께 2px / 가구
+offset(0,-4) / 머신 64×64 / 가구 64×80 / 캐릭터 32×40 / UI 16×16.
+모든 픽셀 치수를 비례 절반해 상대 비율과 배치 규칙은 유지한다.
+결과: gates.json·art_contract.json·asset_catalog.json·프롬프트·문서 동기 갱신.
+코드 상수(IsoMath/TileArt/렌더러)는 다음 빌더 라운드가 회귀체크 실패로 감지해
+전파한다 — 64×64 변경과 동일 경로.
+불변: 물리두께0·논리고도0·오프셋1회·두께시각전용·side-face 비물리 원칙 전부,
+12프레임 단일시트 애니메이션 정책, effective_image_model=gpt-image 계약.

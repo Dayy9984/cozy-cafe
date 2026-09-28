@@ -298,13 +298,13 @@ namespace CozyCafe.Core.Art
         }
 
         /// Measures an approved tile frame's real pixels against the v0.8
-        /// contract: the rhombus fills canvas rows 0-31 (apex row 0, equator
-        /// at the midline ~16, front vertex at row 31, max width 64) and the
-        /// side-face silhouette stays within the 4 px visual budget.
+        /// contract: the rhombus fills canvas rows 0-15 (apex row 0, equator
+        /// at the midline ~8, front vertex at row 15, max width 32) and the
+        /// side-face silhouette stays within the 2 px visual budget.
         public static TileMeasure MeasureTile(SoftwareCanvas sheet, ArtFrame f)
         {
             var t = new TileMeasure();
-            for (int y = 0; y < f.H && y < 36; y++)
+            for (int y = 0; y < f.H && y < 18; y++)
             {
                 int rowW = 0;
                 for (int x = 0; x < f.W; x++)
@@ -318,8 +318,8 @@ namespace CozyCafe.Core.Art
                         t.SilhouetteBottomRow = y;
                     }
                 }
-                if (y < 32 && rowW > 0) t.TopFaceRows++;
-                if (y < 32 && rowW > t.MaxWidth)
+                if (y < 16 && rowW > 0) t.TopFaceRows++;
+                if (y < 16 && rowW > t.MaxWidth)
                 {
                     t.MaxWidth = rowW;
                     t.EquatorRow = y;
@@ -330,7 +330,7 @@ namespace CozyCafe.Core.Art
 
         /// The single effective lift for a furniture frame: manifest-declared
         /// baked alignment plus the runtime render offset the renderer adds.
-        /// Contract: authored unbaked (0,0) + renderer (0,-8) = -8 once.
+        /// Contract: authored unbaked (0,0) + renderer (0,-4) = -4 once.
         public static int EffectiveFurnitureOffsetY(ArtManifest m, out bool recorded)
         {
             recorded = false;

@@ -1,4 +1,4 @@
 Production asset candidate, not a complete game screen. Use image_generation with requested image model gpt-image-2.5-sunburst when the authenticated tool supports model selection; report actual model truthfully. Do not substitute a reasoning model name for the image model.
-One original compact espresso machine on a counter mount, 2.5D isometric matching the project top64x32 / space64x64 guide, no sixth machine, no baked counter; anchor at mounting point. Idle first, active row after acceptance.
+One original compact espresso machine on a counter mount, 2.5D isometric matching the project top32x16 / space32x32 guide, no sixth machine, no baked counter; anchor at mounting point. Idle first, active row after acceptance.
 Keep the same 2.5D cozy cafe art direction, readable at small native size. Pixel edges and proportions must later pass deterministic extraction and geometry QA. Generate only this requested base/row. No logo, brand, original-game copied design, UI text, watermark. Pick chroma background that does not match the subject material; preserve raw output.
-The floor side is visual only. Do not add4px elevation or global table/chair -8px to this machine; use its parent mounting anchor once.
+The floor side is visual only. Do not add2px elevation or global table/chair -4px to this machine; use its parent mounting anchor once.

@@ -3,6 +3,7 @@ using CozyCafe.Core.Layout;
 using CozyCafe.Core.Character;
 using CozyCafe.Core.Render;
 using CozyCafe.Core.Scene;
+using CozyCafe.Core.Tools;
 
 namespace CozyCafe.Core.Gauntlet
 {
@@ -26,6 +27,8 @@ namespace CozyCafe.Core.Gauntlet
                     return CharacterRigSheet();
                 case "art-pipeline":
                     return ArtPipelineSheet();
+                case "desktop-tools":
+                    return DesktopToolsMini();
                 default:
                     return DefaultBoot();
             }
@@ -49,17 +52,17 @@ namespace CozyCafe.Core.Gauntlet
             s.Room = new RoomGrid(4, 4);
             s.IsLoaded = s.Validate();
             s.FixedViewport = true;
-            s.ViewportW = 352;
-            s.ViewportH = 320;
-            s.AnchorX = 176;
-            s.AnchorY = 40;
+            s.ViewportW = 176;
+            s.ViewportH = 160;
+            s.AnchorX = 88;
+            s.AnchorY = 20;
             s.HighlightCellX = 1;
             s.HighlightCellY = 1;
             s.ShowOriginCaret = true;
             return s;
         }
 
-        /// Single tile on its 64x64 authoring canvas.
+        /// Single tile on its 32x32 authoring canvas.
         private static GameScene IsoTileCanvas()
         {
             var s = new GameScene();
@@ -92,10 +95,62 @@ namespace CozyCafe.Core.Gauntlet
             s.Agents.Add(new Agent { Name = "customer_0", PresetId = 1, GridX = 1.5, GridY = 3.5, IsStaff = false });
             s.IsLoaded = s.Validate();
             s.FixedViewport = true;
-            s.ViewportW = 420;
-            s.ViewportH = 300;
-            s.AnchorX = 200;
-            s.AnchorY = 40;
+            s.ViewportW = 210;
+            s.ViewportH = 150;
+            s.AnchorX = 100;
+            s.AnchorY = 20;
+            return s;
+        }
+
+        /// Mini-mode scene: the cafe shrunk into the small window with the
+        /// real work-tools docked on it. The panel is the module's own
+        /// BuildPanel() snapshot — a memo holding real Korean text, three
+        /// todos (one done), the focus timer paused at exactly 900s, and
+        /// the local deck mid-track — so the capture is live module state.
+        private static GameScene DesktopToolsMini()
+        {
+            var s = new GameScene();
+            s.Room = new RoomGrid(4, 3);
+            var ed = new LayoutModule(s);
+            ed.TryPlace(FurnitureKind.Door, 0, 1, 0);
+            ed.BeginCommand();
+            ed.TryPlace(FurnitureKind.Table, 1, 1, 0);
+            ed.TryPlace(FurnitureKind.Chair, 1, 0, 0);
+            ed.TryPlace(FurnitureKind.Counter, 3, 0, 0);
+            ed.EndCommand();
+            ed.TryPlace(FurnitureKind.EspressoMachine, 3, 0, 0);
+            s.Agents.Add(new Agent
+            {
+                Name = "staff_0",
+                PresetId = 0,
+                GridX = 2.5,
+                GridY = 2.5,
+                IsStaff = true
+            });
+
+            var tools = new ToolsModule();
+            int memo = tools.CreateMemo("");
+            tools.SetMemoText(memo, "오늘 매출 정산하기\n내일 우유 주문");
+            int t1 = tools.AddTodo("재고 확인");
+            tools.AddTodo("창가 청소");
+            tools.AddTodo("신메뉴 연구");
+            tools.CompleteTodo(t1);
+            tools.Timer.StartFocus();
+            tools.TickTimer(600);
+            tools.Timer.Pause();
+            tools.Music.Play();
+            tools.Music.Next();
+            tools.Music.TickPlayback(20);
+            tools.SetMode(WindowMode.Mini);
+
+            s.MiniMode = true;
+            s.ToolsPanel = tools.BuildPanel();
+            s.IsLoaded = s.Validate();
+            s.FixedViewport = true;
+            s.ViewportW = 460;
+            s.ViewportH = 400;
+            s.AnchorX = 230;
+            s.AnchorY = 72;
             return s;
         }
 
@@ -113,10 +168,10 @@ namespace CozyCafe.Core.Gauntlet
             s.Room = new RoomGrid(4, 4);
             s.IsLoaded = s.Validate();
             s.FixedViewport = true;
-            s.ViewportW = 600;
-            s.ViewportH = 400;
-            s.AnchorX = 300;
-            s.AnchorY = 96;
+            s.ViewportW = 300;
+            s.ViewportH = 200;
+            s.AnchorX = 150;
+            s.AnchorY = 48;
             s.Zoom = 2;
 
             // casual_02 wears glasses (front view keeps them visible);

@@ -16,27 +16,27 @@ remaining_base_work로 연구 속도 변경을 처리. 1시간 마지막rate 곱
 백업 복원/잘못된 JSON/전원중단/시간역행/버전 migration 시험. 개인자료를 공개 프리셋에서 분리.
 
 ## v0.8 논리 좌표와 시각 보정 계약
-사용자 확정: top64×32 / space64×64 / visual thickness4 / table-chair offset(0,-8).
-64×64는 공간/작업 기준이며 셀 피치가 아니다. 4px를 더한64×68, collider 두께4, 논리Z4는 모두 금지다.
+사용자 확정: top32×16 / space32×32 / visual thickness4 / table-chair offset(0,-4).
+32×32는 공간/작업 기준이며 셀 피치가 아니다. 2px를 더한32×34, collider 두께2, 논리Z2는 모두 금지다.
 현재 구현 기본값(사용자가 피치를 직접 지정한 것은 아님):
   sx=(x-y)*32, sy=(x+y)*16
-  x=sx/64+sy/32, y=sy/32-sx/64
+  x=sx/32+sy/16, y=sy/16-sx/32
 실수좌표에서 왕복하고 최종 카메라 합성에서만 공통 픽셀스냅을 한다. 16를 칸마다 정수화하지 않는다.
 이 함수는 ground projection이며 z/thickness 인자를 받지 않는다. 외곽 side mask는 따로 그린다.
 실제 래스터32행/뒷선 정렬은 첫 2×2/3×3 타일 시각검증에서 확인한다. 피치 조정 필요 시 원인과
 새 기본값을 결정기록에 올리고 plan/gates/예제를 함께 버전업하며 사용자 확정 크기는 바꾸지 않는다.
 
 p_ground=project(grid_x,grid_y)
-target_offset=asset.render_offset_px  # tables/chair/stool=(0,-8), other=(0,0)
+target_offset=asset.render_offset_px  # tables/chair/stool=(0,-4), other=(0,0)
 p_draw=(p_ground + target_offset) * camera_zoom + camera_origin
 
 render_offset은 원본 아트픽셀이다. 줌2에서는8→16px. 물리 elevation 값이 아니다.
 PNG/atlas source pivot의 baked_offset이 있으면 runtime_offset=target_offset-baked_offset;
-최종 effective=baked+runtime=target가 되어야 한다. 기본 제작은 baked0/renderer-8, 허용된 기존 원화는
-baked-8/renderer0. 검증된 metadata 없이 그림과 엔진에서 각각 -8하지 않는다.
+최종 effective=baked+runtime=target가 되어야 한다. 기본 제작은 baked0/renderer-4, 허용된 기존 원화는
+baked-4/renderer0. 검증된 metadata 없이 그림과 엔진에서 각각 -4하지 않는다.
 footprint/collision/path/서비스 연결/depth_sort_key는 원래 논리 셀/기준점에서 계산한다.
-가구 회전은 footprint·부착점만 돌리고 화면상 -8 방향은 돌리지 않는다. 저장 인스턴스에 시각 이동을 누적하지 않는다.
-parent render correction은 자식의 seat/mount world transform에 이미 포함되므로 자식에 다시 -8하지 않는다.
+가구 회전은 footprint·부착점만 돌리고 화면상 -4 방향은 돌리지 않는다. 저장 인스턴스에 시각 이동을 누적하지 않는다.
+parent render correction은 자식의 seat/mount world transform에 이미 포함되므로 자식에 다시 -4하지 않는다.
 픽킹/고스트/윤곽은 실제 시각 transform을 공유하되 좌석/셀 판정은 논리 좌표로 돌려 처리한다.
 
 문은 외벽의 허용 슬롯. BFS4방향 path로 필수 앵커 연결 검사. 탁자-의자·host-parent 관계 검사.

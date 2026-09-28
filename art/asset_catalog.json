@@ -3,8 +3,8 @@
     "id": "floor_wood",
     "category": "tile",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -12,16 +12,16 @@
     },
     "footprint": null,
     "status": "APPROVED",
-    "notes": "User top64x32 / space64x64. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "notes": "User top32x16 / space32x32. Side2px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
     "top_size_px": [
-      64,
-      32
+      32,
+      16
     ],
     "space_size_px": [
-      64,
-      64
+      32,
+      32
     ],
-    "visual_thickness_px": 4,
+    "visual_thickness_px": 2,
     "physical_thickness": 0,
     "source_job": "tile_wood"
   },
@@ -29,8 +29,8 @@
     "id": "floor_dark_wood",
     "category": "tile",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -38,24 +38,24 @@
     },
     "footprint": null,
     "status": "NOT_CREATED",
-    "notes": "User top64x32 / space64x64. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "notes": "User top32x16 / space32x32. Side2px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
     "top_size_px": [
-      64,
-      32
+      32,
+      16
     ],
     "space_size_px": [
-      64,
-      64
+      32,
+      32
     ],
-    "visual_thickness_px": 4,
+    "visual_thickness_px": 2,
     "physical_thickness": 0
   },
   {
     "id": "floor_light_tile",
     "category": "tile",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -63,24 +63,24 @@
     },
     "footprint": null,
     "status": "NOT_CREATED",
-    "notes": "User top64x32 / space64x64. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "notes": "User top32x16 / space32x32. Side2px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
     "top_size_px": [
-      64,
-      32
+      32,
+      16
     ],
     "space_size_px": [
-      64,
-      64
+      32,
+      32
     ],
-    "visual_thickness_px": 4,
+    "visual_thickness_px": 2,
     "physical_thickness": 0
   },
   {
     "id": "floor_dark_tile",
     "category": "tile",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -88,24 +88,24 @@
     },
     "footprint": null,
     "status": "NOT_CREATED",
-    "notes": "User top64x32 / space64x64. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "notes": "User top32x16 / space32x32. Side2px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
     "top_size_px": [
-      64,
-      32
+      32,
+      16
     ],
     "space_size_px": [
-      64,
-      64
+      32,
+      32
     ],
-    "visual_thickness_px": 4,
+    "visual_thickness_px": 2,
     "physical_thickness": 0
   },
   {
     "id": "floor_checker",
     "category": "tile",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -113,24 +113,24 @@
     },
     "footprint": null,
     "status": "NOT_CREATED",
-    "notes": "User top64x32 / space64x64. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "notes": "User top32x16 / space32x32. Side2px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
     "top_size_px": [
-      64,
-      32
+      32,
+      16
     ],
     "space_size_px": [
-      64,
-      64
+      32,
+      32
     ],
-    "visual_thickness_px": 4,
+    "visual_thickness_px": 2,
     "physical_thickness": 0
   },
   {
     "id": "floor_stone",
     "category": "tile",
     "canvas_px": [
-      64,
-      64
+      32,
+      32
     ],
     "directions": 1,
     "states_frames": {
@@ -138,24 +138,24 @@
     },
     "footprint": null,
     "status": "NOT_CREATED",
-    "notes": "User top64x32 / space64x64. Side4px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
+    "notes": "User top32x16 / space32x32. Side2px is a visual overlay only; no physical height, no extra canvas height, no grid-pitch contribution. Record top bounds/pivot.",
     "top_size_px": [
-      64,
-      32
+      32,
+      16
     ],
     "space_size_px": [
-      64,
-      64
+      32,
+      32
     ],
-    "visual_thickness_px": 4,
+    "visual_thickness_px": 2,
     "physical_thickness": 0
   },
   {
     "id": "machine_grinder",
     "category": "machine",
     "canvas_px": [
-      128,
-      128
+      64,
+      64
     ],
     "directions": 4,
     "states_frames": {
@@ -173,8 +173,8 @@
     "id": "machine_espresso",
     "category": "machine",
     "canvas_px": [
-      128,
-      128
+      64,
+      64
     ],
     "directions": 4,
     "states_frames": {
@@ -193,8 +193,8 @@
     "id": "machine_steam",
     "category": "machine",
     "canvas_px": [
-      128,
-      128
+      64,
+      64
     ],
     "directions": 4,
     "states_frames": {
@@ -212,8 +212,8 @@
     "id": "machine_ice",
     "category": "machine",
     "canvas_px": [
-      128,
-      128
+      64,
+      64
     ],
     "directions": 4,
     "states_frames": {
@@ -231,8 +231,8 @@
     "id": "machine_blender",
     "category": "machine",
     "canvas_px": [
-      128,
-      128
+      64,
+      64
     ],
     "directions": 4,
     "states_frames": {
@@ -250,8 +250,8 @@
     "id": "counter_straight",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -268,8 +268,8 @@
     "id": "counter_corner",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -286,8 +286,8 @@
     "id": "shelf",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -304,8 +304,8 @@
     "id": "table_square",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -319,7 +319,7 @@
     "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. USER_FIXED_TABLE",
     "render_offset_px": [
       0,
-      -8
+      -4
     ],
     "baked_alignment_offset_px": [
       0,
@@ -333,8 +333,8 @@
     "id": "table_round",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -348,7 +348,7 @@
     "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. USER_FIXED_TABLE",
     "render_offset_px": [
       0,
-      -8
+      -4
     ],
     "baked_alignment_offset_px": [
       0,
@@ -361,8 +361,8 @@
     "id": "chair",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -376,7 +376,7 @@
     "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. USER_FIXED_CHAIR",
     "render_offset_px": [
       0,
-      -8
+      -4
     ],
     "baked_alignment_offset_px": [
       0,
@@ -390,8 +390,8 @@
     "id": "stool",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -405,7 +405,7 @@
     "notes": "Provisional padded cell; final nonempty bounds/pivot recorded after anchor check. Wall item uses wall attachment. Visual baseline is 8 native pixels above ground anchor, once only; footprint/collision/pathfinding/depth key unchanged. MVP_SEATING_ALIAS_TO_CHAIR_RULE",
     "render_offset_px": [
       0,
-      -8
+      -4
     ],
     "baked_alignment_offset_px": [
       0,
@@ -418,8 +418,8 @@
     "id": "plant_small",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -436,8 +436,8 @@
     "id": "plant_large",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -454,8 +454,8 @@
     "id": "lamp",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -472,8 +472,8 @@
     "id": "wall_picture",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -490,8 +490,8 @@
     "id": "sign",
     "category": "furniture",
     "canvas_px": [
-      128,
-      160
+      64,
+      80
     ],
     "directions": 4,
     "states_frames": {
@@ -508,8 +508,8 @@
     "id": "human_body_01",
     "category": "character",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -527,8 +527,8 @@
     "id": "hair_01",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -542,8 +542,8 @@
     "id": "hair_02",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -557,8 +557,8 @@
     "id": "hair_03",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -572,8 +572,8 @@
     "id": "hair_04",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -587,8 +587,8 @@
     "id": "outfit_01",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -605,8 +605,8 @@
     "id": "outfit_02",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -623,8 +623,8 @@
     "id": "outfit_03",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -641,8 +641,8 @@
     "id": "apron_01",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -659,8 +659,8 @@
     "id": "glasses_01",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -674,8 +674,8 @@
     "id": "glasses_02",
     "category": "character_layer",
     "canvas_px": [
-      64,
-      80
+      32,
+      40
     ],
     "directions": 4,
     "states_frames": {
@@ -689,8 +689,8 @@
     "id": "menu_M01",
     "category": "menu_icon",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -704,8 +704,8 @@
     "id": "menu_M02",
     "category": "menu_icon",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -719,8 +719,8 @@
     "id": "menu_M03",
     "category": "menu_icon",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -734,8 +734,8 @@
     "id": "menu_M04",
     "category": "menu_icon",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -749,8 +749,8 @@
     "id": "menu_M05",
     "category": "menu_icon",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -764,8 +764,8 @@
     "id": "menu_M06",
     "category": "menu_icon",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -779,8 +779,8 @@
     "id": "menu_M07",
     "category": "menu_icon",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -794,8 +794,8 @@
     "id": "menu_M08",
     "category": "menu_icon",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -809,8 +809,8 @@
     "id": "ui_panel",
     "category": "ui_skin",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -829,8 +829,8 @@
     "id": "ui_button",
     "category": "ui_skin",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -849,8 +849,8 @@
     "id": "ui_tab",
     "category": "ui_skin",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -868,8 +868,8 @@
     "id": "ui_toggle",
     "category": "ui_skin",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -887,8 +887,8 @@
     "id": "ui_input",
     "category": "ui_skin",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -906,8 +906,8 @@
     "id": "ui_tooltip",
     "category": "ui_skin",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -925,8 +925,8 @@
     "id": "ui_card",
     "category": "ui_skin",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {
@@ -944,8 +944,8 @@
     "id": "ui_slot",
     "category": "ui_skin",
     "canvas_px": [
-      32,
-      32
+      16,
+      16
     ],
     "directions": 1,
     "states_frames": {

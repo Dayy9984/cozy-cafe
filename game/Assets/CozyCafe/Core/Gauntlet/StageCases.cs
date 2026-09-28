@@ -9,6 +9,7 @@ using CozyCafe.Core.Render;
 using CozyCafe.Core.Research;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Staff;
+using CozyCafe.Core.Tools;
 
 namespace CozyCafe.Core.Gauntlet
 {
@@ -49,6 +50,8 @@ namespace CozyCafe.Core.Gauntlet
                     return CharacterRig();
                 case "art-pipeline":
                     return ArtPipeline();
+                case "desktop-tools":
+                    return DesktopTools();
                 default:
                     return null;
             }
@@ -267,7 +270,7 @@ namespace CozyCafe.Core.Gauntlet
         /// Layout/furniture editor gates. Every value below is computed by a
         /// real LayoutModule run on a real room - 1x1 tile paint, grouped
         /// undo/redo, door/pair/host validity, atomic host-subtree ops, and
-        /// the v0.8 single (0,-8) screen-up render offset resolved through
+        /// the v0.8 single (0,-4) screen-up render offset resolved through
         /// RenderContract while logical state stays unshifted.
         /// </summary>
         private static List<CaseResult> LayoutEditorStage()
@@ -348,7 +351,7 @@ namespace CozyCafe.Core.Gauntlet
                 editCommit == PlacementReject.None
                 && edited.Coins == steady.Coins && edited.Coins > 0));
 
-            // --- the v0.8 single (0,-8) screen-up render offset ---
+            // --- the v0.8 single (0,-4) screen-up render offset ---
             var room = new LayoutModule(new GameScene { Room = new RoomGrid(6, 6) });
             room.BeginCommand();
             room.TryPlace(FurnitureKind.Door, 0, 3, 0);
@@ -362,9 +365,9 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("table_render_offset_y_px", oy));
             RenderContract.TargetOffset(FurnitureKind.Chair, out ox, out oy);
             cases.Add(new CaseResult("chair_render_offset_y_px", oy));
-            RenderContract.RuntimeOffset(FurnitureKind.Table, 0.0, -8.0, out ox, out oy);
+            RenderContract.RuntimeOffset(FurnitureKind.Table, 0.0, -4.0, out ox, out oy);
             cases.Add(new CaseResult("table_runtime_offset_when_baked_y_px", oy));
-            RenderContract.EffectiveOffset(FurnitureKind.Table, 0.0, -8.0, out ox, out oy);
+            RenderContract.EffectiveOffset(FurnitureKind.Table, 0.0, -4.0, out ox, out oy);
             cases.Add(new CaseResult("table_effective_offset_when_baked_y_px", oy));
 
             double gx, gy, dx, dy;
@@ -372,8 +375,8 @@ namespace CozyCafe.Core.Gauntlet
             RenderContract.DrawAnchor(table, 2.0, out dx, out dy);
             cases.Add(new CaseResult("table_offset_at_zoom2_y_px", dy - gy * 2.0));
 
-            // The -8 is always screen-up: resolving the draw transform at
-            // every quarter turn must yield the identical (0,-8) delta.
+            // The -4 is always screen-up: resolving the draw transform at
+            // every quarter turn must yield the identical (0,-4) delta.
             double cgx, cgy;
             IsoMath.Project(chair.CellX + 0.5, chair.CellY + 0.5, out cgx, out cgy);
             bool rotates = false;
@@ -382,17 +385,17 @@ namespace CozyCafe.Core.Gauntlet
                 chair.QuarterTurns = q;
                 double ddx, ddy;
                 RenderContract.DrawAnchor(chair, 1.0, out ddx, out ddy);
-                if (ddy - cgy != -8.0 || ddx - cgx != 0.0) rotates = true;
+                if (ddy - cgy != -4.0 || ddx - cgx != 0.0) rotates = true;
             }
             cases.Add(new CaseResult("chair_offset_rotates_with_furniture", rotates));
 
             // --- the offset must never leak into logical geometry ---
-            // Prove the -8 actually moves draw anchors, then prove every
+            // Prove the -4 actually moves draw anchors, then prove every
             // logical structure is byte-identical after the render path runs.
             double tgx, tgy, tdx, tdy;
             IsoMath.Project(table.CellX + 0.5, table.CellY + 0.5, out tgx, out tgy);
             RenderContract.DrawAnchor(table, 1.0, out tdx, out tdy);
-            bool offsetApplied = tdy == tgy - 8.0 && tdx == tgx;
+            bool offsetApplied = tdy == tgy - 4.0 && tdx == tgx;
 
             string logBefore = room.Snapshot();
             var blockedBefore = room.BlockedCells();
@@ -468,7 +471,7 @@ namespace CozyCafe.Core.Gauntlet
                 RenderContract.TargetOffset(hostTable.Kind, out hox, out hoy);
                 RenderContract.MountLocal(hostTable.Kind, out mx, out my);
                 RenderContract.TargetOffset(child.Kind, out chx, out chy);
-                // parent(-8) + mount + child each appear exactly once.
+                // parent(-4) + mount + child each appear exactly once.
                 duplicates = cdy != hgy + hoy + my + chy
                     || cdx != hgx + hox + mx + chx;
             }
@@ -490,6 +493,157 @@ namespace CozyCafe.Core.Gauntlet
             RenderContract.PickAnchor(table, 1.0, out pdx, out pdy);
             cases.Add(new CaseResult("picking_and_ghost_share_render_transform",
                 ghx == pdx && ghy == pdy));
+
+            return cases;
+        }
+
+        /// Desktop work-tools contract: every value is produced by real
+        /// ToolsModule calls — the window-mode switch against a live cafe
+        /// scene, memo/todo state through the module's own MiniJson save
+        /// path, the focus timer's exact pause report, zero-credit sleep
+        /// records, and the local music deck's controls. Nothing here is a
+        /// declared constant.
+        private static List<CaseResult> DesktopTools()
+        {
+            var cases = new List<CaseResult>();
+
+            // --- normal <-> mini switch keeps the live cafe state ---
+            var boot = GameBootstrap.Create();
+            boot.LoadDefaultScene();
+            var layout = new LayoutModule(boot.Scene);
+            string layoutBefore = layout.SaveLayout();
+            int furnitureBefore = boot.Scene.Furniture.Count;
+            int agentsBefore = boot.Scene.Agents.Count;
+            ToolsModule tools = null;
+            foreach (var m in boot.Registry.Modules)
+            {
+                var t = m as ToolsModule;
+                if (t != null) tools = t;
+            }
+            bool registered = tools != null;
+            if (tools == null) tools = new ToolsModule();
+            tools.SetMode(WindowMode.Mini);
+            bool wentMini = tools.Mode == WindowMode.Mini
+                && tools.ToolsPanelVisible;
+            bool stateInMini = layout.SaveLayout() == layoutBefore
+                && boot.Scene.Furniture.Count == furnitureBefore
+                && boot.Scene.Agents.Count == agentsBefore
+                && boot.Scene.IsLoaded;
+            tools.SetMode(WindowMode.Normal);
+            bool modeKeepsState = registered && wentMini
+                && tools.Mode == WindowMode.Normal && stateInMini
+                && layout.SaveLayout() == layoutBefore;
+            cases.Add(new CaseResult("mode_switch_keeps_state", modeKeepsState));
+
+            // --- memo: real Korean text autosaves on edit and survives the
+            //     module's save/load path with no explicit save call ---
+            var tm = new ToolsModule();
+            const string memoBody = "오늘 매출 정산하기\n내일 우유 주문";
+            int memoId = tm.CreateMemo("");
+            tm.BeginMemoEdit(memoId);
+            tm.SetMemoText(memoId, memoBody);
+            tm.EndMemoEdit();
+            var tmBack = new ToolsModule();
+            tmBack.LoadTools(tm.AutosavedJson);
+            bool memoOk = tmBack.Memos.Count == 1
+                && tmBack.Memos[0].Id == memoId
+                && tmBack.Memos[0].Text == memoBody;
+            cases.Add(new CaseResult("memo_roundtrip", memoOk));
+
+            // --- todo: add / complete / reorder, then the same round-trip ---
+            var td = new ToolsModule();
+            int ta = td.AddTodo("재고 확인");
+            int tb = td.AddTodo("창가 청소");
+            int tc = td.AddTodo("신메뉴 연구");
+            td.CompleteTodo(tb);
+            td.MoveTodo(tc, 0);
+            var tdBack = new ToolsModule();
+            tdBack.LoadTools(td.SaveTools());
+            bool todoOk = tdBack.Todos.Count == 3
+                && tdBack.Todos[0].Id == tc && tdBack.Todos[0].Text == "신메뉴 연구"
+                && !tdBack.Todos[0].Done
+                && tdBack.Todos[1].Id == ta && !tdBack.Todos[1].Done
+                && tdBack.Todos[2].Id == tb && tdBack.Todos[2].Done;
+            cases.Add(new CaseResult("todo_roundtrip", todoOk));
+
+            // --- timer: 25m preset, 600s elapsed, pause reports exactly
+            //     the remaining seconds ---
+            var tf = new ToolsModule();
+            tf.Timer.StartFocus();
+            tf.TickTimer(600);
+            double pausedRemaining = tf.Timer.Pause();
+            cases.Add(new CaseResult("pause_remaining_seconds", pausedRemaining));
+
+            // --- focus records: sleep and exit credit exactly 0 ---
+            var ts = new ToolsModule();
+            ts.Timer.StartFocus();
+            ts.TickTimer(420);
+            double focusBefore = ts.TotalFocusSeconds;
+            ts.OnSystemSleep();
+            double sleepAdded = ts.TotalFocusSeconds - focusBefore;
+            cases.Add(new CaseResult("sleep_focus_added", sleepAdded));
+            ts.Timer.StartFocus();
+            ts.TickTimer(300);
+            ts.OnSystemExit();
+            cases.Add(new CaseResult("exit_focus_added",
+                ts.TotalFocusSeconds - focusBefore - sleepAdded));
+            // A session that actually completes still banks its seconds —
+            // the zero above is the sleep/exit rule, not a broken ledger.
+            ts.Timer.StartFocus();
+            ts.TickTimer(1500);
+            double completedFocus = ts.TotalFocusSeconds;
+            cases.Add(new CaseResult("completed_focus_seconds", completedFocus));
+            ts.Timer.StartBreak();
+            ts.TickTimer(300);
+            cases.Add(new CaseResult("break_session_credited_seconds",
+                ts.TotalFocusSeconds - completedFocus));
+
+            // --- music: controls drive the real local deck ---
+            var mu = new ToolsModule();
+            bool deck = mu.Music.Catalog.Count > 0
+                && mu.Music.AllSourcesAllowed()
+                && mu.Music.Play() && mu.Music.IsPlaying
+                && mu.Music.CurrentIndex == 0
+                && mu.Music.Next() && mu.Music.CurrentIndex == 1
+                && mu.Music.Previous() && mu.Music.CurrentIndex == 0
+                && mu.Music.SetVolume(0.4) == 0.4
+                && mu.Music.PausePlayback() && !mu.Music.IsPlaying;
+            cases.Add(new CaseResult("music_controls_connected", deck));
+            cases.Add(new CaseResult("music_scope_local_only",
+                mu.Music.AllSourcesAllowed()
+                && !mu.Music.Enqueue(new MusicTrack
+                {
+                    Id = "ext",
+                    Title = "x",
+                    DurationSeconds = 10,
+                    Source = MusicSourceKind.ExternalOAuth
+                })));
+
+            // --- memo text entry suppresses game shortcuts (rule evidence) ---
+            var tk = new ToolsModule();
+            int km = tk.CreateMemo("키 입력");
+            bool routedNormally = tk.RouteGameShortcut("open_research");
+            tk.BeginMemoEdit(km);
+            bool suppressedWhileTyping = tk.GameShortcutsSuppressed
+                && !tk.RouteGameShortcut("open_research");
+            tk.EndMemoEdit();
+            cases.Add(new CaseResult("shortcut_suppressed_while_memo_editing",
+                routedNormally && suppressedWhileTyping
+                && tk.RouteGameShortcut("open_research")));
+
+            // --- tool time stays out of cafe settlement ---
+            var data = MvpData.Load();
+            var econ = EconomyModule.CreateStartup(data, 0);
+            econ.SimulateSeconds(60);
+            long coins = econ.Coins;
+            double clock = econ.Clock;
+            var tt = new ToolsModule();
+            tt.Timer.StartFocus();
+            tt.TickTimer(1500);
+            bool separate = econ.Coins == coins && econ.Clock == clock
+                && tt.TotalFocusSeconds == 1500;
+            cases.Add(new CaseResult("tool_time_separate_from_settlement",
+                separate));
 
             return cases;
         }
@@ -650,7 +804,7 @@ namespace CozyCafe.Core.Gauntlet
         /// <summary>
         /// Real art-pipeline state: provider/auth config, generated raws and
         /// per-job provenance on disk, the approved atlas manifest + decoded
-        /// sheet pixels (tile measured against the 64x32/64x64 contract,
+        /// sheet pixels (tile measured against the 32x16/32x32 contract,
         /// furniture effective offset = baked + runtime, palette-variant
         /// regeneration count). Nothing is claimed - a missing artifact or
         /// unverified model reports its actual measured value.
@@ -676,18 +830,18 @@ namespace CozyCafe.Core.Gauntlet
             {
                 tileCanvasH = tile.H;
                 var tm = ArtAssets.MeasureTile(sheet, tile);
-                tileOk = tile.W == 64 && tile.H == 64
-                    && tm.TopRow == 0 && tm.MaxWidth == 64
-                    && tm.TopFaceRows == 32 && tm.EquatorRow >= 14
-                    && tm.EquatorRow <= 18 && tm.SilhouetteBottomRow >= 31
-                    && tm.SilhouetteBottomRow <= 35;
+                tileOk = tile.W == 32 && tile.H == 32
+                    && tm.TopRow == 0 && tm.MaxWidth == 32
+                    && tm.TopFaceRows == 16 && tm.EquatorRow >= 6
+                    && tm.EquatorRow <= 10 && tm.SilhouetteBottomRow >= 15
+                    && tm.SilhouetteBottomRow <= 17;
             }
 
             bool recorded;
             int effY = ArtAssets.EffectiveFurnitureOffsetY(manifest, out recorded);
             bool physicalThickness =
                 manifest.PhysicalThickness != 0
-                || (tile != null && tile.H > 64);
+                || (tile != null && tile.H > 32);
             string effective = ArtAssets.EffectiveImageModel();
 
             var cases = new List<CaseResult>();

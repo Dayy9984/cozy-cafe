@@ -6,14 +6,14 @@ using CozyCafe.Core.Scene;
 namespace CozyCafe.Core.Iso
 {
     /// <summary>
-    /// The 64x64 working canvas a tile sprite is authored on. It is the
+    /// The 32x32 working canvas a tile sprite is authored on. It is the
     /// user-fixed space reference for a tile — never the grid pitch — and the
-    /// 4 px visual side faces paint inside it without extending it (no 64x68).
+    /// 2 px visual side faces paint inside it without extending it (no 32x34).
     /// </summary>
     public static class TileCanvasContract
     {
-        public const int WidthPx = 64;
-        public const int HeightPx = 64;
+        public const int WidthPx = 32;
+        public const int HeightPx = 32;
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ namespace CozyCafe.Core.Iso
         }
 
         /// Rasterizes a single cell's top diamond and measures the painted
-        /// bounding box — the contract's exact 64x32 px top face. The closed
+        /// bounding box — the contract's exact 32x16 px top face. The closed
         /// diamond also inks the pixel just inside each vertex tip; pixel-
         /// center scanlines never land on those side tips, but the drawn
         /// shape covers them, so they count toward the painted extent.
@@ -85,10 +85,10 @@ namespace CozyCafe.Core.Iso
         /// polygon: uncovered pixels are seams, multiply covered are overlaps.
         public static void MeasureFloorSeams(int tiles, out int seamPixels, out int overlapPixels)
         {
-            double ox = 32.0 * tiles + 2.0;
+            double ox = 16.0 * tiles + 2.0;
             double oy = 2.0;
-            int w = 64 * tiles + 4;
-            int h = 32 * tiles + 8;
+            int w = 32 * tiles + 4;
+            int h = 16 * tiles + 8;
             var cover = new int[w * h];
             var inside = new int[w * h];
             for (int y = 0; y < tiles; y++)
@@ -142,7 +142,7 @@ namespace CozyCafe.Core.Iso
             return max;
         }
 
-        /// True if the 4 px visual thickness could alter the ground
+        /// True if the 2 px visual thickness could alter the ground
         /// projection. The projection entry point accepts exactly two
         /// coordinates — there is no thickness/z input path — and
         /// re-projecting after the skirt emission path is untouched.
@@ -161,7 +161,7 @@ namespace CozyCafe.Core.Iso
             return inputs != 2;
         }
 
-        /// True if the 64 px space height were misused as the grid pitch.
+        /// True if the 32 px space height were misused as the grid pitch.
         /// The pitch is a default derived from the top face, not the space
         /// size — this checks the recorded constants can't be conflated.
         public static bool SpaceHeightUsedAsGridPitch()
@@ -171,7 +171,7 @@ namespace CozyCafe.Core.Iso
                 || IsoMath.StepY == IsoMath.TileSpaceHeightPx / 2.0;
         }
 
-        /// True when the user-fixed sizes (64x32 top, 64x64 space/canvas) are
+        /// True when the user-fixed sizes (32x16 top, 32x32 space/canvas) are
         /// provably distinct from the implementation-default pitch (half the
         /// top face) — the pitch derives from the top, not the space height.
         public static bool FixedSizesAndPitchDistinguished()

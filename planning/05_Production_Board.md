@@ -6,9 +6,9 @@
 |---|---|---|---|
 |reference-audit|첨부 원본 분석·샘플 확인|없음|READY|
 |project-boot|실행 가능한 게임·테스트 진입점|reference-audit|READY|
-|iso-grid|64×32/공간64×64/시각4·탁자의자-8|project-boot|READY|
+|iso-grid|32×16/공간32×32/시각2·탁자의자-4|project-boot|READY|
 |layout-editor|가구·타일·문·의자·머신받침|iso-grid|검증완료(리뷰대기)|
-|desktop-tools|미니창·메모·할일·타이머·음악|layout-editor|READY|
+|desktop-tools|미니창·메모·할일·타이머·음악|layout-editor|검증완료(리뷰대기)|
 |idle-economy|자동판매·강화|project-boot|READY|
 |research-staff|연구·메뉴·직원|idle-economy|READY|
 |save-offline|저장·복귀·시간경계|research-staff,layout-editor|READY|
@@ -22,7 +22,7 @@
 
 v0.8: iso-grid/layout-editor/art-pipeline/integration의 변경된 수용 기준으로 다시 검사한다. 이전 PASS를 승계하지 않는다.
 
-v0.8.2 run 메모: character-rig 실구현 완료(Core/Character·StageCases 케이스·4방향 장면·실스폰 근거) 및 iso-grid를 SPEC_CHANGE 상수(64×32/64×64/피치32·16)로 재검증 — 상세는 progress.md "character-rig"·"iso-grid v0.8 신규격" 절. Unity 캡처는 6000.6.3f1 에디터 실카메라로 생성.
+v0.8.2 run 메모: character-rig 실구현 완료(Core/Character·StageCases 케이스·4방향 장면·실스폰 근거) 및 iso-grid를 SPEC_CHANGE 상수(32×16/32×32/피치32·16)로 재검증 — 상세는 progress.md "character-rig"·"iso-grid v0.8 신규격" 절. Unity 캡처는 6000.6.3f1 에디터 실카메라로 생성.
 
 v0.8.2 증거 보강: character-rig 가림 증거를 전 4방향 실측(SW/SE18px·NW/NE0px)으로, 위상·팔레트 불변 스윕을 계약 전 상태(idle/walk/sit/work)로 확장, variant_png_assets을 배송 자산 실스캔으로 전환, 캐릭터 시트 캡처를 Zoom2(600×400)로 상향, capture_game.py Windows형 절대경로 수용 보강.
 

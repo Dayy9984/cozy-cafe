@@ -333,3 +333,104 @@ capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot.Run
 선택·검증 불가(provider.json probe 실측, 유료API 경로만 가능하나 계약 금지) —
 SPEC_CHANGE 기대값으로 정렬됐으나 백엔드 모델이 바뀌면 게이트가 다시
 실패하는 것이 정상 동작.
+
+## desktop-tools — 작업 도구 실구현 (v0.8.2)
+구축: Core/Tools 신규(ToolsModule.cs). WindowMode Normal/Mini 전환
+(SetMode — 미니 진입 시 편집중 메모 자동종료+자동저장), MemoNote 한글
+자동저장(매 변경이 AutosavedJson 스냅샷을 갱신, 별도 저장 호출 없음),
+TodoItem 추가/완료/재정렬(MoveTodo 재삽입), FocusTimer 25/5+사용자지정
+(Pause가 잔여초를 그대로 반환), FocusRecord는 자연 완주만 실초 적립·
+sleep/exit/stop는 0초 레코드, LocalMusicDeck은 로컬/권리확인 트랙만
+(ExternalOAuth Enqueue 거부), 메모 입력 중 RouteGameShortcut=false로
+게임 단축키 억제, SaveTools/LoadTools는 레이아웃과 같은 MiniJson
+결정적 스냅샷 경로, BuildPanel이 실상태 뷰모델 생성. Modules.cs의 구
+스텁 ToolsModule 제거, GameBootstrap이 실모듈 등록. StageCases에
+desktop-tools 케이스, StageScenes에 DesktopToolsMini(미니모드 장면),
+GameScene에 MiniMode/ToolsPanel 페인트 힌트, SceneRenderer에 미니창
+크롬+4셀 도구 독(메모 줄·할일 체크+취소선·타이머 링+mm:ss 3×5폰트·
+음악 트랜스포트/진행/볼륨/트랙핀) 도색 추가.
+검증(실측): dotnet build Release 경고0·오류0. check_stage desktop-tools
+→ GameCli가 CASE 6키 실모듈 계산값으로 방출: mode_switch_keeps_state
+true(레지스트리 등록 모듈로 Mini↔Normal 전환, 전후 SaveLayout·가구수·
+에이전트수·IsLoaded 불변)·memo_roundtrip true("오늘 매출 정산하기 + 개행 + 내일 우유 주문" 편집→AutosavedJson만으로 신규 모듈 복원 일치)·
+todo_roundtrip true(추가3·완료1·MoveTodo 선두이동 후 순서+완료 복원)·
+pause_remaining_seconds 900(1500 시작→600 경과→Pause 잔여 실측)·
+sleep_focus_added 0(420초 진행 세션 sleep 시 총적립 변화0)·
+music_controls_connected true(Play/Next/Previous/SetVolume/Pause 실제킴
++카탈로그 전원 로컬계열). 추가 근거키: exit_focus_added0·
+completed_focus_seconds1500·break_session_credited_seconds0·
+music_scope_local_only true(ExternalOAuth Enqueue 거부 실측)·
+shortcut_suppressed_while_memo_editing true(편집중만 억제)·
+tool_time_separate_from_settlement true(집중1500초 완주해도
+econ.Coins/Clock 불변). 회귀 재검사: layout-editor22/22·iso-grid16/16·
+project-boot2/2·idle-economy8/8·research-staff8/8·character-rig5/5.
+캡처: capture_game.py --stage desktop-tools → Unity 6000.6.3f1이
+스테이징 사본에서 CaptureShot.Run 실카메라로 out/desktop_tools.png
+460×400(10121B) 생성·추적소스 변경0. PNG 실물 확인: 미니창 크롬·4×3
+카페(문/탁자의자/카운터+에스프레소/직원)·도구 독 4셀 — 메모지 2줄·
+할일 3행 첫째 완료 취소선·타이머 링 40%+일시정지 바+"15:00"·음악
+2번트랙 재생(일시정지 glyph)+진행바 20/118초+볼륨 틱.
+남은 문제: 실 OS 창 전환(항상위/투명/마우스통과)·한글 IME 실입력·로컬
+오디오 실재생·uGUI 텍스트는 native-release의 Unity 뷰 계층 미착수 —
+코어 상태기계+게이트 증명만 완료(이전 항목들과 동일한 한계).
+
+### desktop-tools 보강 (2026-09-28 후속) — Unity .meta 누락 수정
+배경: Core/Tools/ 디렉터리와 ToolsModule.cs에 .meta가 없었다 — 에디터가
+스테이징 사본을 열 때마다 임의 GUID를 신규 생성해, 추후 GUID 참조가
+생기는 순간 깨지는 상태였고 리포지터리의 40개 자산 전량 meta 커밋
+관례에서도 벗어났다.
+변경: game/Assets/CozyCafe/Core/Tools.meta(폴더)·ToolsModule.cs.meta를
+고정 GUID로 추가(리포지터리의 최소 meta 형식 그대로). 코드·게이트·
+기대값 변경 없음.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+desktop-tools 6/6·layout-editor 22/22·project-boot 2/2 전부 GameCli
+실계산값 일치. capture_game.py --stage desktop-tools → Unity
+6000.6.3f1 스테이징 사본 CaptureShot.Run이 out/desktop_tools.png를
+커밋본과 byte-identical로 재생성(결정적 렌더 확인, 추적소스 변경0).
+GameCli render 폴백도 같은 장면 픽셀로 동작 확인 — 증거를
+out/evidence/desktop_tools_cli.png로 보관(미니창 크롬·메모지·할일
+취소선·타이머 링+"15:00"·음악 독 확인).
+
+## art-pipeline — 병합충돌 해소 + 전체 픽셀 절반 전파 + 아틀라스 재작성 (HEAD×fe53fc2)
+배경: art-pipeline(HEAD)×desktop-tools+SPEC halving(fe53fc2) 병합이
+StageCases·StageScenes·progress 3파일에 충돌. fe53fc2는 사용자 지시
+전체 스케일 절반 SPEC_CHANGE(top32×16/space·canvas32×32/pitch16·8/시각
+두께2px/가구offset(0,-4)/머신64×64/가구64×80/캐릭터32×40/UI16×16)로
+gates.json·art_contract·catalog·프롬프트만 갱신했고 코드 상수 전파는
+다음 빌더 라운드로 남긴 상태였다(DECISIONS 기록).
+해소: StageCases·StageScenes에 art-pipeline·desktop-tools 양쪽 케이스와
+메서드 모두 유지, progress는 양쪽 로그 모두 보존.
+전파(코드): IsoMath 상수 절반(32/16/32/32/2/0, step16·8, Unproject 역함수
+일반화), TileCanvasContract 32×32, IsoContract seam 감사 버퍼 비례 축소,
+TileArt 다이아몬드(중심16,8)·사이드밴드(0,8)-(16,16)-(32,8), RenderOffsetTable
+Table/Chair/Stool (0,-4), RenderContract MountLocal (-4.5/-2.5), SceneRenderer
+가구·에이전트·캐럿·가이드 전부 절반 + 타일캔버스 뷰 zoom8, StageViewBuilder
+스커트16×10·가구20×10·에이전트6×9 절반, StageCases 레이아웃 -8→-4 실측
+시나리오(baked-4→runtime0·effective-4·zoom2 -8), ArtPipeline 타일 검증
+32×32/최대폭32/상면16행/적도6-10/실루엣15-17, ArtAssets.MeasureTile 밴드
+절반, CharacterModule 레이어 페인터 전량 32×40으로 재작성(풋앵커36행),
+art_contract character.cell[32,40]·foot_anchor[16,36], catalog 타일
+visual_thickness_px 4→2 + 비고 문구, 프롬프트·PIPELINE·planning·DEVELOPMENT의
+남은 4px/-8px 상술 일괄 2px/-4px로 정정. StageScenes 뷰포트 절반
+(iso176×160·layout210×150·rig300×200), DesktopToolsMini는 화면UI 창이라 유지.
+파이프라인: tools/art_pipeline.py를 32스펙으로 재작성(SIDE_PX2·상면행0-15·
+사이드밴드2px·앵커 절반·QA 32/16/6-10/≤2)하고 기존 실제 생성 raws에서
+재추출·QA·합성 → art/approved 갱신(sheet 430×84, 14프레임 전부
+APPROVED, tile 실측 top0/적도7/상면16행/최대폭32/실루엣16). manifest는
+명시 rect/origin/fps/loop + 가구 baked(0,0)+render(0,-4)=유효-4 기록.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+art-pipeline 11/11(provider codex·raw_png_exists true·effective_image_model
+"gpt-image"=SPEC_CHANGE 기대값·팔레트재생성0·타일32×16/캔버스32·가구유효-4)·
+iso-grid 16/16·project-boot 2/2·character-rig 5/5·desktop-tools 6/6·
+idle-economy 8/8·research-staff 8/8 전부 GameCli 실계산값 일치.
+capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot.Run이
+스테이징 사본에서 실카메라로 out/art_pipeline.png(980×184) 생성 — 승인
+아틀라스 프레임+계약 테두리+앵커+유효오프셋 마커 확인. GameCli render로
+iso/character/layout 장면 PNG 육안 확인(out/evidence/*_halved.png) —
+측면스커트 외곽만·뒷모습 안경 가림·가구 -4 리프트 정상.
+남은 문제: gates.json layout-editor 섹션 4키가 halving 이전 값(-8/-16)을
+그대로 기대해 현재 스펙 실측(-4/-8)과 불일치 — 동일 커밋이 iso-grid·
+art-pipeline 키는 절반으로 갱신했으므로 하네스 측 stale 기대값으로 보고
+게이트는 편집하지 않고 불일치를 그대로 보고한다(기준 약화 금지).
+Sunburst 요청 모델은 OAuth 표면에서 선택·검증 불가로 SPEC_CHANGE 기록대로
+NOT_VERIFIED 유지(기대값 gpt-image와 일치, 유료API 경로 금지 유지).

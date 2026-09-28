@@ -19,10 +19,10 @@ character jobs는 몸체 하나의 anchor부터. walk는 실패 가능하므로 
 UI jobs는 후보 스타일일 뿐. 글자는 runtime, 컴포넌트는 9-slice/input/focus 테스트 필요.
 
 ## v0.8 geometry/placement QA
-채택 전에 top64×32, space/canvas64×64, visual side4px를 확인한다. 두께는 물리값이 아니다.
+채택 전에 top32×16, space/canvas32×32, visual side2px를 확인한다. 두께는 물리값이 아니다.
 모델이 요청 크기를 정확히 출력했다고 가정하지 않고 추출·manifest 규격을 검사한다.
-새 table_square/chair 작업은 미보정 source pivot으로 제작하고 renderer에서 -8px를 적용한다.
+새 table_square/chair 작업은 미보정 source pivot으로 제작하고 renderer에서 -4px를 적용한다.
 이미 보정한 원화는 baked_alignment_offset_px로 기록/정규화한다. metadata 없이 이중 보정하지 않는다.
 2×2/3×3 바닥 이음, 뒷선, 외곽만 측면 표시, table/chair ghost와 적용 결과,
 4방향 회전, 줌1/2, 저장·복귀에서 동일한 논리 셀/단일 보정을 실제 렌더로 확인한다.
-기존 character/body/UI 크기와 팔레트 조합은 유지한다. UI 스킨에 아이소 투영이나 -8px를 적용하지 않는다.
+기존 character/body/UI 크기와 팔레트 조합은 유지한다. UI 스킨에 아이소 투영이나 -4px를 적용하지 않는다.

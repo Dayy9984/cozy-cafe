@@ -3,8 +3,8 @@
   "version": "0.8",
   "sheet": "sprite_sheet_alpha.png",
   "sheet_size": [
-    830,
-    164
+    430,
+    84
   ],
   "encoding": "RGBA8/filter0/zlib-stored (canonical PngWriter format)",
   "physical_thickness": 0,
@@ -18,12 +18,12 @@
       "rect": {
         "x": 2,
         "y": 2,
-        "w": 64,
-        "h": 64
+        "w": 32,
+        "h": 32
       },
       "origin": {
-        "x": 32,
-        "y": 32
+        "x": 16,
+        "y": 16
       },
       "fps": 0,
       "loop": false,
@@ -34,83 +34,244 @@
     {
       "id": "body_anchor",
       "rect": {
-        "x": 68,
+        "x": 36,
         "y": 2,
-        "w": 64,
-        "h": 80
+        "w": 32,
+        "h": 40
       },
       "origin": {
-        "x": 32,
-        "y": 72
+        "x": 16,
+        "y": 36
       },
       "fps": 0,
       "loop": false,
       "job": "body_anchor",
       "category": "character",
       "content_bounds": [
-        16,
-        2,
-        48,
-        72
+        8,
+        1,
+        24,
+        36
       ]
     },
     {
       "id": "machine_espresso",
       "rect": {
-        "x": 134,
+        "x": 70,
         "y": 2,
-        "w": 128,
-        "h": 128
+        "w": 64,
+        "h": 64
       },
       "origin": {
-        "x": 64,
-        "y": 116
+        "x": 32,
+        "y": 58
       },
       "fps": 0,
       "loop": false,
       "job": "machine_espresso",
       "category": "machine",
       "content_bounds": [
-        24,
         12,
-        103,
-        116
+        6,
+        52,
+        58
       ]
     },
     {
       "id": "ui_style",
       "rect": {
-        "x": 264,
+        "x": 136,
         "y": 2,
-        "w": 32,
-        "h": 32
+        "w": 16,
+        "h": 16
       },
       "origin": {
-        "x": 16,
-        "y": 16
+        "x": 8,
+        "y": 8
       },
       "fps": 0,
       "loop": false,
       "job": "ui_style",
       "category": "ui_skin",
       "content_bounds": [
-        3,
-        24,
-        29,
-        28
+        2,
+        12,
+        15,
+        14
       ]
     },
     {
       "id": "ui_icons_0",
       "rect": {
-        "x": 298,
+        "x": 154,
         "y": 2,
-        "w": 32,
-        "h": 32
+        "w": 16,
+        "h": 16
       },
       "origin": {
-        "x": 16,
-        "y": 16
+        "x": 8,
+        "y": 8
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "content_bounds": [
+        2,
+        7,
+        15,
+        14
+      ]
+    },
+    {
+      "id": "ui_icons_1",
+      "rect": {
+        "x": 172,
+        "y": 2,
+        "w": 16,
+        "h": 16
+      },
+      "origin": {
+        "x": 8,
+        "y": 8
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "content_bounds": [
+        2,
+        1,
+        14,
+        14
+      ]
+    },
+    {
+      "id": "ui_icons_2",
+      "rect": {
+        "x": 190,
+        "y": 2,
+        "w": 16,
+        "h": 16
+      },
+      "origin": {
+        "x": 8,
+        "y": 8
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "content_bounds": [
+        2,
+        1,
+        15,
+        14
+      ]
+    },
+    {
+      "id": "ui_icons_3",
+      "rect": {
+        "x": 208,
+        "y": 2,
+        "w": 16,
+        "h": 16
+      },
+      "origin": {
+        "x": 8,
+        "y": 8
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "content_bounds": [
+        2,
+        1,
+        15,
+        14
+      ]
+    },
+    {
+      "id": "ui_icons_4",
+      "rect": {
+        "x": 226,
+        "y": 2,
+        "w": 16,
+        "h": 16
+      },
+      "origin": {
+        "x": 8,
+        "y": 8
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "content_bounds": [
+        2,
+        1,
+        13,
+        14
+      ]
+    },
+    {
+      "id": "ui_icons_5",
+      "rect": {
+        "x": 244,
+        "y": 2,
+        "w": 16,
+        "h": 16
+      },
+      "origin": {
+        "x": 8,
+        "y": 8
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "content_bounds": [
+        4,
+        1,
+        12,
+        14
+      ]
+    },
+    {
+      "id": "ui_icons_6",
+      "rect": {
+        "x": 262,
+        "y": 2,
+        "w": 16,
+        "h": 16
+      },
+      "origin": {
+        "x": 8,
+        "y": 8
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "content_bounds": [
+        2,
+        1,
+        13,
+        14
+      ]
+    },
+    {
+      "id": "ui_icons_7",
+      "rect": {
+        "x": 280,
+        "y": 2,
+        "w": 16,
+        "h": 16
+      },
+      "origin": {
+        "x": 8,
+        "y": 8
       },
       "fps": 0,
       "loop": false,
@@ -118,189 +279,28 @@
       "category": "ui_skin",
       "content_bounds": [
         3,
+        1,
         13,
-        29,
-        28
-      ]
-    },
-    {
-      "id": "ui_icons_1",
-      "rect": {
-        "x": 332,
-        "y": 2,
-        "w": 32,
-        "h": 32
-      },
-      "origin": {
-        "x": 16,
-        "y": 16
-      },
-      "fps": 0,
-      "loop": false,
-      "job": "ui_icons",
-      "category": "ui_skin",
-      "content_bounds": [
-        4,
-        2,
-        28,
-        28
-      ]
-    },
-    {
-      "id": "ui_icons_2",
-      "rect": {
-        "x": 366,
-        "y": 2,
-        "w": 32,
-        "h": 32
-      },
-      "origin": {
-        "x": 16,
-        "y": 16
-      },
-      "fps": 0,
-      "loop": false,
-      "job": "ui_icons",
-      "category": "ui_skin",
-      "content_bounds": [
-        4,
-        2,
-        29,
-        28
-      ]
-    },
-    {
-      "id": "ui_icons_3",
-      "rect": {
-        "x": 400,
-        "y": 2,
-        "w": 32,
-        "h": 32
-      },
-      "origin": {
-        "x": 16,
-        "y": 16
-      },
-      "fps": 0,
-      "loop": false,
-      "job": "ui_icons",
-      "category": "ui_skin",
-      "content_bounds": [
-        4,
-        2,
-        29,
-        28
-      ]
-    },
-    {
-      "id": "ui_icons_4",
-      "rect": {
-        "x": 434,
-        "y": 2,
-        "w": 32,
-        "h": 32
-      },
-      "origin": {
-        "x": 16,
-        "y": 16
-      },
-      "fps": 0,
-      "loop": false,
-      "job": "ui_icons",
-      "category": "ui_skin",
-      "content_bounds": [
-        5,
-        2,
-        27,
-        28
-      ]
-    },
-    {
-      "id": "ui_icons_5",
-      "rect": {
-        "x": 468,
-        "y": 2,
-        "w": 32,
-        "h": 32
-      },
-      "origin": {
-        "x": 16,
-        "y": 16
-      },
-      "fps": 0,
-      "loop": false,
-      "job": "ui_icons",
-      "category": "ui_skin",
-      "content_bounds": [
-        8,
-        2,
-        23,
-        28
-      ]
-    },
-    {
-      "id": "ui_icons_6",
-      "rect": {
-        "x": 502,
-        "y": 2,
-        "w": 32,
-        "h": 32
-      },
-      "origin": {
-        "x": 16,
-        "y": 16
-      },
-      "fps": 0,
-      "loop": false,
-      "job": "ui_icons",
-      "category": "ui_skin",
-      "content_bounds": [
-        6,
-        2,
-        27,
-        28
-      ]
-    },
-    {
-      "id": "ui_icons_7",
-      "rect": {
-        "x": 536,
-        "y": 2,
-        "w": 32,
-        "h": 32
-      },
-      "origin": {
-        "x": 16,
-        "y": 16
-      },
-      "fps": 0,
-      "loop": false,
-      "job": "ui_icons",
-      "category": "ui_skin",
-      "content_bounds": [
-        6,
-        2,
-        26,
-        28
+        14
       ]
     },
     {
       "id": "table_square",
       "rect": {
-        "x": 570,
+        "x": 298,
         "y": 2,
-        "w": 128,
-        "h": 160
+        "w": 64,
+        "h": 80
       },
       "origin": {
-        "x": 64,
-        "y": 136
+        "x": 32,
+        "y": 68
       },
       "fps": 0,
       "loop": false,
       "render_offset_px": [
         0,
-        -8
+        -4
       ],
       "baked_alignment_offset_px": [
         0,
@@ -310,29 +310,29 @@
       "job": "table_square",
       "category": "furniture",
       "content_bounds": [
-        16,
-        41,
-        112,
-        136
+        8,
+        20,
+        56,
+        68
       ]
     },
     {
       "id": "chair",
       "rect": {
-        "x": 700,
+        "x": 364,
         "y": 2,
-        "w": 128,
-        "h": 160
+        "w": 64,
+        "h": 80
       },
       "origin": {
-        "x": 64,
-        "y": 136
+        "x": 32,
+        "y": 68
       },
       "fps": 0,
       "loop": false,
       "render_offset_px": [
         0,
-        -8
+        -4
       ],
       "baked_alignment_offset_px": [
         0,
@@ -342,10 +342,10 @@
       "job": "chair",
       "category": "furniture",
       "content_bounds": [
-        29,
-        16,
-        99,
-        136
+        14,
+        8,
+        49,
+        68
       ]
     }
   ]

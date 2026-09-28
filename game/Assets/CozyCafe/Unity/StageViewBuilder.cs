@@ -59,7 +59,7 @@ namespace CozyCafe.Unity
 
         private static void AddSideFaces(GameObject root, RoomGrid room, int x, int y)
         {
-            // 4 px visual skirts on the outer boundary only; never colliders.
+            // 2 px visual skirts on the outer boundary only; never colliders.
             if (!room.HasCell(x + 1, y))
             {
                 CreateSkirt(root, x, y, true);
@@ -75,12 +75,12 @@ namespace CozyCafe.Unity
             var go = new GameObject("side_" + x + "_" + y + (rightEdge ? "_r" : "_l"));
             go.transform.SetParent(root.transform, false);
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = DiamondSprite(32, IsoMath.VisualThicknessPx + 16,
+            sr.sprite = DiamondSprite(16, IsoMath.VisualThicknessPx + 8,
                 rightEdge ? new Color(0.478f, 0.322f, 0.204f) : new Color(0.4f, 0.267f, 0.173f));
             double ex, ey;
             if (rightEdge) IsoMath.Project(x + 1, y + 0.5, out ex, out ey);
             else IsoMath.Project(x + 0.5, y + 1, out ex, out ey);
-            go.transform.position = new Vector3((float)ex, (float)-(ey + 8), 0f);
+            go.transform.position = new Vector3((float)ex, (float)-(ey + 4), 0f);
             sr.sortingOrder = 1;
         }
 
@@ -90,7 +90,7 @@ namespace CozyCafe.Unity
             var go = new GameObject("furn_" + f.Kind + "_" + f.CellX + "_" + f.CellY);
             go.transform.SetParent(root.transform, false);
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = DiamondSprite(40, 19, FurnitureColor(f.Kind));
+            sr.sprite = DiamondSprite(20, 10, FurnitureColor(f.Kind));
             // Same render contract as the core rasterizer: (ground + target)
             // once for floor pieces, host mount resolution for children.
             double dx, dy;
@@ -110,11 +110,11 @@ namespace CozyCafe.Unity
             var go = new GameObject("agent_" + a.Name);
             go.transform.SetParent(root.transform, false);
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = DiamondSprite(12, 18,
+            sr.sprite = DiamondSprite(6, 9,
                 a.IsStaff ? new Color(0.36f, 0.56f, 0.88f) : new Color(0.89f, 0.57f, 0.36f));
             double gx, gy;
             IsoMath.Project(a.GridX, a.GridY, out gx, out gy);
-            go.transform.position = new Vector3((float)gx, (float)-(gy - 9), 0f);
+            go.transform.position = new Vector3((float)gx, (float)-(gy - 4.5f), 0f);
             sr.sortingOrder = 200;
         }
 
