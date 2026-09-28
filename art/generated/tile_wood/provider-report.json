@@ -1,0 +1,21 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Production asset candidate, not a complete game screen. Use image_generation with requested image model gpt-image-2.5-sunburst when the authenticated tool supports model selection; report actual model truthfully. Do not substitute a reasoning model name for the image model.\nA clean original warm oak isometric floor surface. Top face64x32 pixels, space reference and working canvas64x64. Visible side artwork4px only, NOT physical depth, no raised platform. Do not add4 to canvas height. Keep top and visible edge overlay separable and record the top bounds and pivot. Exact final dimensions are enforced by extraction and QA, not assumed from model output. No text. No internal black seams.\nKeep the same 2.5D cozy cafe art direction, readable at small native size. Pixel edges and proportions must later pass deterministic extraction and geometry QA. Generate only this requested base/row. No logo, brand, original-game copied design, UI text, watermark. Pick chroma background that does not match the subject material; preserve raw output.",
+  "out": "C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\art-pipeline\\art\\generated\\tile_wood\\raw.png",
+  "raw": "C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\art-pipeline\\art\\generated\\tile_wood\\raw.png.raw.png",
+  "raw_bytes": 1076681,
+  "elapsed_seconds": 52.071,
+  "model": null,
+  "session_id": "01a0e5f9-ce8d-7ee0-a6e9-95a0f3770b1c",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "inline_results": 1,
+    "rollout_cleaned": false,
+    "transparent_background_reported": true
+  },
+  "provider_resolved_from": "explicit"
+}

@@ -26,4 +26,6 @@ v0.8.2 run 메모: character-rig 실구현 완료(Core/Character·StageCases 케
 
 v0.8.2 증거 보강: character-rig 가림 증거를 전 4방향 실측(SW/SE18px·NW/NE0px)으로, 위상·팔레트 불변 스윕을 계약 전 상태(idle/walk/sit/work)로 확장, variant_png_assets을 배송 자산 실스캔으로 전환, 캐릭터 시트 캡처를 Zoom2(600×400)로 상향, capture_game.py Windows형 절대경로 수용 보강.
 
+v0.8.4 art-pipeline 산출물 배송화: art/generated/ 언 ignore → 7잡 raw·provenance·report가 커밋 트리에 포함되어 평가 체크아웃에서 raw_png_exists=true·effective_image_model이 실측값(gpt-image)으로 보고됨(BLOCKED 아님). assets.py codex 경로 해석을 msys/cygwin python에 대응. 오늘자 codex OAuth 라이브 재생성(probe_live, 35s)으로 image_gen 가용·백엔드 gpt-image 고정 재확인 — sunburst 불가는 honest MISMATCH로 유지. character-rig·iso-grid·project-boot 회귀 전부 일치, Unity 실카메라 캡처 재생성.
+
 v0.8.3 art-pipeline 실구현: tools/assets.py+sprite-gen(b725baa) 경유 Codex OAuth로 7잡 실생성, tools/art_pipeline.py 추출·QA·승인, art/approved/(sheet+manifest+qa_contact) 실산출물, StageCases/StageScenes/SceneRenderer/PngReader·ArtAssets 코어 배선. 게이트 10/11 일치·effective_image_model만 실측 gpt-image(요청 sunburst 미검증, honest MISMATCH). Unity CaptureShot 실카메라 캡처 out/art_pipeline.png.

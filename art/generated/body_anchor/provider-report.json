@@ -1,0 +1,21 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Production asset candidate, not a complete game screen. Use image_generation with requested image model gpt-image-2.5-sunburst when the authenticated tool supports model selection; report actual model truthfully. Do not substitute a reasoning model name for the image model.\nOne original cozy humanoid canonical idle anchor; one shared rig, full body, chibi pixel proportions, four directions will share geometry. No clothing colour variants or character crowd. True pixel-lattice look.\nKeep the same 2.5D cozy cafe art direction, readable at small native size. Pixel edges and proportions must later pass deterministic extraction and geometry QA. Generate only this requested base/row. No logo, brand, original-game copied design, UI text, watermark. Pick chroma background that does not match the subject material; preserve raw output.\nUse the project top64x32 / space64x64 grounding guide. Floor side4px is visual only. No global table/chair -8px lift on standing characters; seated characters follow the explicit chair seat attachment once.",
+  "out": "C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\art-pipeline\\art\\generated\\body_anchor\\raw.png",
+  "raw": "C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\art-pipeline\\art\\generated\\body_anchor\\raw.png.raw.png",
+  "raw_bytes": 381862,
+  "elapsed_seconds": 57.308,
+  "model": null,
+  "session_id": "01a0e5fb-7ae6-7d81-ae18-13858f6347b4",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "inline_results": 1,
+    "rollout_cleaned": false,
+    "transparent_background_reported": true
+  },
+  "provider_resolved_from": "explicit"
+}

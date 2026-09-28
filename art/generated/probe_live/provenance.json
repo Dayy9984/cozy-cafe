@@ -1,0 +1,16 @@
+{
+  "provider": "codex",
+  "purpose": "live capability probe (not a job, not for approval)",
+  "requested_image_model": "gpt-image-2.5-sunburst",
+  "effective_image_model": "gpt-image",
+  "model_evidence": {
+    "c2pa": "gpt-image",
+    "rollout": null
+  },
+  "model_verification": "NOT_VERIFIED",
+  "raw_sha256": "8ff78bb287e78d67a975b453eb30466c019daf8ff4443b5420d4b3bd76fb6123",
+  "session_id": "01a0e7f0-39a2-7d42-9783-4e62e2dc3f14",
+  "elapsed_seconds": 35.13,
+  "game_asset_approval": "NOT_APPLICABLE",
+  "note": "Generated live this run through the codex ChatGPT OAuth provider (no --model flag). Backend model measured from PNG C2PA claim."
+}

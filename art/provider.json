@@ -18,7 +18,8 @@
       "POST /v1/images/generations model=gpt-image-1-mini -> HTTP 200, C2PA gpt-image",
       "POST /v1/images/generations model=<invalid name> -> HTTP 200 + image (backend ignores the body model field)",
       "POST /v1/responses tools=[{type:image_generation, model:gpt-image-2.5-sunburst}] -> upstream normalized tool model to gpt-image-2-codex; PNG C2PA gpt-image",
-      "POST /v1/responses tools=[{type:image_generation, model:gpt-image-1}] -> upstream again normalized tool model to gpt-image-2-codex"
+      "POST /v1/responses tools=[{type:image_generation, model:gpt-image-1}] -> upstream again normalized tool model to gpt-image-2-codex",
+      "2026-09-28 live re-probe: sprite-gen codex provider on existing ChatGPT OAuth (codex exec image_gen, no --model) produced real PNG in 35.13s, session 01a0e7f0-39a2-7d42-9783-4e62e2dc3f14; PNG C2PA software agent still ChatGPT/gpt-image -> requested gpt-image-2.5-sunburst remains not selectable/verifiable"
     ],
     "finding": "The codex ChatGPT image surface is pinned to one backend image model (upstream name gpt-image-2-codex; vendor-signed C2PA version gpt-image). The requested gpt-image-2.5-sunburst cannot be selected, produced, or verified on this account; the only model-selectable image path is the paid OPENAI_API_KEY CLI fallback, which is forbidden.",
     "verification": "NOT_VERIFIED"

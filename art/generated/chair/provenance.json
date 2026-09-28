@@ -1,0 +1,13 @@
+{
+  "provider": "codex",
+  "requested_image_model": "gpt-image-2.5-sunburst",
+  "effective_image_model": "gpt-image",
+  "model_evidence": {
+    "c2pa": "gpt-image",
+    "rollout": null
+  },
+  "model_verification": "NOT_VERIFIED",
+  "raw_sha256": "0bb0b812cc5ee4c2c8a15e6d277c62f68319f1f1562839bda5a2a2cce9270114",
+  "game_asset_approval": "PENDING",
+  "note": "Read actual tool/provider metadata before claiming Sunburst. Raw is not an atlas or approved asset."
+}

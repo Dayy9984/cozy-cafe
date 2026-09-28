@@ -178,3 +178,35 @@ art/provider.json의 model_verification_probe에 동일 증거를 기록했다.
 상태 GENERATED_MODEL_NOT_VERIFIED 유지, 게이트 미스매치는 숨기지 않는다.
 check_stage art-pipeline 11키 중 10키 일치(effective_image_model만 실측
 gpt-image), 나머지 스테이지·Unity 캡처 경로는 재검사로 정상 유지.
+
+## art-pipeline — 생성 산출물 커밋 대상화 + 라이브 재검증(2026-09-28)
+배경: 이전 critic run에서 raw_png_exists=false·effective_image_model=BLOCKED가
+보고됐다. 원인은 판정 실패가 아니라 산출물 미배송 — art/generated/가
+.gitignore 대상이라 평가 체크아웃에 raw.png/provenance.json이 없었다.
+변경:
+- .gitignore에서 art/generated/ 제거 → 7잡의 raw.png·raw.png.raw.png·
+  provider-report.json·provenance.json이 커밋 트리에 포함된다.
+  (크리덴셜 스캔 대상 이름과 무관, 실제 생성물 배송.)
+- tools/assets.py _codex_env(): cygwin/msys python은 Path.home()이
+  /home/<user>를 반환해 npm vendored codex를 못 찾던 문제 수정.
+  USERPROFILE 기반 프로파일 후보(/x/ 마운트 철자 포함)를 추가해
+  이 호스트에서 doctor/login/generate가 실동작함을 확인
+  (codex login status → rc0 "Logged in using ChatGPT").
+- 라이브 재검증: art/prompts/probe_live.txt로 sprite-gen codex provider
+  실생성을 오늘 다시 실행(35.13s, session 01a0e7f0-…, --keep-session,
+  --model 미전달). 산출 raw.png 855,212B + provider-report +
+  provenance(C2PA 실측 gpt-image, rollout model 필드 없음,
+  model_verification NOT_VERIFIED). 이 계정의 이미지 표면은 여전히
+  단일 백엔드 — 요청 gpt-image-2.5-sunburst 선택 불가를 재확인하고
+  provider.json probe 목록에 추가.
+- tools/art_pipeline.py build 재실행: 14셀 전부 APPROVED, 승인 산출물
+  (sheet·manifest·qa_contact·qa_report)이 기존 커밋과 바이트 동일 —
+  raws→approved 재현성 확인.
+검증(GameCli, DOTNET_BIN 고정): art-pipeline 11키 중 10키 일치 —
+raw_png_exists true·provider codex·manifest valid·팔레트재생성0·
+tile 64×32/64x64·가구유효-8 전부 실측 통과. 유일 미스매치
+effective_image_model은 실측 "gpt-image"(요청 sunburst 미검증을 숨기지
+않는 honest MISMATCH — 유료API 전환·값 조작 없음).
+회귀: character-rig 5/5·iso-grid 16/16·project-boot 2/2 전부 일치.
+캡처: Unity 6000.6.3f1 CaptureShot.Run 실카메라로 out/art_pipeline.png
+(1512×676) 재생성 — 기존과 동일 바이트.

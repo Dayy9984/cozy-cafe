@@ -1,7 +1,6 @@
 .godot/
 .venv/
 .external/
-art/generated/
 builds/
 .evidence/
 .gauntlet-runtime/

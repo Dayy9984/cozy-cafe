@@ -1,0 +1,21 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Production asset candidate, not a complete game screen. Use image_generation with requested image model gpt-image-2.5-sunburst when the authenticated tool supports model selection; report actual model truthfully. Do not substitute a reasoning model name for the image model.\nConsistent pixel icon candidates for furniture, tile brush, rotate, undo, redo, research, staff, note, timer. No labels, no generated Korean text.\nKeep the same 2.5D cozy cafe art direction, readable at small native size. Pixel edges and proportions must later pass deterministic extraction and geometry QA. Generate only this requested base/row. No logo, brand, original-game copied design, UI text, watermark. Pick chroma background that does not match the subject material; preserve raw output.",
+  "out": "C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\art-pipeline\\art\\generated\\ui_icons\\raw.png",
+  "raw": "C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\art-pipeline\\art\\generated\\ui_icons\\raw.png.raw.png",
+  "raw_bytes": 659240,
+  "elapsed_seconds": 41.394,
+  "model": null,
+  "session_id": "01a0e5fd-a78b-7620-92e3-a85f3ecda622",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "inline_results": 1,
+    "rollout_cleaned": false,
+    "transparent_background_reported": true
+  },
+  "provider_resolved_from": "explicit"
+}

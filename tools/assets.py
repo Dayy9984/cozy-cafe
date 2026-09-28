@@ -67,6 +67,30 @@ def install():
     return 0
 
 
+def _profile_roots():
+    """Candidate roots for the user's Windows profile, whichever python
+    flavor runs this file: native Windows reports Path.home() directly;
+    cygwin/msys interpreters report the POSIX home instead, so USERPROFILE
+    (drive-letter and /x/ mounted spellings) is tried too."""
+    roots, seen = [], set()
+    for cand in (Path.home(),
+                 Path(os.environ['USERPROFILE'])
+                 if os.environ.get('USERPROFILE') else None):
+        if cand is None:
+            continue
+        key = str(cand)
+        if key not in seen and cand.is_dir():
+            seen.add(key)
+            roots.append(cand)
+    up = os.environ.get('USERPROFILE', '')
+    if len(up) > 2 and up[1] == ':' and os.name == 'posix':
+        mp = Path('/' + up[0].lower() + up[2:].replace(chr(92), '/'))
+        if str(mp) not in seen and mp.is_dir():
+            seen.add(str(mp))
+            roots.append(mp)
+    return roots
+
+
 def _codex_env():
     """Child env resolving `codex` to the real CLI binary.
 
@@ -76,13 +100,18 @@ def _codex_env():
     directory so shutil.which picks it first, then the npm dir and node."""
     env = os.environ.copy()
     extra = []
-    npm = Path.home() / 'AppData/Roaming/npm'
-    for hit in sorted(npm.glob(
-            'node_modules/@openai/**/codex-win32-*/vendor/*/bin/codex.exe')):
-        if hit.with_name('codex-code-mode-host.exe').is_file():
-            extra.append(str(hit.parent))
+    npms = [r / 'AppData/Roaming/npm' for r in _profile_roots()]
+    for npm in npms:
+        found = False
+        for hit in sorted(npm.glob(
+                'node_modules/@openai/**/codex-win32-*/vendor/*/bin/codex.exe')):
+            if hit.with_name('codex-code-mode-host.exe').is_file():
+                extra.append(str(hit.parent))
+                found = True
+                break
+        if found:
             break
-    extra.append(str(npm))
+    extra.extend(str(n) for n in npms if n.is_dir())
     extra.append('C:/Program Files/nodejs')
     env['PATH'] = os.pathsep.join(extra + [env.get('PATH', '')])
     return env
