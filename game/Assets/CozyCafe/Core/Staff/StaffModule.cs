@@ -63,7 +63,7 @@ namespace CozyCafe.Core.Staff
         public override string Name { get { return "staff"; } }
 
         public readonly Economy.EconomyModule Econ;
-        public readonly long GenerationSeed;
+        public long GenerationSeed { get; private set; }
         public readonly List<StaffCandidate> Candidates = new List<StaffCandidate>();
         public readonly List<StaffCandidate> Roster = new List<StaffCandidate>();
         public bool PanelOpen { get; private set; }
@@ -159,6 +159,77 @@ namespace CozyCafe.Core.Staff
                 foreach (var c in Roster) n += c.SalesBonusPct;
                 return n;
             }
+        }
+
+        /// Combined research-rate bonus applied by the lab module.
+        public int TotalResearchBonusPct
+        {
+            get
+            {
+                int n = 0;
+                foreach (var c in Roster) n += c.ResearchBonusPct;
+                return n;
+            }
+        }
+
+        /// Deterministic state record: the persisted generation seed, the
+        /// candidate counter, the open-panel flag, and the roster + drawn
+        /// candidates as (id, appearanceSeed, statSeed) — every other field
+        /// is reproduced exactly by the deterministic roll.
+        public Dictionary<string, object> SaveState()
+        {
+            var d = new Dictionary<string, object>();
+            d["gen_seed"] = GenerationSeed;
+            d["next_id"] = (long)nextCandidateId;
+            d["panel"] = PanelOpen;
+            var roster = new List<object>();
+            foreach (var c in Roster) roster.Add(Record(c));
+            d["roster"] = roster;
+            var cands = new List<object>();
+            foreach (var c in Candidates) cands.Add(Record(c));
+            d["candidates"] = cands;
+            return d;
+        }
+
+        private static Dictionary<string, object> Record(StaffCandidate c)
+        {
+            var r = new Dictionary<string, object>();
+            r["id"] = c.Id;
+            r["app"] = (long)c.AppearanceSeed;
+            r["stat"] = (long)c.StatSeed;
+            return r;
+        }
+
+        /// Replaces the whole office state: the persisted generation seed
+        /// comes back too, so post-restore refills roll the identical stream
+        /// the saved timeline would have produced; candidates are re-rolled
+        /// from their persisted seeds so stats and appearance land
+        /// identically.
+        public void RestoreState(Dictionary<string, object> d)
+        {
+            GenerationSeed = SaveDoc.Long(SaveDoc.Get(d, "gen_seed"));
+            nextCandidateId = (int)SaveDoc.Long(SaveDoc.Get(d, "next_id"));
+            PanelOpen = SaveDoc.Bool(SaveDoc.Get(d, "panel"));
+            Roster.Clear();
+            foreach (var o in SaveDoc.List(SaveDoc.Get(d, "roster")))
+            {
+                Roster.Add(Unroll(o));
+            }
+            Candidates.Clear();
+            foreach (var o in SaveDoc.List(SaveDoc.Get(d, "candidates")))
+            {
+                Candidates.Add(Unroll(o));
+            }
+        }
+
+        private StaffCandidate Unroll(object o)
+        {
+            var r = SaveDoc.Dict(o);
+            var c = RollCandidate(
+                (int)SaveDoc.Long(SaveDoc.Get(r, "app")),
+                (int)SaveDoc.Long(SaveDoc.Get(r, "stat")));
+            c.Id = SaveDoc.Str(SaveDoc.Get(r, "id"));
+            return c;
         }
 
         /// Probe exercises the persisted panel and the independent roll

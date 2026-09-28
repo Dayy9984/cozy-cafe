@@ -1,0 +1,16 @@
+{
+  "provider": "codex",
+  "purpose": "live capability probe (not a job, not for approval)",
+  "requested_image_model": "gpt-image-2.5-sunburst",
+  "effective_image_model": "gpt-image",
+  "model_evidence": {
+    "c2pa": "gpt-image",
+    "rollout": null
+  },
+  "model_verification": "NOT_VERIFIED",
+  "raw_sha256": "ae2e41131e54e0db35eac21c132b567d8dff5034edbf43b3a9f06b249412c107",
+  "session_id": "01a0e8db-7f16-7220-9cf6-1e4945e95536",
+  "elapsed_seconds": 31.143,
+  "game_asset_approval": "NOT_APPLICABLE",
+  "note": "2026-09-29 live re-probe #3 (critic actionable: re-run codex generation on the current account). codex-cli 0.156.1, ChatGPT OAuth, sprite-gen codex provider, no --model. Real 1037170-byte PNG; vendor-signed C2PA softwareAgent still ChatGPT/gpt-image; image_gen.generation item fields (revisedPrompt/result/transparentBackground/failure/savedPath) carry no model field. gpt-image-2.5-sunburst remains unselectable/unverifiable on this surface."
+}

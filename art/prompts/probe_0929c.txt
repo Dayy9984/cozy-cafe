@@ -1,0 +1,2 @@
+Pipeline capability probe, not a game asset and not for approval. Use image_generation with requested image model gpt-image-2.5-sunburst when the authenticated tool supports model selection; report actual model truthfully. Do not substitute a reasoning model name for the image model.
+A plain solid green circle centered on a flat white background. Minimal flat raster test pattern. No text, no watermark, no gradients, no shadows, no borders, no texture, no extra objects. Generate exactly one image.

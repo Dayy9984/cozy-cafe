@@ -11,7 +11,7 @@
 |desktop-tools|미니창·메모·할일·타이머·음악|layout-editor|검증완료(리뷰대기)|
 |idle-economy|자동판매·강화|project-boot|READY|
 |research-staff|연구·메뉴·직원|idle-economy|READY|
-|save-offline|저장·복귀·시간경계|research-staff,layout-editor|READY|
+|save-offline|저장·복귀·시간경계|research-staff,layout-editor|검증완료(리뷰대기)|
 |character-rig|소수 파츠·팔레트·랜덤 손님|iso-grid,research-staff|READY|
 |art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트10/11·요청모델키 BLOCKED 보고)|
 |ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|READY|
@@ -37,3 +37,27 @@ v0.8.2 병합 해소: character-rig(c1f9a1d)×layout-editor 충돌 7파일 해�
 재검증: build 경고0·layout-editor 22/22·iso-grid 16/16·project-boot 2/2·
 idle-economy 8/8·research-staff 8/8·character-rig 5/5, Unity 스테이징
 사본 캡처로 out/layout_editor.png 생성·추적소스 변경 0.
+
+v0.8.2 save-offline 실구현: Core/Save(SaveStore 원자교체+백업·SaveDocument
+v2+v1마이그레이션·CafeSession 이벤트경계 Advance·remaining_base_work)와
+모듈 상태기록 추가, StageCases save-offline 케이스 배선. 검증: build
+경고0·check_stage save-offline 6/6·research-staff 8/8·idle-economy 8/8·
+layout-editor 22/22·project-boot 2/2 — 상세는 progress.md "save-offline" 절.
+v0.8.2 save-offline 병합 해소+보강: StageCases(SaveOffline×DesktopTools
+공존)·progress.md 충돌 해소, settlement_id null 문서가 중복검사를
+우회하던 구멍을 Parse/Settle 양측 거부로 밀봉. 재검증: build 경고0·
+save-offline 6/6·research-staff 8/8·idle-economy 8/8·layout-editor
+22/22·project-boot 2/2 — 상세는 progress.md 해당 절.
+v0.8.2 save-offline 잔여구멍 보강: gen_seed 복원 누락(후보 스트림 분기)·
+형식유효 의미사망 primary가 backup failover 차단·복원 스큐 시 Advance
+정체 — 각각 실복원/RestoreThroughStore 종단증명 failover/0스텝 플러시로
+밀봉, StageCases에 semantic_corrupt_uses_backup·overdue_boundary_flushes
+실측 증거키 추가. 재검증: build 경고0·save-offline 6/6·research-staff
+8/8·idle-economy 8/8·layout-editor 22/22·project-boot 2/2·desktop-tools
+6/6·character-rig 5/5. iso-grid는 SPEC_CHANGE 적용이 iso/art 스트림
+미착수라 이 병합본에서 실측 FAIL로 남음 — 상세는 progress.md 해당 절.
+v0.8.2 save-offline 통합본 재검증: merge 17fd7d4(integration→HEAD, .cs 0파일
+변경·gates에 stack_level_height_px 추가) 후 save-offline 게이트 실재검증 —
+build 경고0·save-offline 6/6·research-staff 8/8·idle-economy 8/8·
+layout-editor 22/22·project-boot 2/2·desktop-tools 6/6·character-rig 5/5.
+iso-grid는 iso/art 스트림 미착수 SPEC_CHANGE로 실측 FAIL 유지(소유 외).

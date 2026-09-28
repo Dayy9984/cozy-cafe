@@ -304,7 +304,6 @@ capture_game.py --stage layout-editor → Unity 6000.6.3f1이 스테이징
 남은 문제: 편집기 UI(입력/드래그 실조작)는 Unity 뷰 계층에 미착수 —
 코어 API와 StageView 그리기만 구현. 이전 항목과 동일.
 
-
 ## art-pipeline — 병합충돌 해소 + Unity 스테이징 캡처 art 루트 수정 (HEAD×a35533f)
 배경: art-pipeline(HEAD)×layout-editor+SPEC_CHANGE(a35533f) 병합이
 StageCases·StageScenes·05_Production_Board·progress 4파일에 충돌을 남겼다.
@@ -333,6 +332,43 @@ capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot.Run
 선택·검증 불가(provider.json probe 실측, 유료API 경로만 가능하나 계약 금지) —
 SPEC_CHANGE 기대값으로 정렬됐으나 백엔드 모델이 바뀌면 게이트가 다시
 실패하는 것이 정상 동작.
+
+## save-offline — 저장·오프라인 정산 실구현
+구축: Core/Save 신규(SaveStore·SaveDocument·CafeSession·OfflineResult,
+shared helper SaveDoc). 저장은 .tmp 스테이징→fsync→File.Replace 원자교체로
+구 primary를 .bak으로 보존(정전/중단 쓰기에도 torn primary 없음), 읽기는
+문서검증 통과 후보를 primary→backup→none 순으로 선택. 문서는 v2 스키마
+( settlement id·checkpoint_utc·runtime_clock·applied 원장·모듈 상태·
+레이아웃·사적 메모 ) strict 파싱+버전 마이그레이션(v1→v2 실경로).
+CafeSession.Advance는 판매·연구완료·예약자금 임계·직원변경 경계를
+시간순으로 스텝 — 청크로 진행한 온라인과 일괄 오프라인 정산이 동일
+이벤트 열을 지나 동일 결과. 연구 진행은 remaining_base_work+WorkRate
+앵커 방식(중간 속도변경 시 구간요율로 먼저 정산 후 재앵커)으로 리팩터 —
+SimulateStep이 큐 시작을 스텝 종단 경계(자금 도달 시점)에 앵커해
+세션 인터리브에서 비용 청구 시점과 시작 시각이 정합(기존 SimulateSeconds
+독립호출 의미는 유지). Economy/Research/Staff에 SaveState·RestoreState와
+감사필드(TotalCharged·NextSaleDelta·NextCompletionDelta·
+TotalResearchBonusPct) 추가. 공개 프리셋은 allow-list 화장/배치 키만 —
+지갑·연구·스탯·메모·경로·인증은 구조적으로 미포함+재귀감사.
+검증: dotnet build Release 경고0·오류0. check_stage save-offline →
+GameCli 실모듈·실파일 왕복 CASE 6키: offline_online_difference0
+(직원고용+연구예약+중간속도변경 후 3600s — 청크 온라인 vs 저장→
+복원→단일정산, 지갑·타이머·연구·직원·레이아웃 전필드 비교)·
+research_cost_charged_once true(진행중 저장→복원 정산 후 TotalCharged
+=300)·time_backwards_reward0(체크포인트 이전 시각 정산)·
+restored_layout_equal true(파일 왕복 SaveLayout 문자열 동일)·
+duplicate_credit0(동일 settlement id 재적용)·save_backup_recovers
+true(깨진JSON·잘린primary+stale.tmp·양쪽손상→백업복구·v1마이그레이션
+실복원) — 6/6 일치. 증거키 save_version_migrates·malformed_json_uses_
+backup·power_loss_recovers·research_rate_rebills(구간요율 정산 실측)·
+offline_cap_enforced·private_fields_in_preset 전부 실측.
+project-boot 2/2·idle-economy 8/8·research-staff 8/8·layout-editor
+22/22 재검사 유지. 수치 변경 없음(mvp.json·gates 불변).
+구현상 새 규칙: 연구 속도=1+Σ직원연구보너스%/100, 직원변경 경계에서만
+적용(기존 실행분은 구요율로 정산) — 명세 규칙 구현이며 데이터 수치 미변경.
+남은 문제: 실제 게임 루프(Unity 측 autosave 호출·UI 프리셋 공유 버튼)
+연동은 미착수 — 코어 계약+게이트 경로만 구현·검증.
+
 
 ## desktop-tools — 작업 도구 실구현 (v0.8.2)
 구축: Core/Tools 신규(ToolsModule.cs). WindowMode Normal/Mini 전환
@@ -390,7 +426,6 @@ desktop-tools 6/6·layout-editor 22/22·project-boot 2/2 전부 GameCli
 GameCli render 폴백도 같은 장면 픽셀로 동작 확인 — 증거를
 out/evidence/desktop_tools_cli.png로 보관(미니창 크롬·메모지·할일
 취소선·타이머 링+"15:00"·음악 독 확인).
-
 ## art-pipeline — 병합충돌 해소 + 전체 픽셀 절반 전파 + 아틀라스 재작성 (HEAD×fe53fc2)
 배경: art-pipeline(HEAD)×desktop-tools+SPEC halving(fe53fc2) 병합이
 StageCases·StageScenes·progress 3파일에 충돌. fe53fc2는 사용자 지시
@@ -488,3 +523,115 @@ capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot.Run이
 남은 문제: effective_image_model 고정 기대값(gpt-image-2.5-sunburst)과 이
 계정 OAuth 백엔드 고정값(gpt-image)의 정직한 불일치 — 위조 없이 BLOCKED로
 보고. 게이트·provenance 측정값 편집 없음.
+
+## save-offline — 병합충돌 해소 + settlement_id 중복방지 보강 (HEAD×fe53fc2)
+배경: save-offline(HEAD)×desktop-tools(fe53fc2) 병합이 StageCases.cs와
+progress.md에 충돌을 남겼다. 양쪽이 서로 다른 스테이지의 케이스·기록을
+추가한 union 충돌.
+해소: StageCases에 SaveOffline()·DesktopTools() 두 메서드를 공존시키고
+Run 디스패치(이미 양쪽 case 분기 존재)는 그대로 유지. progress.md는
+save-offline·desktop-tools 두 절을 순서대로 병합.
+보강(critic 방향의 실제 구멍): SaveDocument.Parse가 settlement_id=null
+문서를 통과시켰고, SettleOffline은 id==null이면 중복검사를 건너뛰어
+같은 정산 구간이 반복 적립될 수 있었다 — "settlement id는 최대 한 번
+원자 적용" 규칙 위반. Parse에서 비어있는 settlement_id를 FormatException
+으로 거부(백업 failover 경로로 이동), SettleOffline도 null id 문서를
+InvalidOperationException으로 거부해 중복방지 불변식을 양측에서 밀봉.
+데이터·게이트 기대값 변경 없음.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+save-offline 6/6(기존 CASE 전키 동일값 재방출)·research-staff 8/8·
+idle-economy 8/8·layout-editor 22/22·project-boot 2/2 전부 GameCli
+실계산값 일치.
+남은 문제: Unity 측 autosave 호출·UI 프리셋 공유 버튼은 이전 항목과
+동일하게 뷰 계층 미착수 — 코어 계약+게이트 경로만 검증.
+
+## save-offline — 복구·시간경계 잔여구멍 보강 (이번 실행)
+배경: 병합 해소본을 재검증하며 critic이 지적할 수 있는 실구멍 3개를 실측 확인.
+구현은 모두 실모듈 경로, 게이트 기대값·데이터 수치 변경 없음.
+
+보강1 gen_seed 사후 복원 누락: StaffModule.SaveState가 gen_seed를 기록하지만
+RestoreState가 읽지 않았다(readonly) — 복원 세션이 다른 생성 스트림으로
+후보를 리필해 저장 타임라인과 분기. GenerationSeed를 private set으로 열고
+gen_seed를 실복원, StateDifference에도 GenerationSeed 비교를 추가해 회귀가
+측정되게 함(복원 실패 시 offline_online_difference가 1로 증가하는 자기검증).
+보강2 의미론적 손상이 백업 failover를 차단: 문서 Parse는 형식만 검증해
+유효JSON+죽은레코드(없는 메뉴 id 등) primary가 선택된 뒤 Restore에서
+예외로 끝나 backup 재시도가 없었다. SaveStore.ReadCandidates(검증 통과
+후보를 primary→backup 순으로 나열)+CafeSession.RestoreThroughStore
+(후보별 Parse→스크래치 세션 완전복원 증명 후에만 자신에게 적용, 전부
+실패 시 자기 상태 불변) 추가. Parse도 layout을 object로 엄격화.
+보강3 Advance 정체 경로: 복원 스큐(next_at/ends_at이 자기 clock보다
+과거)로 델타가0이면 step<=0 break가 RuntimeClock을 영구 정지시키고도
+요청초를 그대로 반환해 정산이 성공처럼 보고됐다. SimulateSeconds·
+SimulateStep의 0스텝을 "기한 경과 이벤트 플러시"로 개방(guard를 <0로),
+Advance는 step<=0 시 즉시 플러시→재검사하고 그래도 못 지우면
+InvalidOperationException으로 실패(조용한 부분진행 금지).
+StageCases 갱신: malformed/torn-write 복구·레이아웃 왕복을 실제
+RestoreThroughStore 경로로 전환(backup·primary 선택 실측), 형식유효·
+의미사망 primary(economy.lines에 없는 메뉴 ZZZ)가 문서검증을 통과하고도
+복원 증명에서 걸려 backup으로 가는 시나리오·스큐 복원 후 Advance가
+기한경과 판매+연구완료를 기록 즉시 정산하고 창 전체를 진행하는 시나리오를
+증거키 semantic_corrupt_uses_backup·overdue_boundary_flushes로 실측 추가,
+save_backup_recovers 게이트에 semantic 복구를 AND로 편입.
+검증(재실행): dotnet build Release 경고0·오류0. check_stage 실측 —
+save-offline 6/6(신규 증거키 2개 포함 CASE 전부 실계산값)·research-staff
+8/8·idle-economy 8/8·layout-editor 22/22·project-boot 2/2·desktop-tools
+6/6·character-rig 5/5 전부 일치.
+남은 문제(소유 외): iso-grid는 이 병합본에서 FAIL — HEAD의 구64px IsoMath/
+TileArt vs fe53fc2 SPEC_CHANGE의 32px 기대값 불일치. 픽셀 계약 파일은
+iso-grid/art 작업 스트림 소유이므로 본 작업에서는 미변경·실측 FAIL로 기록.
+Unity 뷰 계층 autosave·프리셋 공유 버튼은 이전과 동일하게 미착수.
+
+## save-offline — 통합본 재검증 (merge 17fd7d4 기준)
+배경: critic 지적 "다른 스트림이 통합 산출물을 바꿨다 — 동기화·검사·재판정".
+이번 run은 통합 merge(17fd7d4, integration→HEAD) 이후 HEAD를 대상으로
+save-offline 게이트를 실재검증한다. merge는 .cs 0파일 변경 — gates.json에
+iso-grid expected `stack_level_height_px:16` 추가·data/art_contract.json에
+stack_anchor/grid_sheet 정책 추가·art/ 프롬프트·카탈로그만 갱신. 따라서
+저장 모듈 코드·수치 변경 없이 외부 gate 변경분만 재검증 대상.
+검증(재실행, 전부 GameCli 실모듈 실파일 경로): dotnet build -c Release
+game/GameCli 경고0·오류0. check_stage — save-offline 6/6
+(offline_online_difference 0·research_cost_charged_once true·
+time_backwards_reward 0·restored_layout_equal true·duplicate_credit 0·
+save_backup_recovers true — 백업failover·v1마이그레이션·24h캡·역행시계·
+의미사망primary·스큐플러시 증거키 전부 실측값), 의존단계 재확인 —
+research-staff 8/8·idle-economy 8/8·layout-editor 22/22·project-boot 2/2,
+비의존 회귀 확인 — desktop-tools 6/6·character-rig 5/5.
+남은 문제(소유 외, 변경 없음): iso-grid는 이 통합본에서 계속 FAIL —
+구64px IsoMath/TileArt 상수 vs 현 gates의 32×16/32×32/두께2px 기대값
+불일치(stack_level_height_px 포함 9키 불일치+1키 누락). 픽셀 계약
+구현은 iso-grid/art 스트림 소유로 본 작업범위 밖 — 미변경·실측 FAIL
+유지. Unity 뷰 계층 autosave·프리셋 공유 버튼은 이전 기록과 동일하게
+미착수(코어 계약+게이트 경로만 검증됨).
+
+
+## art-pipeline — 병합충돌 해소 + 재프로브#3 (HEAD×4824e1f, 2026-09-29)
+배경: art-pipeline(HEAD)×save-offline 통합(4824e1f) 병합이 StageCases.cs와
+progress.md에 충돌을 남겼다. save-offline 측은 Save 모듈·케이스, art-pipeline
+측은 Art 모듈·v0.8.5/v0.8.6 기록을 추가한 union 충돌.
+해소: StageCases는 양쪽 using을 모두 유지(System.IO — save-offline의
+SaveStore/File 경로용, CozyCafe.Core.Art — art-pipeline의 매니페스트/시트
+측정용). progress.md는 양쪽 로그 전부 보존(union). 게이트·기대값·데이터
+수치 변경 없음.
+재프로브(critic actionable 실실행): 요청 모델이 노출되는지 다시 측정하기
+위해 codex OAuth 라이브 생성을 신규 1회 재실행 — probe_0929c(세션
+01a0e8db-7f16-7220-9cf6-1e4945e95536, codex-cli 0.156.1, sprite-gen codex
+provider 명시 --provider codex·--model 미전달, --keep-session으로 rollout
+보존). 실측: 1,037,170B 실PNG 31.1s, C2PA 서명 softwareAgent ChatGPT 버전
+gpt-image, image_gen.generation 아이템 필드(revisedPrompt/result/
+transparentBackground/failure/savedPath)에 model 필드 여전히 없음 —
+백엔드 고정 gpt-image 재확정, gpt-image-2.5-sunburst 선택·검증 불가는
+그대로. provenance·provider.json probe 목록에 실측 기록 추가.
+검증(재실행): dotnet build -c Release 경고0·오류0. check_stage 실측 —
+art-pipeline 10/11(provider codex·credentials_bundled false·raw_png_exists·
+manifest 유효·팔레트재생성0·타일64×32·캔버스64·물리두께0·가구 기록+
+유효-8 전부 일치, effective_image_model만 요청모델 미검증으로 "BLOCKED"
+방출 — 고정 기대값과의 정직한 불일치, 위조 없음)·character-rig 5/5·
+iso-grid 17/17·project-boot 2/2 일치. capture_game.py --stage art-pipeline
+→ Unity 6000.6.3f1 CaptureShot.Run이 스테이징 사본에서 실카메라로
+out/art_pipeline.png(1692×324, 91KB) 생성 — 승인 아틀라스 14프레임 접촉시트,
+가구 프레임의 green 유효오프셋 마커가 yellow 앵커 아래에 확인됨.
+남은 문제: effective_image_model 고정 기대값(gpt-image-2.5-sunburst)과 이
+계정 OAuth 백엔드 고정값(gpt-image)의 정직한 불일치가 재프로브#3에서도
+동일하게 확인됨 — 게이트는 그대로 FAIL로 보고하고 값·provenance를 조작하지
+않는다. 유료API 경로·--model 전달은 계약 금지로 미사용.
