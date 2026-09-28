@@ -28,6 +28,8 @@ v0.8.2 증거 보강: character-rig 가림 증거를 전 4방향 실측(SW/SE18p
 
 v0.8.4 art-pipeline 산출물 배송화: art/generated/ 언 ignore → 7잡 raw·provenance·report가 커밋 트리에 포함되어 평가 체크아웃에서 raw_png_exists=true·effective_image_model이 실측값(gpt-image)으로 보고됨(BLOCKED 아님). assets.py codex 경로 해석을 msys/cygwin python에 대응. 오늘자 codex OAuth 라이브 재생성(probe_live, 35s)으로 image_gen 가용·백엔드 gpt-image 고정 재확인 — sunburst 불가는 honest MISMATCH로 유지. character-rig·iso-grid·project-boot 회귀 전부 일치, Unity 실카메라 캡처 재생성.
 
+v0.8.6 art-pipeline 모델 재검증·출처 공개 (2026-09-29): critic 요구대로 codex OAuth 라이브 생성을 2회 재실행해 백엔드 모델을 신선 실측 — probe_0929(33s)·probe_complex_0929(76.6s, 복잡장면 에스컬레이션 시험) 모두 C2PA gpt-image. OAuth·image_gen은 가용, 요청 모델 문자열만 검증 불가로 확정(인증 불가와 구분). manifest에 실측 effective_image_model·model_verification 기록(승인 아틀라스 출처 독립 검증 가능), 승인 PNG 바이트 불변. Unity 실카메라 캡처 재생성(1692×324). 게이트 10/11 — effective_image_model만 정직한 BLOCKED.
+
 v0.8.3 art-pipeline 실구현: tools/assets.py+sprite-gen(b725baa) 경유 Codex OAuth로 7잡 실생성, tools/art_pipeline.py 추출·QA·승인, art/approved/(sheet+manifest+qa_contact) 실산출물, StageCases/StageScenes/SceneRenderer/PngReader·ArtAssets 코어 배선. 게이트 10/11 일치·effective_image_model만 실측 gpt-image(요청 sunburst 미검증, honest MISMATCH). Unity CaptureShot 실카메라 캡처 out/art_pipeline.png.
 
 v0.8.2 병합 해소: character-rig(c1f9a1d)×layout-editor 충돌 7파일 해소 —

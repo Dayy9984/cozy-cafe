@@ -173,3 +173,32 @@ gpt-image로 고정되어 요청 모델 검증 불가). provenance는 실측 "gp
 NOT_VERIFIED를 그대로 보존한다.
 불변: OAuth only·codex 전용·API-key/provider fallback 금지·토큰 비수집·요청 모델
 기록 유지·측정값 위조 없음·한 번만 적용되는 보정 원칙.
+
+## VERIFY 2026-09-29 — critic 요구 모델 재검증 실행 + manifest 실측 provenance
+사유: 독립 critic이 effective_image_model=BLOCKED의 유일 불일치를 지적하며
+"OAuth/image_gen 확인 세션에서 codex 생성을 재실행해 백엔드 모델을 검증"과
+"manifest의 Sunburst 출처 주장이 독립 검증되지 않음"을 요구.
+실행: codex ChatGPT OAuth 로그인 상태에서 sprite-gen codex provider(무--model)
+로 라이브 생성 2회 — (1) 단순 프롬프트 probe_0929: 실PNG 858330B/33.0s,
+세션 01a0e8ca-e8bd-7ba2-8e7d-6393f7016165(롤아웃 보존). image_gen.generation
+아이템은 revisedPrompt/result/savedPath/transparentBackground만 지니고 model
+필드 없음. PNG C2PA softwareAgent ChatGPT/version gpt-image.
+(2) 복잡 프롬프트 에스컬레이션 시험 probe_complex_0929: 실PNG/76.6s,
+세션 01a0e8cc-588d-7e22-adab-855bac71a55a — C2PA 동일 gpt-image.
+측정 결론: OAuth·image_gen은 가용(실 생성 성공)이나 툴 스키마가 {prompt}뿐이라
+gpt-image-2.5-sunburst는 선택·생성·검증 불가 — "인증 불가"가 아니라 "모델
+문자열 검증 불가"가 신선 증거로 확정. 모델 선택 가능한 유일 경로는 금지된
+유료 API키 CLI.
+산출: art/generated/probe_0929·probe_complex_0929 provenance에 오늘자 실측
+기록, provider.json model_verification_probe에 두 재프로브 추가(verification
+NOT_VERIFIED 유지). tools/art_pipeline.py build가 manifest에
+effective_image_model(잡 provenance 실측 합집합)·model_verification을
+기록해 승인 아틀라스의 출처를 manifest 자체로 독립 검증 가능하게 함 —
+Sunburst 생성 주장이 아니라 실측 gpt-image 기록. 재빌드 후 승인
+sheet/contact PNG 바이트 불변 확인.
+결과: check_stage art-pipeline 10/11 — effective_image_model만 정직한
+"BLOCKED" 방출(고정 기대값 sunburst와 실측 gpt-image의 차이, 위조 없음).
+capture_game.py --stage art-pipeline은 Unity 6000.6.3f1 CaptureShot.Run
+실카메라로 out/captures/art_pipeline.png(1692×324) 생성 확인.
+불변: gates.json·기대값·OAuth only·codex 전용·API키 금지·토큰 비수집·
+측정값 위조 금지 전부 유지.

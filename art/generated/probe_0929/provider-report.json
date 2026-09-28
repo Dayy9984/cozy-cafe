@@ -1,0 +1,21 @@
+{
+  "kind": "sprite-gen-image-report",
+  "provider": "codex",
+  "prompt": "Pipeline capability probe, not a game asset and not for approval. Use image_generation with requested image model gpt-image-2.5-sunburst when the authenticated tool supports model selection; report actual model truthfully. Do not substitute a reasoning model name for the image model.\nA plain solid magenta square centered on a flat cyan background. Minimal flat raster test pattern. No text, no watermark, no gradients, no shadows, no borders, no texture, no extra objects. Generate exactly one image.",
+  "out": "C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\art-pipeline\\art\\generated\\probe_0929\\raw.png",
+  "raw": "C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\art-pipeline\\art\\generated\\probe_0929\\raw.png.raw.png",
+  "raw_bytes": 858330,
+  "elapsed_seconds": 33.009,
+  "model": null,
+  "session_id": "01a0e8ca-e8bd-7ba2-8e7d-6393f7016165",
+  "refs": [],
+  "transparent": false,
+  "alpha": null,
+  "chroma": null,
+  "extra": {
+    "inline_results": 1,
+    "rollout_cleaned": false,
+    "transparent_background_reported": false
+  },
+  "provider_resolved_from": "explicit"
+}

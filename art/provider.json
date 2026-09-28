@@ -11,7 +11,7 @@
   "installed_commit": "b725baa5aad026f183e2083275b441f2db225c48",
   "status": "GENERATED_MODEL_NOT_VERIFIED",
   "model_verification_probe": {
-    "checked_at": "2026-09-28",
+    "checked_at": "2026-09-29",
     "session": "existing codex ChatGPT OAuth via local relay 127.0.0.1:10100 (no token read or copied)",
     "probes": [
       "POST /v1/images/generations model=gpt-image-2.5-sunburst -> HTTP 200, PNG C2PA software agent ChatGPT/gpt-image",
@@ -19,9 +19,11 @@
       "POST /v1/images/generations model=<invalid name> -> HTTP 200 + image (backend ignores the body model field)",
       "POST /v1/responses tools=[{type:image_generation, model:gpt-image-2.5-sunburst}] -> upstream normalized tool model to gpt-image-2-codex; PNG C2PA gpt-image",
       "POST /v1/responses tools=[{type:image_generation, model:gpt-image-1}] -> upstream again normalized tool model to gpt-image-2-codex",
-      "2026-09-28 live re-probe: sprite-gen codex provider on existing ChatGPT OAuth (codex exec image_gen, no --model) produced real PNG in 35.13s, session 01a0e7f0-39a2-7d42-9783-4e62e2dc3f14; PNG C2PA software agent still ChatGPT/gpt-image -> requested gpt-image-2.5-sunburst remains not selectable/verifiable"
+      "2026-09-28 live re-probe: sprite-gen codex provider on existing ChatGPT OAuth (codex exec image_gen, no --model) produced real PNG in 35.13s, session 01a0e7f0-39a2-7d42-9783-4e62e2dc3f14; PNG C2PA software agent still ChatGPT/gpt-image -> requested gpt-image-2.5-sunburst remains not selectable/verifiable",
+      "2026-09-29 live re-probe #1 (simple prompt): sprite-gen codex provider on existing ChatGPT OAuth (codex exec image_gen, no --model) produced a real 858330-byte PNG in 33.0s, session 01a0e8ca-e8bd-7ba2-8e7d-6393f7016165 (rollout kept). image_gen.generation item keys: revisedPrompt/result/savedPath/transparentBackground - no model field. PNG C2PA softwareAgent ChatGPT version gpt-image.",
+      "2026-09-29 live re-probe #2 (complex-prompt escalation test): real PNG in 76.6s, session 01a0e8cc-588d-7e22-adab-855bac71a55a; PNG C2PA still ChatGPT/gpt-image -> backend does not escalate to or report gpt-image-2.5-sunburst even on complex prompts."
     ],
-    "finding": "The codex ChatGPT image surface is pinned to one backend image model (upstream name gpt-image-2-codex; vendor-signed C2PA version gpt-image). The requested gpt-image-2.5-sunburst cannot be selected, produced, or verified on this account; the only model-selectable image path is the paid OPENAI_API_KEY CLI fallback, which is forbidden.",
+    "finding": "The codex ChatGPT image surface is pinned to one backend image model (upstream name gpt-image-2-codex; vendor-signed C2PA version gpt-image). Re-verified live on 2026-09-29 (sessions 01a0e8ca/01a0e8cc): OAuth login active and image_gen executes - the tool schema accepts only {prompt}, so gpt-image-2.5-sunburst cannot be selected, produced, or verified on this account. The only model-selectable image path is the paid OPENAI_API_KEY CLI fallback, which is forbidden. Conclusion: unverifiable model string, not unavailable OAuth/image_gen.",
     "verification": "NOT_VERIFIED"
   }
 }

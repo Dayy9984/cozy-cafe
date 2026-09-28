@@ -460,3 +460,31 @@ character-rig 5/5·project-boot 2/2 일치. Unity 6000.6.3f1 CaptureShot.Run이
 (zoom2 = 소스 -8) 실측 확인.
 남은 문제: effective_image_model 키는 고정 게이트(sunburst)와 실측 BLOCKED가
 불일치. OAuth 표면에서 요청모델 지정·검증이 불가해 정직한 차이로 남긴다.
+
+v0.8.6 art-pipeline 모델 재검증 + manifest 실측 provenance (2026-09-29):
+독립 critic 지적 — "OAuth/image_gen 확인 세션에서 codex 생성을 재실행해
+백엔드 모델 검증" 및 "manifest의 Sunburst 출처 주장이 독립 검증 안 됨"을
+실행으로 해소한다.
+재실행(실측): codex login status=ChatGPT OAuth 유지 확인 후 sprite-gen
+codex provider(명시 --provider codex, --model 미전달)로 라이브 생성 2회.
+probe_0929(단순): 858330바이트 실PNG, 33.0s, 세션 01a0e8ca-e8bd-7ba2-
+8e7d-6393f7016165 — PNG C2PA ChatGPT/gpt-image, image_gen 아이템에 model
+필드 없음. probe_complex_0929(복잡장면 에스컬레이션 시험): 76.6s, 세션
+01a0e8cc-588d-7e22-adab-855bac71a55a — C2PA 동일 gpt-image. 결론 갱신:
+OAuth·image_gen은 "불가"가 아니라 "가용하나 요청 모델 문자열 검증 불가"로
+신선 증거 확정(툴 스키마={prompt}뿐). 각 provenance를 probe_live 형식으로
+기록하고 provider.json model_verification_probe에 두 재프로브 추가.
+manifest: tools/art_pipeline.py build가 잡별 provenance의 실측 모델 합집합을
+effective_image_model + model_verification으로 manifest에 기록 — 요청
+모델 주장만 남기던 구조를 실측 출처 공개로 정정. 재빌드해도 승인
+sprite_sheet_alpha.png·qa_contact.png 바이트 불변(sha256 동일) 확인,
+manifest에 effective_image_model="gpt-image"·NOT_VERIFIED 추가.
+검증(재실행): dotnet build Release 오류0. check_stage — art-pipeline
+10/11(provider codex·credentials false·raw true·manifest 유효·팔레트0·
+타일64×32·캔버스64·물리두께0·가구 기록+유효-8, effective_image_model만
+"BLOCKED" 방출)·character-rig 5/5·iso-grid 17/17·project-boot 2/2.
+capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot.Run이
+스테이징 사본 실카메라로 out/captures/art_pipeline.png(1692×324,91KB) 생성.
+남은 문제: effective_image_model 고정 기대값(gpt-image-2.5-sunburst)과 이
+계정 OAuth 백엔드 고정값(gpt-image)의 정직한 불일치 — 위조 없이 BLOCKED로
+보고. 게이트·provenance 측정값 편집 없음.

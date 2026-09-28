@@ -355,10 +355,38 @@ def contact_sheet(cells, metas, zoom=2):
     return img
 
 
+def job_provenance_model(jobs):
+    """Measured backend model union across the jobs' own provenance files.
+
+    Reads art/generated/<id>/provenance.json (written by tools/assets.py from
+    the PNG's vendor-signed C2PA claim and the preserved rollout). Returns
+    (effective_model, verification): effective_model is the single measured
+    backend string, 'DIVERGENT' when jobs disagree, None when any provenance
+    is missing; verification is VERIFIED only when every job's provenance
+    verified the requested model. This is the measured record the manifest
+    publishes - the requested model is never copied here."""
+    models, verifs = set(), set()
+    for job in jobs:
+        p = ART / 'generated' / job['id'] / 'provenance.json'
+        try:
+            pr = json.loads(p.read_text(encoding='utf8'))
+        except (OSError, ValueError):
+            return None, 'MISSING'
+        em = pr.get('effective_image_model')
+        if not em:
+            return None, 'MISSING'
+        models.add(em)
+        verifs.add(pr.get('model_verification'))
+    eff = next(iter(models)) if len(models) == 1 else 'DIVERGENT'
+    ver = 'VERIFIED' if verifs == {'VERIFIED'} else 'NOT_VERIFIED'
+    return eff, ver
+
+
 def build():
     catalog = load_catalog()
     jobs = json.loads((ART / 'jobs.json').read_text(encoding='utf8'))
     provider = json.loads((ART / 'provider.json').read_text(encoding='utf8'))
+    eff_model, model_ver = job_provenance_model(jobs)
     APPROVED.mkdir(parents=True, exist_ok=True)
 
     cells, metas, qa = [], [], {}
@@ -395,6 +423,8 @@ def build():
         'thickness_mode': 'visual_only',
         'provider': provider['provider'],
         'requested_image_model': provider.get('requested_image_model'),
+        'effective_image_model': eff_model,
+        'model_verification': model_ver,
         'palette_variants_generated': 0,
         'frames': frames,
     }

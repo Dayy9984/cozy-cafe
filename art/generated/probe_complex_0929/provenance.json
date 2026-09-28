@@ -1,0 +1,16 @@
+{
+  "provider": "codex",
+  "purpose": "live capability probe (not a job, not for approval)",
+  "requested_image_model": "gpt-image-2.5-sunburst",
+  "effective_image_model": "gpt-image",
+  "model_evidence": {
+    "c2pa": "gpt-image",
+    "rollout": null
+  },
+  "model_verification": "NOT_VERIFIED",
+  "raw_sha256": "ac9c5d1f7679ca92bc8f381f41ca9ec1a1ba3617a6642b09c9b776f7bbb02d00",
+  "session_id": "01a0e8cc-588d-7e22-adab-855bac71a55a",
+  "elapsed_seconds": 76.643,
+  "game_asset_approval": "NOT_APPLICABLE",
+  "note": "2026-09-29 live re-probe with a deliberately complex scene prompt to test backend Sunburst escalation: C2PA still reports gpt-image, confirming the OAuth image_gen surface cannot select or report gpt-image-2.5-sunburst even for complex prompts."
+}

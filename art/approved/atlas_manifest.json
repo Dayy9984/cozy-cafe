@@ -11,6 +11,8 @@
   "thickness_mode": "visual_only",
   "provider": "codex",
   "requested_image_model": "gpt-image-2.5-sunburst",
+  "effective_image_model": "gpt-image",
+  "model_verification": "NOT_VERIFIED",
   "palette_variants_generated": 0,
   "frames": [
     {

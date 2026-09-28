@@ -1,0 +1,16 @@
+{
+  "provider": "codex",
+  "purpose": "live capability probe (not a job, not for approval)",
+  "requested_image_model": "gpt-image-2.5-sunburst",
+  "effective_image_model": "gpt-image",
+  "model_evidence": {
+    "c2pa": "gpt-image",
+    "rollout": null
+  },
+  "model_verification": "NOT_VERIFIED",
+  "raw_sha256": "c61fc4711f489ce4b7d0b756172bdfc33a0ad6311143c9035681bbd9e711bb34",
+  "session_id": "01a0e8ca-e8bd-7ba2-8e7d-6393f7016165",
+  "elapsed_seconds": 33.009,
+  "game_asset_approval": "NOT_APPLICABLE",
+  "note": "2026-09-29 live re-probe through the codex ChatGPT OAuth provider (no --model flag). Backend model measured from the vendor-signed PNG C2PA claim; the image_gen item carries no model field. Prompt asked for gpt-image-2.5-sunburst; backend still reports gpt-image, so the requested model remains unverifiable on this surface."
+}
