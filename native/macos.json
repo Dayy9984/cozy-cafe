@@ -1,0 +1,40 @@
+{
+  "os": "macos",
+  "status": "BLOCKED",
+  "recorded_utc": 1790676356,
+  "blocked_reason": "no macOS host on this Windows build machine; the produced Mach-O arm64 apphost cannot be executed or verified here, and Unity has no macOS playback module installed, so no GUI run evidence exists to back a PASS",
+  "probes": [
+    {
+      "probe": "host_os",
+      "result": "cygwin",
+      "macos_host_present": false
+    },
+    {
+      "probe": "unity_macos_build_module",
+      "installed_playback_engines": [
+        "C:/Program Files/Unity/Hub/Editor/6000.6.3f1/Editor/Data/PlaybackEngines/WebGLSupport",
+        "C:/Program Files/Unity/Hub/Editor/6000.6.3f1/Editor/Data/PlaybackEngines/windowsstandalonesupport"
+      ],
+      "macos_module_present": false
+    },
+    {
+      "probe": "dotnet_osx_apphost_pack",
+      "cached_osx_host_packs": [],
+      "apphost_pack_present": false
+    },
+    {
+      "probe": "dotnet_osx_publish_attempt",
+      "attempted": true,
+      "rc": 0,
+      "output_tail": "  복원할 프로젝트를 확인하는 중...\n  복원할 모든 프로젝트가 최신 상태입니다.\n  GameCli -> C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\native-release\\game\\GameCli\\bin\\Release\\net8.0\\osx-arm64\\GameCli.dll\n  GameCli -> C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\native-release\\out\\builds\\macos\\\n"
+    }
+  ],
+  "build": {
+    "path": "out/builds/macos/GameCli",
+    "sha256": "52d39fb6c0e968a64b4aa1f1da67f497eeb4f916768acd92298a45409639d9ff",
+    "bytes": 105744,
+    "kind": "dotnet-osx-arm64-apphost",
+    "mach_o_magic_verified": true,
+    "runnable_here": false
+  }
+}

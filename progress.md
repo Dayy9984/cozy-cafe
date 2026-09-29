@@ -944,3 +944,50 @@ character_presets의 상위검색이 실패하던 문제(rc=2 FileNotFoundExcept
 남은 문제: 없음(이 스트림 범위). Unity 호스트는 환경 오버라이드 보수 후
 실카메라 경로로 캡처 성공. art-pipeline effective_image_model은
 별도 스트림의 계정 표면 한계로 선언형 BLOCKED 유지 — 본 스트림 변경 없음.
+
+## native-release — 실 네이티브 빌드·실행 증거 (2026-09-29)
+
+구축: Core/Native/NativeRelease.cs 신규 — 코어 레벨 증거 검증기.
+native/{os}.json 구조·os 일치·build sha256 소문자hex 재계산·evidence
+경로 존재+sha256 재검증·필수 네이티브 시나리오 커버·PASS는 실측 증거
+동반·BLOCKED는 reason+probes 필수. 선택 필드는 관용 파서 사용(엄격
+SaveDoc 재사용 금지). StageCases "native-release" 케이스 배선 —
+windows_native·macos_native 게이트키 + 진단키 실측 emit.
+
+Unity 런타임: Unity/NativeOverlayScenario.cs — 빌드된 플레이어 내부에서
+실OS API 시나리오 구동(동일 시나리오 양OS 적용 가능). IntegrationModule
+실세션 부팅→카페 래스터 프레젠트→Win32: SetProcessDpiAwarenessContext
+readback·LWA_COLORKEY 실투명+스크린픽셀 실측·EnumDisplayMonitors
+이동·WS_EX_TOPMOST z-order vs 실notepad·WndProc 서브클래스로
+WM_NCHITTEST=HTTRANSPARENT 실클릭스루(WindowFromPoint/실클릭 도달·
+notepad 실제 활성화 확인)·복구 제어=트레이아이콘(쉘 GetRect 등록확인+
+WM_TRAYICON 콜백 실토글)+핫키 → GetForegroundWindow 실전이·
+한국어 TIP(0x4120412)+VK_HANGUL 토글 실자모합성 '한글'·WM_POWERBROADCAST
+서스펜드→실체크포인트/리줌→SettleOffline 실정산. 와치독+스텝마커,
+로깅 락, 외부윈도우 호출은 워커스레드/비동기(SWP_ASYNCWINDOWPOS)로
+교착 회피. MjpegMp4.cs — 백그라운드 스레드 화면캡처→유효 MJPEG MP4
+(ftyp/mdat/moov) 기록. Editor/NativePlayerBuild.cs — BuildPipeline
+Windows 스탠드얼론 빌드 엔트리. tools/native_run.py — 스테이징→빌드→
+sha256→실행→로그/녹화 수집→windows.json + macOS 프로브 리포트 작성.
+
+검증(실행, DOTNET_BIN=C:/Users/dlgkr/dotnet/dotnet.exe):
+- dotnet build -c Release 경고0·오류0.
+- Unity 6000.6.3f1 BuildPlayer → out/builds/windows/CozyCafe.exe
+  (sha256 96b492cb…70873) → GUI 실실행 43.2s rc=0.
+- native/evidence/windows-run.log + windows-recording.mp4(91프레임
+  JPEG·ftyp/mdat/moov 유효) 해시 전부 재계산 일치.
+- 8/8 시나리오 PASS 실측: dpi(aware2·120DPI), transparency
+  (chroma key+아트 가시), multi_monitor(모니터1 이동식별),
+  always_on_top(z-order 실측), click_through_recovery(hittest=-1·
+  클릭 도달·핫키복구·트레이콜백복구), focus(실전이+워커폴백),
+  korean_ime('한글' 실합성), sleep(PBT 실체크포인트+3s 정산).
+- check_stage integration 회귀 6/6 exit 0.
+- macOS: 호스트가 Windows, Unity macOS 빌드 모듈·osx apphost 캐시
+  부재. osx-arm64 크로스 publish로 실 Mach-O arm64 실행파일 생성 확인
+  (프로브로 기록)했으나 미실행 → native/macos.json 정직 BLOCKED
+  (reason+probes 기록). 동결 게이트 macos_native=true 불충족 —
+  check_stage native-release 는 MISMATCH/CHECK_FAIL 유지. 허위 PASS
+  없음.
+
+남은 문제: macOS 실GUI 실행 환경(macOS 호스트+Unity macOS 모듈)이
+있어야 macos_native PASS 가능. Windows 경로는 실측 완료.

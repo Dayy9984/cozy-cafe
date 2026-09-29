@@ -7,6 +7,7 @@ using CozyCafe.Core.Economy;
 using CozyCafe.Core.Integration;
 using CozyCafe.Core.Iso;
 using CozyCafe.Core.Layout;
+using CozyCafe.Core.Native;
 using CozyCafe.Core.Render;
 using CozyCafe.Core.Research;
 using CozyCafe.Core.Save;
@@ -63,6 +64,8 @@ namespace CozyCafe.Core.Gauntlet
                     return UiLocalUgc();
                 case "integration":
                     return Integration();
+                case "native-release":
+                    return NativeRelease();
                 default:
                     return null;
             }
@@ -1867,6 +1870,38 @@ namespace CozyCafe.Core.Gauntlet
             foreach (var id in reserveIds) lab.Reserve(id);
             lab.SimulateSeconds(7200.0);
             return new ResearchScenario { Econ = econ, Research = lab };
+        }
+
+        /// <summary>
+        /// Native-OS release evidence: the values here are computed by the
+        /// NativeReleaseModule verifying the recorded native/{os}.json
+        /// reports on disk — report status, required evidence-case coverage,
+        /// and a fresh sha256 of every recorded artifact (player build, raw
+        /// run log, screen recording). This runner never asserts an OS ran:
+        /// a report that records BLOCKED/FAIL, or any artifact hash that
+        /// does not match the file on disk, keeps the key off true.
+        /// </summary>
+        private static List<CaseResult> NativeRelease()
+        {
+            var cases = new List<CaseResult>();
+            var module = new NativeReleaseModule();
+            var win = module.VerifyOs("windows");
+            var mac = module.VerifyOs("macos");
+            cases.Add(new CaseResult("windows_native", win.CaseValue));
+            cases.Add(new CaseResult("macos_native", mac.CaseValue));
+            cases.Add(new CaseResult("windows_report_status", win.Status));
+            cases.Add(new CaseResult("windows_cases_passed", win.CasesPassed));
+            cases.Add(new CaseResult("windows_evidence_verified",
+                win.EvidenceVerified));
+            cases.Add(new CaseResult("windows_build_sha256_verified",
+                win.BuildSha256 != null));
+            cases.Add(new CaseResult("windows_verify_errors",
+                win.Errors.Count));
+            cases.Add(new CaseResult("macos_report_status", mac.Status));
+            cases.Add(new CaseResult("macos_blocked_documented",
+                mac.BlockedDocumented));
+            cases.Add(new CaseResult("macos_verify_errors", mac.Errors.Count));
+            return cases;
         }
 
         private static object JsonNumber(Fraction f)
