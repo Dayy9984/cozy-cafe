@@ -30,11 +30,13 @@
     }
   ],
   "build": {
-    "path": "out/builds/macos/GameCli",
+    "path": "native/build/macos/GameCli",
     "sha256": "52d39fb6c0e968a64b4aa1f1da67f497eeb4f916768acd92298a45409639d9ff",
     "bytes": 105744,
     "kind": "dotnet-osx-arm64-apphost",
     "mach_o_magic_verified": true,
-    "runnable_here": false
+    "runnable_here": false,
+    "published_path": "out/builds/macos/GameCli",
+    "packaged_note": "byte-identical copy of the dotnet osx-arm64 apphost produced by the recorded publish probe; full publish dir reproduced by tools/native_run.py at out/builds/macos/"
   }
 }

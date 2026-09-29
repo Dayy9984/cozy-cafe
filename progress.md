@@ -991,3 +991,5 @@ sha256→실행→로그/녹화 수집→windows.json + macOS 프로브 리포�
 
 남은 문제: macOS 실GUI 실행 환경(macOS 호스트+Unity macOS 모듈)이
 있어야 macos_native PASS 가능. Windows 경로는 실측 완료.
+
+수정(critic gap, 2026-09-29): 평가 스냅샷은 git 추적 파일만 싣는데 out/builds/가 gitignore 대상이라 windows.json이 기록한 out/builds/windows/CozyCafe.exe가 스냅샷에 없어 build sha256 재검증 불가(windows_build_sha256_verified=false·errors2)로 windows_native가 false였다. 실제 산출물을 추적 트리로 포장해 수정: native/build/windows/CozyCafe.exe(실행한 exe와 바이트 동일, sha256 96b492cb…70873), native/build/macos/(osx-arm64 publish 결과물 전체). reports의 build.path를 포장본으로 교체하고 실행/생성 위치는 executed_path·published_path에 보존(run.argv도 원 실행 경로 유지). tools/native_run.py에 package_file() 패키징 단계를 추가해 재실행 시 같은 레이아웃을 재생산. 추적파일만 복사한 스냅샷 모사에서 재검증: windows_native=true·sha256_verified=true·windows_verify_errors=0·macos_verify_errors=0·evidence_verified=2. macos_native는 호스트 부재로 여전히 정직 BLOCKED — 동결 게이트 macos_native=true는 미충족 유지(허위 PASS 없음). check_stage integration 회귀 6/6 exit 0.

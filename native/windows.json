@@ -8,10 +8,12 @@
     "editor_version": "6000.6.3f1"
   },
   "build": {
-    "path": "out/builds/windows/CozyCafe.exe",
+    "path": "native/build/windows/CozyCafe.exe",
     "sha256": "96b492cb271111251fe42b8646e65370a1b7b566773a1e35b34c3f2d1ae70873",
     "bytes": 667136,
-    "kind": "unity-standalone-windows64"
+    "kind": "unity-standalone-windows64",
+    "executed_path": "out/builds/windows/CozyCafe.exe",
+    "packaged_note": "byte-identical copy of the exe that ran; the full player dir (UnityPlayer.dll, CozyCafe_Data) is reproduced by tools/native_run.py at out/builds/windows/"
   },
   "run": {
     "argv": [

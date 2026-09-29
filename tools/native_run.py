@@ -55,6 +55,24 @@ def rel(p):
         os.sep, "/")
 
 
+PACKAGE = {
+    "windows": NATIVE_DIR / "build" / "windows",
+    "macos": NATIVE_DIR / "build" / "macos",
+}
+
+
+def package_file(src, os_name):
+    """Copy a recorded build artifact into the tracked native/build/<os>/
+    tree. out/builds/ is gitignored build scratch: snapshots of this
+    workspace only carry tracked files, so the report must point at the
+    packaged copy for its sha256 to verify anywhere the report travels."""
+    dst_dir = PACKAGE[os_name]
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    dst = dst_dir / Path(src).name
+    shutil.copy2(str(src), str(dst))
+    return dst
+
+
 def unity_build_windows():
     """Build the real standalone player via the editor entry point on a
     staged copy. Returns (exe_path, log_tail) or (None, log_tail)."""
@@ -170,11 +188,17 @@ def write_windows_report():
         report["build_log_tail"] = build_log
         write_report("windows", report)
         return report
+    packaged = package_file(build_path, "windows")
     report["build"] = {
-        "path": rel(build_path),
-        "sha256": sha256(build_path),
-        "bytes": Path(build_path).stat().st_size,
+        "path": rel(packaged),
+        "sha256": sha256(packaged),
+        "bytes": packaged.stat().st_size,
         "kind": "unity-standalone-windows64",
+        "executed_path": rel(build_path),
+        "packaged_note": (
+            "byte-identical copy of the exe that ran; the full player dir "
+            "(UnityPlayer.dll, CozyCafe_Data) is reproduced by "
+            "tools/native_run.py at out/builds/windows/"),
     }
     summary, meta = run_windows_player()
     # Raw log tail: orchestrator appends its own harness facts after the
@@ -284,13 +308,24 @@ def write_macos_report():
         magics = ("cffaedfe", "cffaedff", "feedface", "feedfacf",
                   "cafebabe")
         macho = exe.read_bytes()[:4].hex() in magics
+        pkg_dir = PACKAGE["macos"]
+        pkg_dir.mkdir(parents=True, exist_ok=True)
+        for f in outdir.iterdir():
+            if f.is_file():
+                shutil.copy2(str(f), str(pkg_dir / f.name))
+        pkg = pkg_dir / "GameCli"
         report["build"] = {
-            "path": rel(exe),
-            "sha256": sha256(exe),
-            "bytes": exe.stat().st_size,
+            "path": rel(pkg),
+            "sha256": sha256(pkg),
+            "bytes": pkg.stat().st_size,
             "kind": "dotnet-osx-arm64-apphost",
             "mach_o_magic_verified": bool(macho),
             "runnable_here": False,
+            "published_path": rel(exe),
+            "packaged_note": (
+                "byte-identical copy of the dotnet osx-arm64 apphost "
+                "produced by the recorded publish probe; full publish dir "
+                "reproduced by tools/native_run.py at out/builds/macos/"),
         }
     write_report("macos", report)
     return report
