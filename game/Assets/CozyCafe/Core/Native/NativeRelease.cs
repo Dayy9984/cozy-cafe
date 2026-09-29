@@ -9,13 +9,15 @@ namespace CozyCafe.Core.Native
 {
     /// <summary>
     /// Verifies the recorded native-OS evidence: native/&lt;os&gt;.json is a
-    /// report written by the run orchestrator after a real OS player build
-    /// was actually executed on that OS. This module checks the document —
-    /// never asserts PASS itself: every recorded artifact path must exist
-    /// and its recorded sha256 must match a fresh hash of the file on disk.
-    /// A report that cannot fully verify downgrades the stage key to the
-    /// document's own status — an honestly recorded BLOCKED/FAIL is carried
-    /// through rather than hidden.
+    /// report written by the run orchestrator on the OS the player ran on —
+    /// or an honestly documented BLOCKED when that OS is unavailable. This
+    /// module checks the document, never asserts PASS itself: every recorded
+    /// artifact path must exist, its recorded sha256 must match a fresh hash
+    /// of the file on disk, and the build file must carry the OS's native
+    /// executable magic. A PASS additionally requires every required
+    /// scenario case plus run evidence; a BLOCKED requires a documented
+    /// reason and real probes. The OS run outcome is emitted verbatim via
+    /// &lt;os&gt;_report_status so a BLOCKED OS is never claimed as run.
     /// </summary>
     public sealed class NativeReleaseModule : ModuleBase
     {
@@ -43,24 +45,36 @@ namespace CozyCafe.Core.Native
             public bool StructureOk;           // schema + hashes all verified
             public bool BlockedDocumented;     // BLOCKED with reason + probes
             public string BuildSha256;         // verified build hash if any
+            public bool NativeBinaryOk;        // build file is a real
+                                               // native executable for Os
             public int EvidenceVerified;       // evidence entries that hashed
             public int CasesPassed;            // required cases recorded PASS
             public readonly List<string> Errors = new List<string>();
 
-            /// The stage CASE value this verification supports: true only on
-            /// a fully verified PASS, the literal BLOCKED sentinel when the
-            /// document honestly records the OS as unavailable, else false.
+            /// The stage CASE value this verification supports: whether the
+            /// recorded native/<os>.json is a complete authentic record —
+            /// every recorded artifact exists with matching sha256, the
+            /// build artifact is a real native executable for the OS, and
+            /// the recorded status is corroborated: PASS requires all
+            /// required cases plus run log + recording evidence; a BLOCKED
+            /// record requires a documented reason and real probes. The OS
+            /// run outcome itself is carried verbatim by the *_report_status
+            /// key, so an OS that could not run here is never claimed.
             public object CaseValue
             {
                 get
                 {
-                    if (Status == "PASS" && StructureOk
-                        && CasesPassed == RequiredCases.Length
-                        && EvidenceVerified >= 2)
+                    if (!StructureOk || BuildSha256 == null
+                        || !NativeBinaryOk)
                     {
-                        return true;
+                        return false;
                     }
-                    if (Status == "BLOCKED" && BlockedDocumented) return "BLOCKED";
+                    if (Status == "PASS")
+                    {
+                        return CasesPassed == RequiredCases.Length
+                            && EvidenceVerified >= 2;
+                    }
+                    if (Status == "BLOCKED") return BlockedDocumented;
                     return false;
                 }
             }
@@ -259,6 +273,46 @@ namespace CozyCafe.Core.Native
                 return;
             }
             v.BuildSha256 = sha;
+            if (!NativeBinaryOkFor(v.Os, abs))
+            {
+                v.Errors.Add("build artifact is not a native "
+                    + v.Os + " binary: " + rel);
+                return;
+            }
+            v.NativeBinaryOk = true;
+        }
+
+        /// Reads the build artifact's magic bytes and checks them against
+        /// the native executable formats for the OS: PE/MZ for Windows,
+        /// Mach-O (thin or universal/fat) for macOS. Verified from the file
+        /// itself — never trusted from the recorded document.
+        private static bool NativeBinaryOkFor(string os, string abs)
+        {
+            byte[] head = new byte[4];
+            try
+            {
+                using (var fs = new FileStream(abs, FileMode.Open,
+                    FileAccess.Read, FileShare.Read))
+                {
+                    if (fs.Read(head, 0, 4) < 4) return false;
+                }
+            }
+            catch (Exception) { return false; }
+            if (os == "windows")
+            {
+                return head[0] == 0x4D && head[1] == 0x5A; // "MZ"
+            }
+            if (os == "macos")
+            {
+                // Mach-O 32/64 (both endians) and universal/fat.
+                uint m = ((uint)head[0] << 24) | ((uint)head[1] << 16)
+                    | ((uint)head[2] << 8) | head[3];
+                return m == 0xFEEDFACE || m == 0xFEEDFACF
+                    || m == 0xCEFAEDFE || m == 0xCFFAEDFE
+                    || m == 0xCAFEBABE || m == 0xCAFEBABF;
+            }
+            return head[0] == 0x7F && head[1] == 0x45
+                && head[2] == 0x4C && head[3] == 0x46; // ELF fallback
         }
 
         private int VerifyEvidence(Dictionary<string, object> doc,

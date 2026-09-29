@@ -1,8 +1,8 @@
 {
   "os": "macos",
   "status": "BLOCKED",
-  "recorded_utc": 1790676356,
-  "blocked_reason": "no macOS host on this Windows build machine; the produced Mach-O arm64 apphost cannot be executed or verified here, and Unity has no macOS playback module installed, so no GUI run evidence exists to back a PASS",
+  "recorded_utc": 1790684769,
+  "blocked_reason": "no macOS host on this Windows build machine; the produced macOS player cannot be executed or verified here, so no GUI run evidence exists to back a PASS",
   "probes": [
     {
       "probe": "host_os",
@@ -13,9 +13,12 @@
       "probe": "unity_macos_build_module",
       "installed_playback_engines": [
         "C:/Program Files/Unity/Hub/Editor/6000.6.3f1/Editor/Data/PlaybackEngines/WebGLSupport",
-        "C:/Program Files/Unity/Hub/Editor/6000.6.3f1/Editor/Data/PlaybackEngines/windowsstandalonesupport"
+        "C:/Program Files/Unity/Hub/Editor/6000.6.3f1/Editor/Data/PlaybackEngines/windowsstandalonesupport",
+        "C:\\Users\\dlgkr/UnityLocal/6000.6.3f1/Editor/Data/PlaybackEngines/MacStandaloneSupport",
+        "C:\\Users\\dlgkr/UnityLocal/6000.6.3f1/Editor/Data/PlaybackEngines/WebGLSupport",
+        "C:\\Users\\dlgkr/UnityLocal/6000.6.3f1/Editor/Data/PlaybackEngines/windowsstandalonesupport"
       ],
-      "macos_module_present": false
+      "macos_module_present": true
     },
     {
       "probe": "dotnet_osx_apphost_pack",
@@ -24,19 +27,25 @@
     },
     {
       "probe": "dotnet_osx_publish_attempt",
+      "attempted": false
+    },
+    {
+      "probe": "unity_macos_player_build",
       "attempted": true,
-      "rc": 0,
-      "output_tail": "  복원할 프로젝트를 확인하는 중...\n  복원할 모든 프로젝트가 최신 상태입니다.\n  GameCli -> C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\native-release\\game\\GameCli\\bin\\Release\\net8.0\\osx-arm64\\GameCli.dll\n  GameCli -> C:\\Users\\dlgkr\\cozy_cafe\\run_devin_v2\\work\\builders\\native-release\\out\\builds\\macos\\\n"
+      "editor": "C:\\Users\\dlgkr/UnityLocal/6000.6.3f1/Editor/Unity.exe",
+      "succeeded": true,
+      "app_path": "out/builds/macos/CozyCafe.app",
+      "log_tail": "3808},{\"Utility\":2674262},{\"Curl\":2498},{\"PoolAlloc\":2168},{\"AI\":80},{\"TypeTree\":19589},{\"ScriptManager\":12656},{\"CodeReload\":448},{\"RuntimeInitializeOnLoadManager\":64},{\"Sprites\":102},{\"SpriteAtlas\":120},{\"GI\":7816},{\"Director\":8296},{\"CloudService\":7296},{\"WebRequest\":15778},{\"VR\":49650},{\"SceneManager\":608},{\"Video\":64},{\"LazyScriptCache\":32},{\"Camera\":729},{\"Secure\":2377},{\"Image\":65536},{\"SerializationCache\":9256},{\"APIUpdating\":10320},{\"Subsystems\":336},{\"VirtualTexturing\":57888},{\"StaticSafetyDebugInfo\":278528},{\"Analytics\":768},{\"Hierarchy\":1188},{\"UIElements\":40},{\"CoreStats\":14456},{\"Identifiers\":7152},{\"Gui\":128},{\"EditorUtility\":92876},{\"VersionControl\":8},{\"Undo\":931},{\"AssetDatabase\":396915},{\"AssetImporter\":40},{\"EditorGi\":328},{\"UnityConnect\":40441},{\"Upm\":1912},{\"UpmDiagnostics\":8},{\"AssetCompliance\":96},{\"DrivenProperties\":72},{\"LocalIPC\":260},{\"ProfilerEditor\":9746},{\"CoreBusinessMetrics\":3584},{\"Windowing\":456},{\"Licensing\":12757},{\"AssetReference\":32},{\"IPCStream\":32}]}\n~StackAllocator(ALLOC_TEMP_MAIN) m_LastAlloc not NULL. Did you forget to call FreeAllStackAllocations()? To get more information, run app with -diag-temp-memory-leak-validation cmd line argument"
     }
   ],
   "build": {
-    "path": "native/build/macos/GameCli",
-    "sha256": "52d39fb6c0e968a64b4aa1f1da67f497eeb4f916768acd92298a45409639d9ff",
-    "bytes": 105744,
-    "kind": "dotnet-osx-arm64-apphost",
+    "path": "native/build/macos/CozyCafe.app/Contents/MacOS/game",
+    "sha256": "1dfe746409eab5a34f618d63a208b97358b4101cd8554d19ec762d97b80ce1de",
+    "bytes": 34168,
+    "kind": "unity-standalone-osx-player",
     "mach_o_magic_verified": true,
     "runnable_here": false,
-    "published_path": "out/builds/macos/GameCli",
-    "packaged_note": "byte-identical copy of the dotnet osx-arm64 apphost produced by the recorded publish probe; full publish dir reproduced by tools/native_run.py at out/builds/macos/"
+    "built_path": "out/builds/macos/CozyCafe.app",
+    "packaged_note": "byte-identical copy of the Unity macOS player bundle produced by the recorded unity_macos_player_build probe; build.path is the bundle's real Mach-O executable (Contents/MacOS/game)"
   }
 }

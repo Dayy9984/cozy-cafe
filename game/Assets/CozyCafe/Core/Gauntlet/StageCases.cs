@@ -1900,6 +1900,10 @@ namespace CozyCafe.Core.Gauntlet
             cases.Add(new CaseResult("macos_report_status", mac.Status));
             cases.Add(new CaseResult("macos_blocked_documented",
                 mac.BlockedDocumented));
+            cases.Add(new CaseResult("macos_build_sha256_verified",
+                mac.BuildSha256 != null));
+            cases.Add(new CaseResult("macos_native_binary_ok",
+                mac.NativeBinaryOk));
             cases.Add(new CaseResult("macos_verify_errors", mac.Errors.Count));
             return cases;
         }

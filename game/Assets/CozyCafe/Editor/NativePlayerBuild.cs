@@ -8,32 +8,50 @@ using UnityEngine;
 namespace CozyCafe.Editor
 {
     /// <summary>
-    /// Builds the real Windows standalone player carrying the
+    /// Builds the real standalone players carrying the
     /// NativeOverlayScenario. Invoked as:
     ///   unity -batchmode -projectPath &lt;staged game&gt; -executeMethod
     ///         CozyCafe.Editor.NativePlayerBuild.BuildWindows -quit
-    /// Env contract: GAUNTLET_NATIVE_BUILD_EXE = absolute .exe output path.
-    /// The scene is generated, built, then deleted from the staged copy —
-    /// the tracked tree is never touched (the adapter stages game/ first).
+    ///   unity -batchmode -projectPath &lt;staged game&gt; -executeMethod
+    ///         CozyCafe.Editor.NativePlayerBuild.BuildMacOS -quit
+    /// Env contract: GAUNTLET_NATIVE_BUILD_EXE = absolute .exe output path
+    /// (Windows), GAUNTLET_NATIVE_BUILD_APP = absolute .app output path
+    /// (macOS). The scene is generated, built, then deleted from the staged
+    /// copy — the tracked tree is never touched (the adapter stages game/
+    /// first).
     /// </summary>
     public static class NativePlayerBuild
     {
         public static void BuildWindows()
         {
+            BuildPlayer("GAUNTLET_NATIVE_BUILD_EXE",
+                BuildTarget.StandaloneWindows64);
+        }
+
+        public static void BuildMacOS()
+        {
+            BuildPlayer("GAUNTLET_NATIVE_BUILD_APP",
+                BuildTarget.StandaloneOSX);
+        }
+
+        private static void BuildPlayer(string outEnvVar,
+            BuildTarget target)
+        {
             int exitCode = 2;
             string scenePath = null;
             try
             {
-                string exe = Environment.GetEnvironmentVariable(
-                    "GAUNTLET_NATIVE_BUILD_EXE");
+                string exe = Environment.GetEnvironmentVariable(outEnvVar);
                 if (string.IsNullOrEmpty(exe))
                 {
                     Debug.LogError("NativePlayerBuild: "
-                        + "GAUNTLET_NATIVE_BUILD_EXE is required");
+                        + outEnvVar + " is required");
                     EditorApplication.Exit(2);
                     return;
                 }
-                string dir = Path.GetDirectoryName(exe);
+                string dir = Path.GetDirectoryName(
+                    exe.TrimEnd('/', Path.DirectorySeparatorChar,
+                        Path.AltDirectorySeparatorChar));
                 if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
 
                 var scene = EditorSceneManager.NewScene(
@@ -45,16 +63,16 @@ namespace CozyCafe.Editor
                 AssetDatabase.SaveAssets();
 
                 var result = BuildPipeline.BuildPlayer(
-                    new[] { scenePath }, exe,
-                    BuildTarget.StandaloneWindows64, BuildOptions.None);
+                    new[] { scenePath }, exe, target, BuildOptions.None);
                 bool ok = result != null
                     && result.summary.result ==
                         UnityEditor.Build.Reporting.BuildResult.Succeeded
-                    && File.Exists(exe);
+                    && (File.Exists(exe) || Directory.Exists(exe));
                 Debug.Log("NativePlayerBuild result=" +
                     (result == null ? "null"
                         : result.summary.result.ToString())
-                    + " exe=" + exe + " exists=" + File.Exists(exe));
+                    + " target=" + target + " out=" + exe
+                    + " exists=" + ok);
                 exitCode = ok ? 0 : 2;
             }
             catch (Exception e)

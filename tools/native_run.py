@@ -9,14 +9,17 @@ suspend/resume handling), then hash the raw run log + MP4 screen recording
 it produced and write native/windows.json from the results.
 
 macos: honestly records BLOCKED — this is a Windows host: it probes for a
-macOS host, a Unity macOS playback module, and a dotnet osx apphost pack
-and records the measured facts; it never claims a build it cannot run.
+macOS host, a Unity macOS playback module, and a dotnet osx apphost pack,
+builds the real Unity macOS player (.app) of the same scenario when the
+editor's Mac module is present, and records the measured facts; it never
+claims a run that did not happen.
 
 usage: python3 tools/native_run.py windows|macos|all
 """
 import glob
 import json
 import os
+import plistlib
 import shutil
 import subprocess
 import sys
@@ -110,6 +113,83 @@ def unity_build_windows():
     if rc == 0 and WIN_EXE.is_file():
         return str(WIN_EXE), tail
     return None, "unity build rc=%d\n%s" % (rc, tail)
+
+MAC_APP = ROOT / "out" / "builds" / "macos" / "CozyCafe.app"
+BUILD_METHOD_MAC = "CozyCafe.Editor.NativePlayerBuild.BuildMacOS"
+
+
+def editor_has_mac_module(engine):
+    """True when the editor's own PlaybackEngines contains a macOS player
+    module (MacStandaloneSupport or OSXStandaloneSupport)."""
+    try:
+        pe = Path(engine).parent / "Data" / "PlaybackEngines"
+        if not pe.is_dir():
+            return False
+        return any("mac" in c.name.lower() or "osx" in c.name.lower()
+                   for c in pe.iterdir())
+    except OSError:
+        return False
+
+
+def find_unity_macos_editors():
+    """All Unity editor installs visible on this host that carry a real
+    macOS playback module — the Program Files hub installs plus any
+    user-level copy assembled for this purpose."""
+    cands = []
+    env = os.environ.get("UNITY_BIN")
+    if env:
+        cands.append(env)
+    cands += glob.glob(
+        os.path.expanduser("~/UnityLocal/*/Editor/Unity.exe"))
+    userprofile = os.environ.get("USERPROFILE")
+    if userprofile:
+        cands += glob.glob(os.path.join(
+            userprofile, "UnityLocal", "*", "Editor", "Unity.exe"))
+    cands += glob.glob(
+        "C:/Program Files/Unity/Hub/Editor/*/Editor/Unity.exe")
+    out = []
+    for e in cands:
+        if Path(e).is_file() and editor_has_mac_module(e):
+            out.append(str(e))
+    return out
+
+
+def unity_build_macos(engine):
+    """Build the real macOS standalone player (.app bundle) of the same
+    NativeOverlayScenario via the editor entry point on a staged copy.
+    Returns (app_dir_or_None, log_tail)."""
+    if not unity_matches_project(engine):
+        return None, ("unity %s does not match project %s"
+                      % (engine, project_editor_version()))
+    staged_root, staged_game = stage_unity_project()
+    fd, log_path = tempfile.mkstemp(prefix="native-mac-build-log-",
+                                    suffix=".txt")
+    os.close(fd)
+    env = os.environ.copy()
+    env["GAUNTLET_NATIVE_BUILD_APP"] = native_path(MAC_APP)
+    env["COZYCAFE_MVP_JSON"] = native_path(ROOT / "data" / "mvp.json")
+    env["COZYCAFE_WORKSPACE_ROOT"] = native_path(ROOT)
+    env["COZYCAFE_DATA_DIR"] = native_path(ROOT / "data")
+    cmd = [engine, "-batchmode", "-projectPath", native_path(staged_game),
+           "-executeMethod", BUILD_METHOD_MAC, "-quit",
+           "-logFile", native_path(log_path)]
+    print("BUILD_ARGV %s" % cmd)
+    try:
+        rc = subprocess.run(cmd, cwd=str(ROOT), env=env,
+                            timeout=2400).returncode
+    except subprocess.TimeoutExpired:
+        return None, "unity macos build timed out"
+    finally:
+        shutil.rmtree(staged_root, ignore_errors=True)
+    try:
+        tail = "\n".join(Path(log_path).read_text(
+            encoding="utf-8", errors="replace").splitlines()[-40:])
+    except OSError:
+        tail = ""
+    if rc == 0 and MAC_APP.is_dir():
+        return str(MAC_APP), tail
+    return None, "unity macos build rc=%d\n%s" % (rc, tail)
+
 
 REQUIRED_CASES = [
     "transparency", "always_on_top", "click_through_recovery",
@@ -258,6 +338,13 @@ def write_macos_report():
     })
     engines = glob.glob(
         "C:/Program Files/Unity/Hub/Editor/*/Editor/Data/PlaybackEngines/*")
+    engines += glob.glob(os.path.expanduser(
+        "~/UnityLocal/*/Editor/Data/PlaybackEngines/*"))
+    userprofile = os.environ.get("USERPROFILE")
+    if userprofile:
+        engines += glob.glob(os.path.join(
+            userprofile, "UnityLocal", "*", "Editor", "Data",
+            "PlaybackEngines", "*"))
     engines += glob.glob("/Applications/Unity/Hub/Editor/*/"
                          "Unity.app/Contents/PlaybackEngines/*")
     mac_modules = [e for e in engines
@@ -292,19 +379,86 @@ def write_macos_report():
         except (subprocess.TimeoutExpired, OSError) as e:
             attempt = {"attempted": True, "error": str(e)}
     probes.append({"probe": "dotnet_osx_publish_attempt", **attempt})
+    # Real Unity macOS player build of the same NativeOverlayScenario —
+    # attempted whenever an editor with a macOS playback module exists.
+    unity_attempt = {"attempted": False}
+    app_dir = None
+    mac_editors = find_unity_macos_editors()
+    if mac_editors:
+        engine = mac_editors[0]
+        app_dir, build_log = unity_build_macos(engine)
+        unity_attempt = {"attempted": True,
+                         "editor": engine,
+                         "succeeded": app_dir is not None,
+                         "app_path": rel(app_dir) if app_dir else None,
+                         "log_tail": build_log[-1200:]}
+    probes.append({"probe": "unity_macos_player_build", **unity_attempt})
     report = {
         "os": "macos",
         "status": "BLOCKED",
         "recorded_utc": int(time.time()),
         "blocked_reason": (
             "no macOS host on this Windows build machine; the produced "
-            "Mach-O arm64 apphost cannot be executed or verified here, "
-            "and Unity has no macOS playback module installed, so no "
+            "macOS player cannot be executed or verified here, so no "
             "GUI run evidence exists to back a PASS"),
         "probes": probes,
     }
+    if app_dir:
+        plist_path = Path(app_dir) / "Contents" / "Info.plist"
+        try:
+            plist_doc = plistlib.loads(
+                plist_path.read_bytes())
+            exe_name = plist_doc.get("CFBundleExecutable")
+        except (OSError, ValueError, plistlib.InvalidFileException):
+            exe_name = None
+        exe_in_app = (Path(app_dir) / "Contents" / "MacOS" / exe_name
+                      if exe_name else None)
+        pkg_dir = PACKAGE["macos"]
+        pkg_dir.mkdir(parents=True, exist_ok=True)
+        app_pkg = pkg_dir / "CozyCafe.app"
+        if app_pkg.exists():
+            shutil.rmtree(app_pkg)
+        shutil.copytree(str(app_dir), str(app_pkg))
+        pkg = (app_pkg / "Contents" / "MacOS" / exe_name
+               if exe_name else app_pkg)
+        magics = ("cffaedfe", "cffaedff", "feedface", "feedfacf",
+                  "cafebabe", "cafebabf")
+        macho = (exe_name is not None and pkg.is_file()
+                 and pkg.read_bytes()[:4].hex() in magics)
+        if pkg.is_file():
+            report["build"] = {
+                "path": rel(pkg),
+                "sha256": sha256(pkg),
+                "bytes": pkg.stat().st_size,
+                "kind": "unity-standalone-osx-player",
+                "mach_o_magic_verified": bool(macho),
+                "runnable_here": False,
+                "built_path": rel(app_dir),
+                "packaged_note": (
+                    "byte-identical copy of the Unity macOS player "
+                    "bundle produced by the recorded "
+                    "unity_macos_player_build probe; build.path is "
+                    "the bundle's real Mach-O executable "
+                    "(Contents/MacOS/" + exe_name + ")"),
+            }
+        else:
+            report["build"] = {
+                "path": rel(app_pkg),
+                "kind": "unity-standalone-osx-player",
+                "mach_o_magic_verified": False,
+                "runnable_here": False,
+                "built_path": rel(app_dir),
+                "packaged_note": (
+                    "byte-identical copy of the Unity macOS player "
+                    "bundle produced by the recorded "
+                    "unity_macos_player_build probe; bundle executable "
+                    "could not be resolved from Info.plist"),
+            }
+        write_report("macos", report)
+        return report
     exe = outdir / "GameCli"
-    if exe.is_file() and exe.stat().st_size > 0 and             attempt.get("rc") == 0:
+    if (exe.is_file() and exe.stat().st_size > 0
+            and attempt.get("rc") == 0):
         magics = ("cffaedfe", "cffaedff", "feedface", "feedfacf",
                   "cafebabe")
         macho = exe.read_bytes()[:4].hex() in magics
