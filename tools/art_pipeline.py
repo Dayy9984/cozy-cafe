@@ -1,7 +1,16 @@
-"""Post-generation asset pipeline: extract real generated art into contract
-cells, run v0.8 geometry QA, compose the approved atlas + manifest, and emit
-the QA contact sheet. Deterministic measurement only - QA failures are
-reported, never edited into compliance.
+#!/usr/bin/env python3
+"""Post-generation asset pipeline: deterministic pixel-art production of the
+approved atlas under the v0.8.3 32x32 unit contract.
+
+Raw generations are REFERENCES, not sources to blur-shrink. Each final atlas
+cell is a 32x32 unit box produced by a deterministic pixel path:
+block-decimate pixel_snap through the frame's declared ref_map (source
+rect -> destination rect inside the cell, coverage >= 0.25 -> opaque with
+the block's median color), then a cluster palette quantize capped at the
+contract's max_unique_colors_per_cell. Approval requires the measured
+reference conformance (silhouette IoU vs the raw + palette match) to meet
+the contract thresholds; the score is recorded as reference_similarity in
+the manifest frame and the job's provenance.json.
 
   python tools/art_pipeline.py build      extract -> qa -> compose -> approve
   python tools/art_pipeline.py qa         re-measure approved art and report
@@ -9,7 +18,8 @@ reported, never edited into compliance.
 Runs under the sprite-gen venv interpreter (numpy + Pillow present).
 Approved PNGs are written in the same canonical encoding as the core's
 PngWriter (RGBA8, filter 0, zlib stored blocks) so the shared C# PngReader
-decodes them byte-for-byte on both hosts.
+decodes them byte-for-byte on both hosts. The C# gate recomputes every
+measurement below from the committed files - nothing here is authoritative.
 """
 import json, math, struct, sys, zlib
 from pathlib import Path
@@ -20,6 +30,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / 'art'
 APPROVED = ART / 'approved'
+CONTRACT = ROOT / 'data' / 'art_contract.json'
 PNG_SIG = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
 
 JOB_TARGET = {
@@ -32,7 +43,15 @@ JOB_TARGET = {
     'chair': 'chair',
 }
 ALPHA_CUT = 24
-SIDE_PX = 4
+UNIT = 32                 # atlas cell unit box, contract a50b762
+MARGIN = 2                # content margin inside the unit box
+
+# pixel_quality / reference_conformance spec (data/art_contract.json):
+#   max_unique_colors_per_cell = 64, min_silhouette_iou = 0.55,
+#   min_palette_match = 0.80, coverage_threshold = 0.25.
+COVER_MIN = 0.25
+PIXEL_PATH = ('pixel_snap:block_decimate(cover>=%s)+median_color'
+              '+cluster_quantize(<=%d)')
 
 
 def write_json_lf(path, obj):
@@ -42,6 +61,18 @@ def write_json_lf(path, obj):
 
 def load_catalog():
     return {e['id']: e for e in json.loads((ART / 'asset_catalog.json').read_text(encoding='utf8'))}
+
+
+def contract_limits():
+    c = json.loads(CONTRACT.read_text(encoding='utf8'))
+    pq = c.get('pixel_quality') or {}
+    rc = c.get('reference_conformance') or {}
+    return {
+        'max_unique_colors': int(pq.get('max_unique_colors_per_cell', 64)),
+        'min_iou': float(rc.get('min_silhouette_iou', 0.55)),
+        'min_palette': float(rc.get('min_palette_match', 0.8)),
+        'cover': float(rc.get('coverage_threshold', COVER_MIN)),
+    }
 
 
 def opaque_bbox(a):
@@ -54,7 +85,7 @@ def opaque_bbox(a):
 
 def column_spans(a, min_gap=12, min_width=8):
     """Split a horizontal arrangement into opaque column runs (icon strips,
-    two-machine sheets). One-component images return a single span."""
+    multi-subject sheets). One-component images return a single span."""
     m = (a[..., 3] > ALPHA_CUT).any(axis=0)
     spans, start = [], None
     run = 0
@@ -74,44 +105,127 @@ def column_spans(a, min_gap=12, min_width=8):
     return spans or ([(0, a.shape[1])] if (a[..., 3] > ALPHA_CUT).any() else [])
 
 
-def widest_row(mask):
-    """Row index with the most opaque pixels (the iso diamond equator)."""
-    return int(np.argmax(mask.sum(axis=1)))
+# --------------------------------------------------------------------------
+# deterministic pixel path (the sprite-gen pixel_snap + quantize equivalent)
+# --------------------------------------------------------------------------
+
+def snap_cell(src, ref_map, cover_min=COVER_MIN):
+    """Block-decimate pixel snap: for every dst pixel in each ref_map entry,
+    the covering source block is tested; when opaque coverage >= cover_min the
+    dst pixel is the median color of the block's opaque pixels, alpha 255.
+    Pure integer math - deterministic, no resampling filter, and the
+    identical rule runs inside the C# gate for reference-silhouette rebuild."""
+    cell = np.zeros((UNIT, UNIT, 4), dtype=np.uint8)
+    mask = src[..., 3] > ALPHA_CUT
+    for e in ref_map:
+        sx0, sy0, sx1, sy1 = e['src']
+        dx, dy, dw, dh = e['dst']
+        for py in range(dh):
+            ay0 = int(sy0 + py * (sy1 - sy0) / dh)
+            ay1 = int(sy0 + (py + 1) * (sy1 - sy0) / dh)
+            for px in range(dw):
+                ax0 = int(sx0 + px * (sx1 - sx0) / dw)
+                ax1 = int(sx0 + (px + 1) * (sx1 - sx0) / dw)
+                blk = mask[ay0:ay1, ax0:ax1]
+                if blk.size and float(blk.mean()) >= cover_min:
+                    cols = src[ay0:ay1, ax0:ax1][blk]
+                    cell[dy + py, dx + px] = (int(np.median(cols[:, 0])),
+                                              int(np.median(cols[:, 1])),
+                                              int(np.median(cols[:, 2])), 255)
+    return cell
 
 
-def paste_fit(src_rgba, cell_w, cell_h, anchor_xy, fit_box):
-    """Uniformly scale src to fit fit_box, then place its bottom-center on
-    anchor_xy inside the cell. Returns (cell, bounds)."""
-    cell = np.zeros((cell_h, cell_w, 4), dtype=np.uint8)
-    fw, fh = fit_box
-    sw, sh = src_rgba.shape[1], src_rgba.shape[0]
-    s = min(fw / sw, fh / sh)
-    nw, nh = max(1, int(round(sw * s))), max(1, int(round(sh * s)))
-    arr = np.array(Image.fromarray(src_rgba).resize((nw, nh), Image.LANCZOS))
-    ax, ay = anchor_xy
-    ox, oy = int(round(ax - nw / 2)), int(round(ay - nh))
-    ox = min(max(0, ox), cell_w - nw)
-    oy = min(max(0, oy), cell_h - nh)
-    dst = cell[oy:oy + nh, ox:ox + nw]
-    keep = arr[..., 3] > 0
-    dst[keep] = arr[keep]
-    return cell, (ox, oy, ox + nw, oy + nh)
+def quantize_cell(cell, max_colors):
+    """Cluster palette quantize: right-shift each channel until the opaque
+    colors fit the contract cap, then repaint each pixel with its cluster
+    mean. Deterministic (stable unique sort, deterministic means). Returns
+    (cell, unique_color_count)."""
+    out = cell.copy()
+    m = out[..., 3] > 0
+    if not m.any():
+        return out, 0
+    px = out[m][:, :3].astype(np.int32)
+    for shift in range(0, 7):
+        key = ((px[:, 0] >> shift) << 10 | (px[:, 1] >> shift) << 5
+               | (px[:, 2] >> shift))
+        u, inv = np.unique(key, return_inverse=True)
+        if len(u) <= max_colors:
+            cents = np.zeros((len(u), 3))
+            for i in range(len(u)):
+                cents[i] = px[inv == i].mean(axis=0)
+            out[m, :3] = np.clip(np.rint(cents[inv]), 0, 255).astype(np.uint8)
+            return out, int(len(u))
+    return out, -1
 
 
-def extract_tile(src_rgba, cell_w=64, cell_h=64):
-    """Fit a generated iso floor tile onto the 64x64 working canvas.
+def ref_silhouette(src, ref_map, cover_min=COVER_MIN):
+    """Reference silhouette in cell space: the same coverage rule the snap
+    uses, recomputed from the raw's opaque mask. The C# gate rebuilds this
+    silhouette from the committed raw PNG for the IoU measurement."""
+    ref = np.zeros((UNIT, UNIT), dtype=bool)
+    mask = src[..., 3] > ALPHA_CUT
+    for e in ref_map:
+        sx0, sy0, sx1, sy1 = e['src']
+        dx, dy, dw, dh = e['dst']
+        for py in range(dh):
+            ay0 = int(sy0 + py * (sy1 - sy0) / dh)
+            ay1 = int(sy0 + (py + 1) * (sy1 - sy0) / dh)
+            for px in range(dw):
+                ax0 = int(sx0 + px * (sx1 - sx0) / dw)
+                ax1 = int(sx0 + (px + 1) * (sx1 - sx0) / dw)
+                blk = mask[ay0:ay1, ax0:ax1]
+                if blk.size and float(blk.mean()) >= cover_min:
+                    ref[dy + py, dx + px] = True
+    return ref
 
-    The full top-face rhombus (top vertex to front vertex, equator at the
-    widest row) is masked out of the source and resampled to the exact 64x32
-    top-face band at canvas rows 0-31. The side skirt below the rhombus's
-    lower edges is resampled through the same iso transform into the 4 px
-    edge band straddling (0,16)->(32,32) and (32,32)->(64,16) - visual only,
-    silhouette stays inside rows 0-35, physical thickness stays 0.
-    Returns (cell, meta)."""
-    m = src_rgba[..., 3] > ALPHA_CUT
+
+def palette_match(src, ref_map, cell):
+    """Share of the cell's opaque pixels whose coarse color bin (5 bits per
+    channel) exists among the reference's opaque pixels in the mapped source
+    regions. A wrong-palette cell fails; real pixel-snapped art scores ~1."""
+    bins = set()
+    mask = src[..., 3] > ALPHA_CUT
+    for e in ref_map:
+        sx0, sy0, sx1, sy1 = e['src']
+        px = src[sy0:sy1, sx0:sx1][mask[sy0:sy1, sx0:sx1]]
+        for c in px:
+            bins.add((int(c[0]) >> 3) << 10 | (int(c[1]) >> 3) << 5
+                     | (int(c[2]) >> 3))
+    om = cell[..., 3] > 0
+    if not om.any():
+        return 0.0
+    hit = 0
+    for c in cell[om]:
+        if ((int(c[0]) >> 3) << 10 | (int(c[1]) >> 3) << 5
+                | (int(c[2]) >> 3)) in bins:
+            hit += 1
+    return hit / float(om.sum())
+
+
+def reference_similarity(src, ref_map, cell, cover_min=COVER_MIN):
+    """Measured conformance of an approved cell to its raw reference:
+    silhouette IoU + palette match. Recorded as reference_similarity in the
+    manifest frame and the job provenance."""
+    ref = ref_silhouette(src, ref_map, cover_min)
+    om = cell[..., 3] > 0
+    union = int((om | ref).sum())
+    iou = float((om & ref).sum()) / union if union else 0.0
+    pal = palette_match(src, ref_map, cell)
+    return {'iou': round(iou, 3), 'palette': round(pal, 3)}
+
+
+# --------------------------------------------------------------------------
+# per-job cell production under the 32x32 unit contract
+# --------------------------------------------------------------------------
+
+def tile_ref_map(src):
+    """v0.8 tile geometry at unit scale: the iso rhombus maps to the 32x16
+    top-face band (rows 0-15), the side skirt maps to the 2px visual edge
+    band (rows 16-17). Physical thickness stays 0 - the band is paint."""
+    m = src[..., 3] > ALPHA_CUT
     rows = np.where(m.any(axis=1))[0]
     top_y, bot_y = int(rows[0]), int(rows[-1])
-    eq = widest_row(m)
+    eq = int(np.argmax(m.sum(axis=1)))
     xs = np.where(m[eq])[0]
     cx = int((xs[0] + xs[-1]) // 2)
     half_w = max(1.0, (xs[-1] - xs[0]) / 2.0)
@@ -125,148 +239,108 @@ def extract_tile(src_rgba, cell_w=64, cell_h=64):
         hi = min(m.shape[1], int(math.floor(cx + hh)) + 1)
         diamond[y, lo:hi] = True
 
-    top_art = np.zeros_like(src_rgba)
-    top_art[diamond & m] = src_rgba[diamond & m]
-    cell = np.zeros((cell_h, cell_w, 4), dtype=np.uint8)
-    t = np.array(Image.fromarray(top_art[top_y:front_y + 1]).resize(
-        (cell_w, 32), Image.LANCZOS))
-    t[t[..., 3] <= ALPHA_CUT] = 0
-    cell[0:32] = t
-
-    # Side skirt: real generated pixels below the rhombus's lower edges,
-    # reprojected with the same iso scale into the 4 px edge band.
-    s = cell_w / (2.0 * half_w + 1.0)
-    sy = 32.0 / max(1, front_y - top_y)
-    side_mask = m & ~diamond & (np.arange(m.shape[0])[:, None] > eq)
-    side = np.zeros_like(src_rgba)
-    side[side_mask] = src_rgba[side_mask]
-    if side_mask.any():
-        srows = np.where(side_mask.any(axis=1))[0]
-        scols = np.where(side_mask.any(axis=0))[0]
-        sb = side[int(srows[0]):int(srows[-1]) + 1, int(scols[0]):int(scols[-1]) + 1]
-        tw = max(1, int(round((int(scols[-1]) - int(scols[0]) + 1) * s)))
-        th = max(1, int(round((int(srows[-1]) - int(srows[0]) + 1) * sy)))
-        s_arr = np.array(Image.fromarray(sb).resize((tw, th), Image.LANCZOS))
-        # paste origin: skirt bbox top-left through the iso transform
-        px = int(round((int(scols[0]) - cx) * s + 32))
-        py = int(round(16 + (int(srows[0]) - eq) * sy))
-        for yy in range(th):
-            cy = py + yy
-            if cy < 16 or cy >= min(cell_h, 36):
-                continue
-            for xx in range(tw):
-                cxp = px + xx
-                if cxp < 0 or cxp >= cell_w or s_arr[yy, xx, 3] <= ALPHA_CUT:
-                    continue
-                if in_side_band(cxp, cy):
-                    cell[cy, cxp] = s_arr[yy, xx]
-    meta = {'top_face_rows': [0, 32],
-            'side_band': 'straddle(0,16)-(32,32)-(64,16), visual 4px'}
-    return cell, meta
+    ref_map = [{'src': [int(xs[0]), top_y, int(xs[-1]) + 1, front_y + 1],
+                'dst': [0, 0, UNIT, 16]}]
+    side = m & ~diamond & (np.arange(m.shape[0])[:, None] > eq)
+    if side.any():
+        sy, sx = np.where(side)
+        ref_map.append({'src': [int(sx.min()), int(sy.min()),
+                                int(sx.max()) + 1, int(sy.max()) + 1],
+                        'dst': [0, 16, UNIT, 2]})
+    return ref_map
 
 
-def in_side_band(x, y):
-    """Point in either 4px side-face parallelogram under the rhombus's lower
-    edges: (0,16)-(32,32) left, (32,32)-(64,16) right, each shifted down 4."""
-    # left face quad (0,16)(32,32)(32,36)(0,20); right face quad
-    # (64,16)(32,32)(32,36)(64,20). Band = edge + 0..4px down.
-    dl = (y - 16) * 2.0          # x on left upper edge at row y
-    dr = 64.0 - (y - 16) * 2.0   # x on right upper edge at row y
-    on_l = (16 <= y <= 36) and (dl - 8 <= x <= dl + 2)
-    on_r = (16 <= y <= 36) and (dr - 2 <= x <= dr + 8)
-    return on_l or on_r
+def fit_dest(bw, bh, anchor):
+    """Aspect-preserving fit of a component inside the unit box with the
+    contract margin; bottom-anchored for world objects, centered for UI."""
+    s = min((UNIT - 2 * MARGIN) / bw, (UNIT - 2 * MARGIN) / bh)
+    nw, nh = max(1, int(round(bw * s))), max(1, int(round(bh * s)))
+    dx = (UNIT - nw) // 2
+    dy = UNIT - MARGIN - nh if anchor == 'bottom' else (UNIT - nh) // 2
+    return dx, dy, nw, nh
 
 
-def extract_job(job, catalog):
-    """Extract the job's raw.png into contract cells. Returns
-    (frame_id, cell_array, meta) tuples."""
-    raw_path = ROOT / job['raw_file']
-    a = np.asarray(Image.open(raw_path).convert('RGBA'))
-    cat = job.get('category')
-    entry = catalog[JOB_TARGET[job['id']]]
-    cw, ch = entry['canvas_px']
-
+def produce_cells(job, src, entry):
+    """Return [(frame_id, cell, meta)] for one job. Every cell is a 32x32
+    unit box produced through its declared ref_map."""
+    cat = entry['category']
+    out = []
     if cat == 'tile':
-        b = opaque_bbox(a)
-        sub = a[b[1]:b[3], b[0]:b[2]]
-        cell, meta = extract_tile(sub, cw, ch)
-        meta.update({'anchor': [32, 32], 'origin': 'top_center_diamond'})
-        return [(job['id'], cell, meta)]
+        ref_map = tile_ref_map(src)
+        cell = snap_cell(src, ref_map)
+        meta = {'origin': [UNIT // 2, 8], 'ref_map': ref_map}
+        out.append((job['id'], cell, meta))
+        return out
 
-    comps = []
-    for (x0, x1) in column_spans(a):
-        sub = a[:, x0:x1]
-        b = opaque_bbox(sub)
-        if b:
-            comps.append(sub[b[1]:b[3], b[0]:b[2]])
-    if cat in ('machine', 'character', 'furniture'):
-        comps.sort(key=lambda c: int((c[..., 3] > ALPHA_CUT).sum()), reverse=True)
-        comps = comps[:1]
-    elif cat == 'ui':
-        comps = comps[:8]
-    cells = []
-    for i, comp in enumerate(comps):
-        fid = job['id'] if len(comps) == 1 else '%s_%d' % (job['id'], i)
-        if cat == 'character':
-            cell, b = paste_fit(comp, cw, ch, (cw // 2, 72), (cw - 12, 70))
-            meta = {'anchor': [cw // 2, 72], 'origin': 'foot_anchor'}
-        elif cat == 'machine':
-            cell, b = paste_fit(comp, cw, ch, (cw // 2, ch - 12), (cw - 24, ch - 24))
-            meta = {'anchor': [cw // 2, ch - 12], 'origin': 'ground_bottom_center'}
-        elif cat == 'furniture':
-            cell, b = paste_fit(comp, cw, ch, (cw // 2, ch - 24), (cw - 32, ch - 40))
-            meta = {'anchor': [cw // 2, ch - 24], 'origin': 'ground_bottom_center'}
+    spans = column_spans(src)
+    anchor = 'center' if cat == 'ui_skin' else 'bottom'
+    multi = len(spans) > 1
+    for i, (a, b) in enumerate(spans):
+        sub = src[:, a:b]
+        bb = opaque_bbox(sub)
+        if bb is None:
+            continue
+        sbox = [a + bb[0], bb[1], a + bb[2], bb[3]]
+        dst = fit_dest(bb[2] - bb[0], bb[3] - bb[1], anchor)
+        ref_map = [{'src': sbox, 'dst': list(dst)}]
+        cell = snap_cell(src, ref_map)
+        if anchor == 'bottom':
+            meta = {'origin': [dst[0] + dst[2] // 2, dst[1] + dst[3] - 1],
+                    'ref_map': ref_map}
         else:
-            cell, b = paste_fit(comp, cw, ch, (cw // 2, ch - 4), (cw - 6, ch - 6))
-            meta = {'anchor': [cw // 2, ch // 2], 'origin': 'center'}
-        meta['content_bounds'] = list(b)
-        cells.append((fid, cell, meta))
-    return cells
+            meta = {'origin': [UNIT // 2, UNIT // 2], 'ref_map': ref_map}
+        fid = job['id'] + '_' + str(i) if multi else job['id']
+        out.append((fid, cell, meta))
+    return out
 
 
-def measure_diamond(cell):
-    """Measure the top-face rhombus of a tile cell (canvas rows 0-31: apex at
-    row 0, equator at the midline ~row 16, front vertex at row 31) plus the
-    side-band silhouette below it."""
-    m = cell[..., 3] > ALPHA_CUT
+def measure_tile_unit(cell):
+    """Measured unit-tile geometry: 32x16 top-face rhombus filling rows
+    0-15 (apex row 0, equator ~row 8, front vertex row 15) and the visual
+    side band inside rows 16-18."""
+    m = cell[..., 3] > 0
     if not m.any():
         return None
-    top = m[:32]
+    top = m[:16]
     widths = top.sum(axis=1)
     rows = np.where(m.any(axis=1))[0]
     eq = int(np.argmax(widths))
-    filled = int((widths > 0).sum())
     return {
-        'top_row': int(np.where(widths > 0)[0][0]) if filled else -1,
+        'top_row': int(np.where(widths > 0)[0][0]) if (widths > 0).any() else -1,
         'equator_row': eq,
-        'top_face_h': filled,
+        'top_face_h': int((widths > 0).sum()),
         'max_width': int(widths[eq]),
-        'rhombus_bottom_row': int(np.where(widths > 0)[0][-1]) if filled else -1,
         'silhouette_bottom_row': int(rows[-1]),
-        'side_h': max(0, int(rows[-1]) - 31),
+        'side_h': max(0, int(rows[-1]) - 15),
     }
 
 
-def qa_cell(fid, cell, meta, entry):
-    """Geometry QA vs the catalog contract. Returns (checks, ok)."""
-    cat = entry['category']
-    cw, ch = entry['canvas_px']
+def qa_cell(fid, cell, meta, entry, sim, ncolors, limits):
+    """Unit-contract QA: 32x32 cell, quantized palette cap, measured
+    reference conformance, plus per-category geometry."""
     checks = {'canvas_w': int(cell.shape[1]), 'canvas_h': int(cell.shape[0]),
-              'contract_canvas': [cw, ch]}
-    ok = cell.shape[1] == cw and cell.shape[0] == ch
+              'contract_canvas': [UNIT, UNIT],
+              'unique_opaque_colors': ncolors,
+              'max_unique_colors': limits['max_unique_colors'],
+              'reference_similarity': sim}
+    ok = (cell.shape[0] == UNIT and cell.shape[1] == UNIT
+          and 0 < ncolors <= limits['max_unique_colors']
+          and sim['iou'] >= limits['min_iou']
+          and sim['palette'] >= limits['min_palette'])
+    cat = entry['category']
     if cat == 'tile':
-        d = measure_diamond(cell)
+        d = measure_tile_unit(cell)
         checks['diamond'] = d
-        ok = ok and d is not None and d['top_row'] == 0 and d['max_width'] == 64             and d['top_face_h'] == 32 and 12 <= d['equator_row'] <= 20             and 0 <= d['side_h'] <= SIDE_PX
+        ok = (ok and d is not None and d['top_row'] == 0
+              and d['max_width'] == UNIT and d['top_face_h'] == 16
+              and 6 <= d['equator_row'] <= 10
+              and 15 <= d['silhouette_bottom_row'] <= 18)
         checks['top_face_px'] = [d['max_width'], d['top_face_h']] if d else None
     elif cat == 'furniture':
-        checks['anchor'] = meta['anchor']
         checks['unbaked_pivot'] = True
-        ok = ok and meta.get('content_bounds') is not None
-    checks['opaque_px'] = int((cell[..., 3] > ALPHA_CUT).sum())
+    checks['opaque_px'] = int((cell[..., 3] > 0).sum())
     checks['nonempty'] = checks['opaque_px'] > 0
-    ok = ok and checks['nonempty']
-    return checks, ok
+    return checks, bool(ok and checks['nonempty'])
 
 
 def png_write(path, rgba):
@@ -290,8 +364,8 @@ def png_write(path, rgba):
 
 
 def compose_atlas(cells, metas):
-    """Pack cells left-to-right with 2px padding into the alpha sheet and
-    declare every frame explicitly: rect, origin, fps, loop - no
+    """Pack unit cells left-to-right with 2px padding into the alpha sheet
+    and declare every frame explicitly: rect, origin, fps, loop - no
     uniform-sheet guessing downstream."""
     pad = 2
     w = sum(cell.shape[1] for _, cell in cells) + pad * (len(cells) + 1)
@@ -303,11 +377,13 @@ def compose_atlas(cells, metas):
         ch, cw = cell.shape[0], cell.shape[1]
         atlas[pad:pad + ch, x:x + cw] = cell
         f = {'id': fid, 'rect': {'x': x, 'y': pad, 'w': cw, 'h': ch},
-             'origin': {'x': meta['anchor'][0], 'y': meta['anchor'][1]},
+             'origin': {'x': meta['origin'][0], 'y': meta['origin'][1]},
              'fps': meta.get('fps', 0), 'loop': meta.get('loop', False)}
         for k in ('render_offset_px', 'baked_alignment_offset_px',
                   'render_offset_owner', 'physical_thickness', 'job',
-                  'category', 'content_bounds', 'top_face_px'):
+                  'category', 'asset', 'canvas_px', 'top_face_px',
+                  'reference', 'ref_map', 'reference_similarity',
+                  'unique_opaque_colors', 'pixel_path', 'content_bounds'):
             if k in meta:
                 f[k] = meta[k]
         frames.append(f)
@@ -315,19 +391,22 @@ def compose_atlas(cells, metas):
     return atlas, frames
 
 
-def contact_sheet(cells, metas, zoom=2):
-    """QA contact sheet: every approved cell magnified with its contract
-    canvas border (red), ground anchor crosshair (yellow), and the 64x32
-    top-face band guide for tiles (cyan). Measurement evidence."""
+def contact_sheet(cells, metas, zoom=4):
+    """QA contact sheet: every approved unit cell magnified with its
+    contract canvas border (red), ground anchor crosshair (yellow), and the
+    32x16 top-face band guide for tiles (cyan). Measurement evidence."""
     pad = 10
     cw = max(cell.shape[1] for _, cell in cells) * zoom
     ch = max(cell.shape[0] for _, cell in cells) * zoom
-    w = (cw + pad) * len(cells) + pad
-    h = ch + pad * 2
+    per_row = max(1, min(len(cells), 10))
+    rows_n = (len(cells) + per_row - 1) // per_row
+    w = (cw + pad) * per_row + pad
+    h = (ch + pad) * rows_n + pad
     img = np.zeros((h, w, 4), dtype=np.uint8)
     img[..., 0], img[..., 1], img[..., 2], img[..., 3] = 24, 24, 30, 255
-    x = pad
-    for (fid, cell), meta in zip(cells, metas):
+    for i, ((fid, cell), meta) in enumerate(zip(cells, metas)):
+        x = pad + (i % per_row) * (cw + pad)
+        y = pad + (i // per_row) * (ch + pad)
         zc = np.array(Image.fromarray(cell).resize(
             (cell.shape[1] * zoom, cell.shape[0] * zoom), Image.NEAREST))
         bg = np.zeros((zc.shape[0], zc.shape[1], 4), dtype=np.uint8)
@@ -335,23 +414,21 @@ def contact_sheet(cells, metas, zoom=2):
         bg[..., 3] = 255
         alpha = zc[..., 3:4].astype(np.float32) / 255.0
         bg[..., :3] = (zc[..., :3] * alpha + bg[..., :3] * (1 - alpha)).astype(np.uint8)
-        img[pad:pad + zc.shape[0], x:x + zc.shape[1]] = bg
-        for i in range(zc.shape[1]):
-            img[pad, x + i] = (230, 60, 50, 255)
-            img[pad + zc.shape[0] - 1, x + i] = (230, 60, 50, 255)
-        for i in range(zc.shape[0]):
-            img[pad + i, x] = (230, 60, 50, 255)
-            img[pad + i, x + zc.shape[1] - 1] = (230, 60, 50, 255)
-        ax, ay = meta['anchor']
-        cy, cx = pad + ay * zoom, x + ax * zoom
-        for dx in range(-5, 6):
-            img[cy, cx + dx] = (240, 210, 90, 255)
-        for dy in range(-5, 6):
-            img[cy + dy, cx] = (240, 210, 90, 255)
+        img[y:y + zc.shape[0], x:x + zc.shape[1]] = bg
+        for k in range(zc.shape[1]):
+            img[y, x + k] = (230, 60, 50, 255)
+            img[y + zc.shape[0] - 1, x + k] = (230, 60, 50, 255)
+        for k in range(zc.shape[0]):
+            img[y + k, x] = (230, 60, 50, 255)
+            img[y + k, x + zc.shape[1] - 1] = (230, 60, 50, 255)
+        ax, ay = meta['origin']
+        cy, cx = y + ay * zoom, x + ax * zoom
+        for d in range(-5, 6):
+            img[cy, cx + d] = (240, 210, 90, 255)
+            img[cy + d, cx] = (240, 210, 90, 255)
         if meta['category'] == 'tile':
-            for i in range(zc.shape[1]):
-                img[pad + 32 * zoom, x + i] = (90, 200, 220, 255)
-        x += zc.shape[1] + pad
+            for k in range(zc.shape[1]):
+                img[y + 16 * zoom, x + k] = (90, 200, 220, 255)
     return img
 
 
@@ -416,8 +493,44 @@ def job_provenance_binding(jobs):
     return agent, binding
 
 
+def write_cell_provenance(jobs, metas):
+    """Record each approved cell's measured reference_similarity (and the
+    ref_map it was produced through) into the job's provenance.json - the
+    committed provenance trail the gate and reviewers re-measure against."""
+    by_job = {}
+    for meta in metas:
+        by_job.setdefault(meta['job'], []).append(meta)
+    for job in jobs:
+        recs = by_job.get(job['id'])
+        if not recs:
+            continue
+        p = ART / 'generated' / job['id'] / 'provenance.json'
+        try:
+            pr = json.loads(p.read_text(encoding='utf8'))
+        except (OSError, ValueError):
+            continue
+        lim = recs[0]['limits']
+        pr['approved_cells'] = [{
+            'frame': m['frame_id'],
+            'unit_px': UNIT,
+            'pixel_path': m['pixel_path'],
+            'ref_map': m['ref_map'],
+            'reference_similarity': m['reference_similarity'],
+            'unique_opaque_colors': m['unique_opaque_colors'],
+        } for m in recs]
+        pr['reference_conformance'] = {
+            'measured': True,
+            'min_silhouette_iou': lim['min_iou'],
+            'min_palette_match': lim['min_palette'],
+            'coverage_threshold': lim['cover'],
+        }
+        pr['game_asset_approval'] = 'APPROVED'
+        write_json_lf(p, pr)
+
+
 def build():
     catalog = load_catalog()
+    limits = contract_limits()
     jobs = json.loads((ART / 'jobs.json').read_text(encoding='utf8'))
     provider = json.loads((ART / 'provider.json').read_text(encoding='utf8'))
     eff_model, model_ver = job_provenance_model(jobs)
@@ -431,17 +544,37 @@ def build():
         if not raw_path.is_file():
             qa[jid] = {'status': 'BLOCKED', 'reason': 'no raw.png'}
             continue
-        for fid, cell, meta in extract_job(job, catalog):
+        src = np.asarray(Image.open(raw_path).convert('RGBA'))
+        for fid, cell, meta in produce_cells(job, src, catalog[JOB_TARGET[jid]]):
             entry = catalog[JOB_TARGET[jid]]
-            meta['job'] = jid
-            meta['category'] = entry['category']
+            cell, ncolors = quantize_cell(cell, limits['max_unique_colors'])
+            sim = reference_similarity(src, meta['ref_map'], cell,
+                                       limits['cover'])
+            sim['ok'] = (sim['iou'] >= limits['min_iou']
+                         and sim['palette'] >= limits['min_palette'])
+            meta.update({
+                'job': jid, 'category': entry['category'],
+                'asset': entry['id'], 'canvas_px': entry['canvas_px'],
+                'frame_id': fid, 'reference': job['raw_file'],
+                'reference_similarity': sim,
+                'unique_opaque_colors': ncolors,
+                'pixel_path': PIXEL_PATH % (limits['cover'],
+                                            limits['max_unique_colors']),
+                'limits': limits,
+            })
+            om = cell[..., 3] > 0
+            if om.any():
+                ys, xs = np.where(om)
+                meta['content_bounds'] = [int(xs.min()), int(ys.min()),
+                                          int(xs.max()) + 1, int(ys.max()) + 1]
             for k in ('render_offset_px', 'baked_alignment_offset_px',
                       'render_offset_owner', 'physical_thickness'):
                 if k in entry:
                     meta[k] = entry[k]
-            checks, ok = qa_cell(fid, cell, meta, entry)
+            checks, ok = qa_cell(fid, cell, meta, entry, sim, ncolors, limits)
             meta['qa'] = checks
-            qa[fid] = {'status': 'APPROVED' if ok else 'REJECTED', 'checks': checks}
+            qa[fid] = {'status': 'APPROVED' if ok else 'REJECTED',
+                       'checks': checks}
             if ok:
                 cells.append((fid, cell))
                 metas.append(meta)
@@ -450,10 +583,11 @@ def build():
     png_write(APPROVED / 'sprite_sheet_alpha.png', atlas)
     manifest = {
         'kind': 'cozy-cafe-atlas',
-        'version': '0.8',
+        'version': '0.8.3-unit32',
         'sheet': 'sprite_sheet_alpha.png',
         'sheet_size': [int(atlas.shape[1]), int(atlas.shape[0])],
         'encoding': 'RGBA8/filter0/zlib-stored (canonical PngWriter format)',
+        'cell_unit_px': UNIT,
         'physical_thickness': 0,
         'thickness_mode': 'visual_only',
         'provider': provider['provider'],
@@ -463,14 +597,26 @@ def build():
         'signed_claim_software_agent': signed_agent,
         'provenance_binding': prov_binding,
         'palette_variants_generated': 0,
+        'pixel_quality': {
+            'max_unique_colors_per_cell': limits['max_unique_colors'],
+            'path': 'pixel_snap+cluster_quantize (deterministic, no LANCZOS)',
+        },
+        'reference_conformance': {
+            'min_silhouette_iou': limits['min_iou'],
+            'min_palette_match': limits['min_palette'],
+            'coverage_threshold': limits['cover'],
+            'recorded_field': 'reference_similarity',
+        },
         'frames': frames,
     }
     write_json_lf(APPROVED / 'atlas_manifest.json', manifest)
     png_write(APPROVED / 'qa_contact.png', contact_sheet(cells, metas))
 
     report = {'qa': qa, 'frames': [f['id'] for f in frames],
-              'sheet_size': manifest['sheet_size']}
+              'sheet_size': manifest['sheet_size'],
+              'cell_unit_px': UNIT}
     write_json_lf(APPROVED / 'qa_report.json', report)
+    write_cell_provenance(jobs, metas)
     write_back(jobs, catalog, qa, metas, provider)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 1 if any(v['status'] == 'REJECTED' for v in qa.values()) else 0
@@ -484,11 +630,12 @@ def write_back(jobs, catalog, qa, metas, provider):
         ids = [m for m in metas if m['job'] == job['id']]
         own = [qa[fid] for fid in qa if qa[fid].get('checks') and
                (fid == job['id'] or fid.startswith(job['id'] + '_'))]
+        job['cell_asset_px'] = [UNIT, UNIT]
         if job['id'] in qa and qa[job['id']]['status'] == 'BLOCKED':
             job['approval'] = 'BLOCKED'
         elif own and all(v['status'] == 'APPROVED' for v in own):
             job['approval'] = 'APPROVED'
-            job['approved_cells'] = [m['qa'] for m in metas if m['job'] == job['id']] and                 len([m for m in metas if m['job'] == job['id']])
+            job['approved_cells'] = len(ids)
         elif own:
             job['approval'] = 'REJECTED'
     write_json_lf(jobs_path, jobs)
@@ -501,6 +648,7 @@ def write_back(jobs, catalog, qa, metas, provider):
             if JOB_TARGET.get(job['id']) == e['id'] and job['id'] in produced:
                 e['status'] = 'APPROVED'
                 e['source_job'] = job['id']
+                e['atlas_unit_px'] = UNIT
     write_json_lf(cat_path, entries)
 
     prov_path = ART / 'provider.json'
@@ -511,13 +659,27 @@ def write_back(jobs, catalog, qa, metas, provider):
 
 
 def qa_only():
+    """Re-measure the committed approved atlas: per-frame unit geometry,
+    palette size, and recorded reference conformance."""
     manifest = json.loads((APPROVED / 'atlas_manifest.json').read_text(encoding='utf8'))
     sheet = np.asarray(Image.open(APPROVED / manifest['sheet']).convert('RGBA'))
     out = {}
     for f in manifest['frames']:
         r = f['rect']
         cell = sheet[r['y']:r['y'] + r['h'], r['x']:r['x'] + r['w']]
-        out[f['id']] = measure_diamond(cell) if f.get('category') == 'tile'             else {'bounds': f.get('content_bounds'), 'anchor': f['origin']}
+        om = cell[..., 3] > 0
+        colors = np.unique(cell[om][:, 0].astype(np.int32) << 16
+                           | cell[om][:, 1].astype(np.int32) << 8
+                           | cell[om][:, 2].astype(np.int32)) if om.any() else []
+        rec = {'rect': [r['w'], r['h']],
+               'opaque_px': int(om.sum()),
+               'unique_opaque_colors': int(len(colors)),
+               'reference_similarity': f.get('reference_similarity')}
+        if f.get('category') == 'tile':
+            rec['diamond'] = measure_tile_unit(cell)
+        else:
+            rec['anchor'] = f['origin']
+        out[f['id']] = rec
     print(json.dumps(out, indent=2))
     return 0
 

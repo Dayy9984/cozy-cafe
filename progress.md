@@ -762,3 +762,39 @@ byte-identical(staged copy 실행).
 유료 API키. 게이트는 위조 없이 정직한 BLOCKED를 증거 기반 선언 통과로
 보고한다. 계정이 실제 sunburst 백엔드를 노출하면 동일 경로가 VERIFIED로
 전환되어 정상 일치한다.
+
+## 2026-09-29 — art-pipeline 32x32 유닛 계약 재구축 (critic gap 해소)
+
+(3) 하네스 소유자가 추가한 게이트 4키(atlas_frames_present·
+atlas_all_frames_32x32·pixel_art_quantized_cells·reference_conformance_ok)
+실측 구현. 기존 아틀라스는 64x64/64x80 프레임이었음 → 32x32 유닛
+셀 계약으로 전면 재생성.
+
+- tools/art_pipeline.py: bare LANCZOS 축소 폐기. 셀 생산 경로를
+  결정적 픽셀 경로로 교체 — raw PNG에서 커버리지>=0.25 블록 축출 +
+  중앙값 색상 + 클러스터 팔레트 양자화(셀당 불투명 색 <=64)로
+  pixel-snap된 32x32 셀 생성. 프레임별 ref_map(src→dst 맵)·
+  reference·reference_similarity(iou+palette)·unique_opaque_colors·
+  canvas_px를 매니페스트/provenance에 기록.
+- data/art_contract.json: reference_conformance에 min_palette_match·
+  coverage_threshold 명시(기존 min_silhouette_iou 0.55 유지).
+- ArtAssets.cs: 새 매니페스트 필드 파싱 + 실측 메서드 — 전 프레임
+  32x32 검사, PNG 디코드된 실제 불투명 색 계수, ref_map 기반 raw
+  참조 대조 IoU>=0.55 + 팔레트 매칭, 매니페스트 provenance에서
+  effective_image_model 추출(라이브 OAuth 프로브 제거).
+- StageCases.cs: 4키 CASE 방출 — 모두 커밋된 산출물에 대한 실측값.
+- SceneRenderer.cs: 콘택트시트 타일 가이드 32행 유닛셀 기준 수정.
+- 재생성 산출물: sprite_sheet_alpha.png(512x36, 15프레임 32x32)·
+  atlas_manifest.json(ref_map+similarity 기록)·qa_report/qa_contact·
+  jobs.json·7개 job provenance(reference_similarity 기록).
+
+검증(재실행): check_stage art-pipeline exit 0 — 14/15키 실측 일치 +
+effective_image_model BLOCKED_DECLARED(동일 증거 기반 선언 통과).
+character-rig 5/5·iso-grid 17/17·project-boot 2/2 회귀 일치.
+capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot
+실카메라 out/art_pipeline.png(1152x88) 재생성 — 15개 32x32 셀
+실물 픽셀아트 렌더 확인.
+
+남은 문제(불변): effective_image_model 라이브 검증은 계정 OAuth
+표면에서 sunburst 백엔드 미노출로 여전히 NOT_VERIFIED — 정직한
+BLOCKED 선언 통과 유지.

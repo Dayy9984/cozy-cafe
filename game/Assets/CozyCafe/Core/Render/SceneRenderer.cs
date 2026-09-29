@@ -761,7 +761,10 @@ namespace CozyCafe.Core.Render
 
                 if (c.Category == "tile")
                 {
-                    dev.FillRect(ox, oy + 32 * zoom, cw, 1, GuideCyan);
+                    // top-face band's lower edge at the unit scale (32x16
+                    // rhombus over a 32-row cell -> guide at row 16)
+                    dev.FillRect(ox, oy + (c.Sprite.Height / 2) * zoom,
+                        cw, 1, GuideCyan);
                 }
                 // anchor crosshair
                 int ax = ox + c.AnchorX * zoom, ay = oy + c.AnchorY * zoom;

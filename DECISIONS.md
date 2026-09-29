@@ -309,3 +309,17 @@ pixel_snap+양자화/recolor 또는 TileArt식 코드 래스터)로 생산하고
 (reference_similarity)에 기록한다. 게이트 reference_conformance_ok=true가
 실측값을 요구한다 — 픽셀 경로를 실제로 돌리지 않으면 PASS 불가.
 불변: 기존 키 전부(추가만), OAuth only, codex 전용, 12프레임 단일시트.
+
+## IMPL 2026-09-29 — 32×32 유닛셀 아틀라스 + 실측 게이트 구현
+사유: critic gap — 통합 코드가 게이트 4키 미방출 + 승인 아틀라스가
+64x64/64x80 프레임으로 32x32 계약 위반.
+결정: 셀 생산을 결정적 픽셀 경로로 교체 — raw 참조에서 커버리지≥0.25
+블록 축출(픽셀 스냅) + 셀당 불투명 색 클러스터 양자화(≤64). 타일 셀은
+ref_map 2구간(윗면 다이아 32x16 + 4px 사이드 스커트 32x2)로 기하를
+유지. 프레임별 ref_map·reference_similarity(iou+palette)·
+unique_opaque_colors를 atlas_manifest와 job provenance에 기록.
+검증 경로: PngReader가 raw PNG(RGBA/RGB8)를 C#에서 직접 디코드해
+IoU·팔레트·색 수·프레임 치수를 실측 — eval 워크트리에서 라이브
+프로브 없이 결정론적으로 재현된다.
+불변: gates.json 기대값·64x32 top/64x64 canvas 계약·OAuth only·
+codex 전용·provider.json 기록.

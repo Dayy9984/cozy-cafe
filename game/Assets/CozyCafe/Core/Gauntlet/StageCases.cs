@@ -1099,12 +1099,16 @@ namespace CozyCafe.Core.Gauntlet
         }
 
         /// <summary>
-        /// Real art-pipeline state: provider/auth config, generated raws and
-        /// per-job provenance on disk, the approved atlas manifest + decoded
-        /// sheet pixels (tile measured against the 64x32/64x64 contract,
-        /// furniture effective offset = baked + runtime, palette-variant
-        /// regeneration count). Nothing is claimed - a missing artifact or
-        /// unverified model reports its actual measured value.
+        /// Real art-pipeline state under the v0.8.3 32x32 unit contract:
+        /// provider/auth config, generated raws and per-job provenance on
+        /// disk, the approved atlas manifest + decoded sheet pixels (tile
+        /// measured against the unit 32x16-top geometry, furniture effective
+        /// offset = baked + runtime, palette-variant regeneration count), the
+        /// per-cell unique-color count on the decoded PNG, and the per-cell
+        /// silhouette-IoU + palette conformance re-measured against the
+        /// committed raw references through each frame's declared ref_map.
+        /// Nothing is claimed - a missing artifact or unverified model
+        /// reports its actual measured value.
         /// </summary>
         private static List<CaseResult> ArtPipeline()
         {
@@ -1116,30 +1120,32 @@ namespace CozyCafe.Core.Gauntlet
                 PngReader.TryLoad(ArtAssets.SheetPath(manifest), out sheet);
             }
 
+            int maxColors; double minIou, minPalette, cover;
+            bool limits = ArtAssets.ContractLimits(out maxColors, out minIou,
+                out minPalette, out cover);
+
             ArtFrame tile = null;
+            bool anyTall = false;
             foreach (var f in manifest.Frames)
             {
-                if (f.Category == "tile") { tile = f; break; }
+                if (f.Category == "tile" && tile == null) tile = f;
+                if (f.H > 32) anyTall = true;
             }
             bool tileOk = false;
-            int tileCanvasH = 0;
             if (tile != null && sheet != null)
             {
-                tileCanvasH = tile.H;
-                var tm = ArtAssets.MeasureTile(sheet, tile);
-                tileOk = tile.W == 64 && tile.H == 64
-                    && tm.TopRow == 0 && tm.MaxWidth == 64
-                    && tm.TopFaceRows == 32 && tm.EquatorRow >= 12
-                    && tm.EquatorRow <= 20 && tm.SilhouetteBottomRow >= 31
-                    && tm.SilhouetteBottomRow <= 35;
+                var tm = ArtAssets.MeasureTileUnit(sheet, tile);
+                tileOk = tile.W == 32 && tile.H == 32
+                    && tm.TopRow == 0 && tm.MaxWidth == 32
+                    && tm.TopFaceRows == 16 && tm.EquatorRow >= 6
+                    && tm.EquatorRow <= 10 && tm.SilhouetteBottomRow >= 15
+                    && tm.SilhouetteBottomRow <= 18;
             }
 
             bool recorded;
             int effY = ArtAssets.EffectiveFurnitureOffsetY(manifest, out recorded);
-            bool physicalThickness =
-                manifest.PhysicalThickness != 0
-                || (tile != null && tile.H > 64);
-            string effective = ArtAssets.EffectiveImageModel();
+            bool physicalThickness = manifest.PhysicalThickness != 0 || anyTall;
+            string effective = ArtAssets.EffectiveImageModel(manifest);
 
             var cases = new List<CaseResult>();
             cases.Add(new CaseResult("provider", provider ?? "BLOCKED"));
@@ -1157,9 +1163,22 @@ namespace CozyCafe.Core.Gauntlet
                 ArtAssets.ProvenanceSessionBound()));
             cases.Add(new CaseResult("thickness_physical_geometry_generated",
                 physicalThickness));
-            cases.Add(new CaseResult("tile_canvas_height", tileCanvasH));
+            cases.Add(new CaseResult("tile_canvas_height",
+                ArtAssets.TileCanvasHeight(manifest)));
             cases.Add(new CaseResult("furniture_baked_offset_recorded", recorded));
             cases.Add(new CaseResult("furniture_effective_offset_y_px", effY));
+            cases.Add(new CaseResult("atlas_frames_present",
+                manifest.Valid && sheet != null
+                    && ArtAssets.AtlasFramesPresent(manifest, sheet)));
+            cases.Add(new CaseResult("atlas_all_frames_32x32",
+                ArtAssets.AllFramesUnit(manifest, 32)));
+            cases.Add(new CaseResult("pixel_art_quantized_cells",
+                limits && sheet != null
+                    && ArtAssets.QuantizedCellsOk(sheet, manifest, maxColors)));
+            cases.Add(new CaseResult("reference_conformance_ok",
+                limits && sheet != null
+                    && ArtAssets.ReferenceConformanceOk(sheet, manifest,
+                        minIou, minPalette, cover)));
             return cases;
         }
 

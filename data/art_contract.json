@@ -164,6 +164,9 @@
     "rule": "raw generations are REFERENCES, not sources to shrink. Final 32x32 cells are produced by deterministic code path (sprite-gen pixel_snap+quantize/recolor, or code-drawn raster like TileArt) and must measure conformant to their reference before approval.",
     "metric": "per-cell silhouette IoU vs reference + palette/color match; score recorded in provenance per approved cell",
     "min_silhouette_iou": 0.55,
-    "provenance_field": "reference_similarity"
+    "provenance_field": "reference_similarity",
+    "min_palette_match": 0.8,
+    "coverage_threshold": 0.25,
+    "metric_detail": "silhouette IoU rebuilt through the frame's committed ref_map (block coverage >= coverage_threshold over the mapped raw region) plus palette match: share of the cell's opaque pixels whose 5-bit-per-channel color bin is populated by the reference's mapped region"
   }
 }

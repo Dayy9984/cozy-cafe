@@ -3,205 +3,314 @@
     "tile_wood": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
+        "unique_opaque_colors": 44,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 1.0,
+          "ok": true
+        },
         "diamond": {
           "top_row": 0,
-          "equator_row": 15,
-          "top_face_h": 32,
-          "max_width": 64,
-          "rhombus_bottom_row": 31,
-          "silhouette_bottom_row": 33,
+          "equator_row": 7,
+          "top_face_h": 16,
+          "max_width": 32,
+          "silhouette_bottom_row": 17,
           "side_h": 2
         },
         "top_face_px": [
-          64,
-          32
+          32,
+          16
         ],
-        "opaque_px": 1216,
+        "opaque_px": 361,
         "nonempty": true
       }
     },
     "body_anchor": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 80,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          80
+          32,
+          32
         ],
-        "opaque_px": 1513,
+        "unique_opaque_colors": 59,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 0.996,
+          "ok": true
+        },
+        "opaque_px": 251,
         "nonempty": true
       }
     },
-    "machine_espresso": {
+    "machine_espresso_0": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 938,
+        "unique_opaque_colors": 55,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 0.996,
+          "ok": true
+        },
+        "opaque_px": 458,
+        "nonempty": true
+      }
+    },
+    "machine_espresso_1": {
+      "status": "APPROVED",
+      "checks": {
+        "canvas_w": 32,
+        "canvas_h": 32,
+        "contract_canvas": [
+          32,
+          32
+        ],
+        "unique_opaque_colors": 34,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 0.991,
+          "ok": true
+        },
+        "opaque_px": 457,
         "nonempty": true
       }
     },
     "ui_style": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 460,
+        "unique_opaque_colors": 52,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 0.969,
+          "ok": true
+        },
+        "opaque_px": 98,
         "nonempty": true
       }
     },
     "ui_icons_0": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 1029,
+        "unique_opaque_colors": 39,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 0.996,
+          "ok": true
+        },
+        "opaque_px": 247,
         "nonempty": true
       }
     },
     "ui_icons_1": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 1687,
+        "unique_opaque_colors": 47,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 1.0,
+          "ok": true
+        },
+        "opaque_px": 414,
         "nonempty": true
       }
     },
     "ui_icons_2": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 1596,
+        "unique_opaque_colors": 53,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 0.995,
+          "ok": true
+        },
+        "opaque_px": 383,
         "nonempty": true
       }
     },
     "ui_icons_3": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 1633,
+        "unique_opaque_colors": 60,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 0.997,
+          "ok": true
+        },
+        "opaque_px": 389,
         "nonempty": true
       }
     },
     "ui_icons_4": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 2058,
+        "unique_opaque_colors": 60,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 0.988,
+          "ok": true
+        },
+        "opaque_px": 484,
         "nonempty": true
       }
     },
     "ui_icons_5": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 1541,
+        "unique_opaque_colors": 41,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 1.0,
+          "ok": true
+        },
+        "opaque_px": 381,
         "nonempty": true
       }
     },
     "ui_icons_6": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 2087,
+        "unique_opaque_colors": 41,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 0.982,
+          "ok": true
+        },
+        "opaque_px": 509,
         "nonempty": true
       }
     },
     "ui_icons_7": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
+          32,
+          32
         ],
-        "opaque_px": 1808,
+        "unique_opaque_colors": 42,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 1.0,
+          "ok": true
+        },
+        "opaque_px": 425,
         "nonempty": true
       }
     },
     "table_square": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
-        ],
-        "anchor": [
           32,
-          40
+          32
         ],
+        "unique_opaque_colors": 40,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 1.0,
+          "ok": true
+        },
         "unbaked_pivot": true,
-        "opaque_px": 295,
+        "opaque_px": 375,
         "nonempty": true
       }
     },
     "chair": {
       "status": "APPROVED",
       "checks": {
-        "canvas_w": 64,
-        "canvas_h": 64,
+        "canvas_w": 32,
+        "canvas_h": 32,
         "contract_canvas": [
-          64,
-          64
-        ],
-        "anchor": [
           32,
-          40
+          32
         ],
+        "unique_opaque_colors": 58,
+        "max_unique_colors": 64,
+        "reference_similarity": {
+          "iou": 1.0,
+          "palette": 1.0,
+          "ok": true
+        },
         "unbaked_pivot": true,
-        "opaque_px": 218,
+        "opaque_px": 268,
         "nonempty": true
       }
     }
@@ -209,7 +318,8 @@
   "frames": [
     "tile_wood",
     "body_anchor",
-    "machine_espresso",
+    "machine_espresso_0",
+    "machine_espresso_1",
     "ui_style",
     "ui_icons_0",
     "ui_icons_1",
@@ -223,7 +333,8 @@
     "chair"
   ],
   "sheet_size": [
-    926,
-    84
-  ]
+    512,
+    36
+  ],
+  "cell_unit_px": 32
 }

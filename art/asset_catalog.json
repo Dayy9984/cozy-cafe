@@ -23,7 +23,8 @@
     ],
     "visual_thickness_px": 4,
     "physical_thickness": 0,
-    "source_job": "tile_wood"
+    "source_job": "tile_wood",
+    "atlas_unit_px": 32
   },
   {
     "id": "floor_dark_wood",
@@ -187,7 +188,8 @@
     ],
     "status": "APPROVED",
     "notes": "Canvas is provisional padded render size, NOT tile size. Counter mount required.",
-    "source_job": "machine_espresso"
+    "source_job": "machine_espresso",
+    "atlas_unit_px": 32
   },
   {
     "id": "machine_steam",
@@ -327,7 +329,8 @@
     ],
     "render_offset_owner": "renderer",
     "physical_elevation": 0,
-    "source_job": "table_square"
+    "source_job": "table_square",
+    "atlas_unit_px": 32
   },
   {
     "id": "table_round",
@@ -384,7 +387,8 @@
     ],
     "render_offset_owner": "renderer",
     "physical_elevation": 0,
-    "source_job": "chair"
+    "source_job": "chair",
+    "atlas_unit_px": 32
   },
   {
     "id": "stool",
@@ -521,7 +525,8 @@
     "footprint": null,
     "status": "APPROVED",
     "notes": "One shared rig; foot anchor32,72 provisional.",
-    "source_job": "body_anchor"
+    "source_job": "body_anchor",
+    "atlas_unit_px": 32
   },
   {
     "id": "hair_01",
@@ -823,7 +828,8 @@
     "footprint": null,
     "status": "APPROVED",
     "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement.",
-    "source_job": "ui_style"
+    "source_job": "ui_style",
+    "atlas_unit_px": 32
   },
   {
     "id": "ui_button",
@@ -843,7 +849,8 @@
     "footprint": null,
     "status": "APPROVED",
     "notes": "Candidate asset size only; 9-slice where appropriate; runtime text; no isometric UI requirement.",
-    "source_job": "ui_icons"
+    "source_job": "ui_icons",
+    "atlas_unit_px": 32
   },
   {
     "id": "ui_tab",

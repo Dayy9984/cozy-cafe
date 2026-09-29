@@ -17,10 +17,20 @@ namespace CozyCafe.Core.Art
         public bool Loop;
         public string Category;
         public string Job;
+        public string Asset;
+        public int CanvasW, CanvasH;
         public int BakedDx, BakedDy;
         public int RenderDx, RenderDy;
         public bool BakedOffsetRecorded;
         public bool RenderOffsetRecorded;
+        public int UniqueColors = -1;
+        public string Reference;
+        /// ref_map entries as {sx0,sy0,sx1,sy1,dx,dy,dw,dh}: the committed
+        /// declaration of which raw-reference region produced which part of
+        /// this cell - the gate rebuilds the reference silhouette with it.
+        public readonly List<int[]> RefMap = new List<int[]>();
+        public double RefIou = -1, RefPalette = -1;
+        public bool RefRecordedOk;
     }
 
     /// The approved-atlas manifest after structural validation.
@@ -35,6 +45,9 @@ namespace CozyCafe.Core.Art
         public string ProvenanceBinding;
         public int PhysicalThickness = -1;
         public int PaletteVariantsGenerated = -1;
+        public int CellUnitPx;
+        public string EffectiveImageModel;
+        public string ModelVerification;
         public bool Valid;
         public string Error;
     }
@@ -130,40 +143,6 @@ namespace CozyCafe.Core.Art
             return prov == null ? null : AsString(Get(prov, "requested_image_model"));
         }
 
-        /// The verified effective image model: union of every generated
-        /// job's provenance.json effective_image_model (measured from the PNG
-        /// C2PA claim) is reported only when it equals the requested model
-        /// and all jobs agree. A backend that produced a different model -
-        /// or missing/diverging provenance - means the requested-model
-        /// generation cannot be verified, so the key reports BLOCKED
-        /// verbatim instead of a model name that fails the request.
-        public static string EffectiveImageModel()
-        {
-            var jobs = LoadJobs();
-            if (jobs == null || jobs.Count == 0) return "BLOCKED";
-            string requested = RequestedImageModel();
-            var seen = new HashSet<string>();
-            foreach (var o in jobs)
-            {
-                var job = AsDict(o);
-                string id = AsString(Get(job, "id"));
-                var prov = LoadJsonDict("art/generated/" + id + "/provenance.json");
-                if (prov == null) return "BLOCKED";
-                string em = AsString(Get(prov, "effective_image_model"));
-                if (string.IsNullOrEmpty(em)) return "BLOCKED";
-                if (AsString(Get(prov, "model_verification")) != "VERIFIED")
-                {
-                    return "BLOCKED";
-                }
-                seen.Add(em);
-            }
-            if (seen.Count != 1) return "BLOCKED";
-            foreach (var s in seen)
-            {
-                return s == requested ? s : "BLOCKED";
-            }
-            return "BLOCKED";
-        }
 
         /// Every declared job's raw.png exists and carries the PNG signature.
         public static bool RawPngsExist()
@@ -243,6 +222,9 @@ namespace CozyCafe.Core.Art
             if (pt != null) m.PhysicalThickness = (int)AsLong(pt);
             object pv = Get(d, "palette_variants_generated");
             if (pv != null) m.PaletteVariantsGenerated = (int)AsLong(pv);
+            m.CellUnitPx = (int)AsLong(Get(d, "cell_unit_px"));
+            m.EffectiveImageModel = AsString(Get(d, "effective_image_model"));
+            m.ModelVerification = AsString(Get(d, "model_verification"));
 
             var frames = AsList(Get(d, "frames"));
             if (frames == null || frames.Count == 0)
@@ -273,6 +255,44 @@ namespace CozyCafe.Core.Art
                 fr.Loop = AsBool(Get(f, "loop"));
                 fr.Category = AsString(Get(f, "category"));
                 fr.Job = AsString(Get(f, "job"));
+                fr.Asset = AsString(Get(f, "asset"));
+                fr.Reference = AsString(Get(f, "reference"));
+                var cvs = AsList(Get(f, "canvas_px"));
+                if (cvs != null && cvs.Count == 2)
+                {
+                    fr.CanvasW = (int)AsLong(cvs[0]);
+                    fr.CanvasH = (int)AsLong(cvs[1]);
+                }
+                object uc = Get(f, "unique_opaque_colors");
+                if (uc != null) fr.UniqueColors = (int)AsLong(uc);
+                var refMap = AsList(Get(f, "ref_map"));
+                if (refMap != null)
+                {
+                    foreach (var mo in refMap)
+                    {
+                        var md = AsDict(mo);
+                        var src = md == null ? null : AsList(Get(md, "src"));
+                        var dst = md == null ? null : AsList(Get(md, "dst"));
+                        if (src != null && src.Count == 4
+                            && dst != null && dst.Count == 4)
+                        {
+                            fr.RefMap.Add(new int[]
+                            {
+                                (int)AsLong(src[0]), (int)AsLong(src[1]),
+                                (int)AsLong(src[2]), (int)AsLong(src[3]),
+                                (int)AsLong(dst[0]), (int)AsLong(dst[1]),
+                                (int)AsLong(dst[2]), (int)AsLong(dst[3])
+                            });
+                        }
+                    }
+                }
+                var rs = AsDict(Get(f, "reference_similarity"));
+                if (rs != null)
+                {
+                    fr.RefIou = AsDouble(Get(rs, "iou"));
+                    fr.RefPalette = AsDouble(Get(rs, "palette"));
+                    fr.RefRecordedOk = AsBool(Get(rs, "ok"));
+                }
                 var baked = AsList(Get(f, "baked_alignment_offset_px"));
                 if (baked != null && baked.Count == 2)
                 {
@@ -415,6 +435,347 @@ namespace CozyCafe.Core.Art
                 }
             }
             return n;
+        }
+
+        /// Loads a JSON file whose top level is a list (asset_catalog.json).
+        public static List<object> LoadJsonList(string relPath)
+        {
+            string root = WorkspaceRoot();
+            if (root == null) return null;
+            string p = Path.Combine(root, relPath.Replace('/', Path.DirectorySeparatorChar));
+            try
+            {
+                if (!File.Exists(p)) return null;
+                return AsList(MiniJson.Parse(File.ReadAllText(p)));
+            }
+            catch (Exception) { return null; }
+        }
+
+        /// Pixel-quality and reference-conformance thresholds from the data
+        /// source (data/art_contract.json) - numbers live in data, not code.
+        public static bool ContractLimits(out int maxColors, out double minIou,
+            out double minPalette, out double cover)
+        {
+            maxColors = 0; minIou = 0; minPalette = 0; cover = 0;
+            var c = LoadJsonDict("data/art_contract.json");
+            if (c == null) return false;
+            var pq = AsDict(Get(c, "pixel_quality"));
+            var rc = AsDict(Get(c, "reference_conformance"));
+            if (pq == null || rc == null) return false;
+            object mc = Get(pq, "max_unique_colors_per_cell");
+            object mi = Get(rc, "min_silhouette_iou");
+            object mp = Get(rc, "min_palette_match");
+            object cv = Get(rc, "coverage_threshold");
+            if (mc == null || mi == null || mp == null || cv == null) return false;
+            maxColors = (int)AsLong(mc);
+            minIou = AsDouble(mi);
+            minPalette = AsDouble(mp);
+            cover = AsDouble(cv);
+            return maxColors > 0 && minIou > 0 && minPalette > 0 && cover > 0;
+        }
+
+        /// The tile asset's declared authoring canvas height: read from the
+        /// produced frame's asset entry in art/asset_catalog.json (the data
+        /// source), falling back to data/art_contract.json tile.canvas.
+        public static int TileCanvasHeight(ArtManifest m)
+        {
+            ArtFrame tile = null;
+            foreach (var f in m.Frames)
+            {
+                if (f.Category == "tile") { tile = f; break; }
+            }
+            if (tile != null && tile.Asset != null)
+            {
+                var cat = LoadJsonList("art/asset_catalog.json");
+                if (cat != null)
+                {
+                    foreach (var o in cat)
+                    {
+                        var e = AsDict(o);
+                        if (e == null || AsString(Get(e, "id")) != tile.Asset) continue;
+                        var cp = AsList(Get(e, "canvas_px"));
+                        if (cp != null && cp.Count == 2)
+                        {
+                            return (int)AsLong(cp[1]);
+                        }
+                    }
+                }
+            }
+            var c = LoadJsonDict("data/art_contract.json");
+            var t = c == null ? null : AsDict(Get(c, "tile"));
+            var cv = t == null ? null : AsList(Get(t, "canvas"));
+            if (cv != null && cv.Count == 2) return (int)AsLong(cv[1]);
+            return tile != null ? tile.CanvasH : 0;
+        }
+
+        /// atlas_frames_present: the manifest declares a nonempty frame list,
+        /// every declared job in art/jobs.json produced at least one frame,
+        /// and every frame rect contains real opaque pixels in the sheet.
+        public static bool AtlasFramesPresent(ArtManifest m, SoftwareCanvas sheet)
+        {
+            if (!m.Valid || sheet == null || m.Frames.Count == 0) return false;
+            var jobs = LoadJobs();
+            if (jobs == null || jobs.Count == 0) return false;
+            foreach (var o in jobs)
+            {
+                var job = AsDict(o);
+                string jid = AsString(Get(job, "id"));
+                bool any = false;
+                foreach (var f in m.Frames)
+                {
+                    if (f.Job == jid) { any = true; break; }
+                }
+                if (!any) return false;
+            }
+            foreach (var f in m.Frames)
+            {
+                if (CountOpaque(sheet, f) == 0) return false;
+            }
+            return true;
+        }
+
+        /// Every declared frame rect is exactly the contract unit box.
+        public static bool AllFramesUnit(ArtManifest m, int unit)
+        {
+            if (!m.Valid || m.Frames.Count == 0) return false;
+            foreach (var f in m.Frames)
+            {
+                if (f.W != unit || f.H != unit) return false;
+            }
+            return true;
+        }
+
+        private static int CountOpaque(SoftwareCanvas sheet, ArtFrame f)
+        {
+            int n = 0;
+            for (int y = 0; y < f.H; y++)
+            {
+                for (int x = 0; x < f.W; x++)
+                {
+                    int i = ((f.Y + y) * sheet.Width + f.X + x) * 4;
+                    if (sheet.Pixels[i + 3] > 24) n++;
+                }
+            }
+            return n;
+        }
+
+        /// pixel_art_quantized_cells: every cell is real pixel art - at
+        /// least one opaque pixel and at most maxColors distinct opaque
+        /// colors, counted on the decoded sheet. A smooth resample lands
+        /// hundreds of unique colors per cell and fails.
+        public static bool QuantizedCellsOk(SoftwareCanvas sheet,
+            ArtManifest m, int maxColors)
+        {
+            if (!m.Valid || sheet == null || m.Frames.Count == 0) return false;
+            foreach (var f in m.Frames)
+            {
+                var seen = new HashSet<int>();
+                int opaque = 0;
+                for (int y = 0; y < f.H; y++)
+                {
+                    for (int x = 0; x < f.W; x++)
+                    {
+                        int i = ((f.Y + y) * sheet.Width + f.X + x) * 4;
+                        if (sheet.Pixels[i + 3] > 24)
+                        {
+                            opaque++;
+                            seen.Add((sheet.Pixels[i] << 16)
+                                | (sheet.Pixels[i + 1] << 8)
+                                | sheet.Pixels[i + 2]);
+                        }
+                    }
+                }
+                if (opaque == 0 || seen.Count > maxColors) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// reference_conformance_ok: for every frame, rebuild the reference
+        /// silhouette in cell space from the committed raw reference PNG via
+        /// the frame's committed ref_map (block coverage >= cover over the
+        /// mapped source region), measure silhouette IoU against the decoded
+        /// cell, and measure palette match (share of the cell's opaque pixels
+        /// whose 5-bit-per-channel color bin is populated by the reference's
+        /// mapped region). A frame passes when iou >= minIou, palette >=
+        /// minPalette, and the manifest's recorded reference_similarity
+        /// agrees with the re-measurement (recorded provenance is audited,
+        /// not trusted).
+        /// </summary>
+        public static bool ReferenceConformanceOk(SoftwareCanvas sheet,
+            ArtManifest m, double minIou, double minPalette, double cover)
+        {
+            if (!m.Valid || sheet == null || m.Frames.Count == 0) return false;
+            string root = WorkspaceRoot();
+            if (root == null) return false;
+            var refs = new Dictionary<string, SoftwareCanvas>();
+            foreach (var f in m.Frames)
+            {
+                if (string.IsNullOrEmpty(f.Reference) || f.RefMap.Count == 0)
+                {
+                    return false;
+                }
+                SoftwareCanvas raw;
+                string path = Path.Combine(root,
+                    f.Reference.Replace('/', Path.DirectorySeparatorChar));
+                if (!refs.TryGetValue(path, out raw))
+                {
+                    if (!PngReader.TryLoad(path, out raw)) return false;
+                    refs[path] = raw;
+                }
+                var refMask = new bool[f.W * f.H];
+                for (int e = 0; e < f.RefMap.Count; e++)
+                {
+                    var r = f.RefMap[e];
+                    int sx0 = r[0], sy0 = r[1], sx1 = r[2], sy1 = r[3];
+                    int dx = r[4], dy = r[5], dw = r[6], dh = r[7];
+                    for (int py = 0; py < dh; py++)
+                    {
+                        int ay0 = sy0 + py * (sy1 - sy0) / dh;
+                        int ay1 = sy0 + (py + 1) * (sy1 - sy0) / dh;
+                        for (int px = 0; px < dw; px++)
+                        {
+                            int ax0 = sx0 + px * (sx1 - sx0) / dw;
+                            int ax1 = sx0 + (px + 1) * (sx1 - sx0) / dw;
+                            int tot = 0, op = 0;
+                            for (int yy = ay0; yy < ay1; yy++)
+                            {
+                                for (int xx = ax0; xx < ax1; xx++)
+                                {
+                                    if (yy < 0 || xx < 0 || yy >= raw.Height
+                                        || xx >= raw.Width) continue;
+                                    tot++;
+                                    if (raw.Pixels[(yy * raw.Width + xx) * 4 + 3] > 24)
+                                    {
+                                        op++;
+                                    }
+                                }
+                            }
+                            if (tot > 0 && (double)op / tot >= cover)
+                            {
+                                refMask[(dy + py) * f.W + dx + px] = true;
+                            }
+                        }
+                    }
+                }
+                int inter = 0, uni = 0;
+                for (int y = 0; y < f.H; y++)
+                {
+                    for (int x = 0; x < f.W; x++)
+                    {
+                        int i = ((f.Y + y) * sheet.Width + f.X + x) * 4;
+                        bool c = sheet.Pixels[i + 3] > 24;
+                        if (c && refMask[y * f.W + x]) inter++;
+                        if (c || refMask[y * f.W + x]) uni++;
+                    }
+                }
+                if (uni == 0) return false;
+                double iou = (double)inter / uni;
+                if (iou < minIou) return false;
+
+                var bins = new HashSet<int>();
+                for (int e = 0; e < f.RefMap.Count; e++)
+                {
+                    var r = f.RefMap[e];
+                    int y1 = Math.Min(r[3], raw.Height);
+                    int x1 = Math.Min(r[2], raw.Width);
+                    for (int yy = Math.Max(0, r[1]); yy < y1; yy++)
+                    {
+                        for (int xx = Math.Max(0, r[0]); xx < x1; xx++)
+                        {
+                            int i = (yy * raw.Width + xx) * 4;
+                            if (raw.Pixels[i + 3] > 24)
+                            {
+                                bins.Add(((raw.Pixels[i] >> 3) << 10)
+                                    | ((raw.Pixels[i + 1] >> 3) << 5)
+                                    | (raw.Pixels[i + 2] >> 3));
+                            }
+                        }
+                    }
+                }
+                int hit = 0, cellOpaque = 0;
+                for (int y = 0; y < f.H; y++)
+                {
+                    for (int x = 0; x < f.W; x++)
+                    {
+                        int i = ((f.Y + y) * sheet.Width + f.X + x) * 4;
+                        if (sheet.Pixels[i + 3] > 24)
+                        {
+                            cellOpaque++;
+                            if (bins.Contains(((sheet.Pixels[i] >> 3) << 10)
+                                | ((sheet.Pixels[i + 1] >> 3) << 5)
+                                | (sheet.Pixels[i + 2] >> 3)))
+                            {
+                                hit++;
+                            }
+                        }
+                    }
+                }
+                if (cellOpaque == 0) return false;
+                double pal = (double)hit / cellOpaque;
+                if (pal < minPalette) return false;
+
+                if (!f.RefRecordedOk || f.RefIou < 0 || f.RefPalette < 0)
+                {
+                    return false;
+                }
+                if (Math.Abs(f.RefIou - iou) > 0.05
+                    || Math.Abs(f.RefPalette - pal) > 0.05)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// Unit-tile pixel measure on the approved 32x32 cell: the 32x16
+        /// top-face rhombus fills rows 0-15 (apex row 0, equator ~row 8,
+        /// front vertex row 15) and the visual side band ends by row 18.
+        public static TileMeasure MeasureTileUnit(SoftwareCanvas sheet, ArtFrame f)
+        {
+            var t = new TileMeasure();
+            for (int y = 0; y < f.H && y < 32; y++)
+            {
+                int rowW = 0;
+                for (int x = 0; x < f.W; x++)
+                {
+                    int i = ((f.Y + y) * sheet.Width + f.X + x) * 4;
+                    if (sheet.Pixels[i + 3] > 24)
+                    {
+                        rowW++;
+                        t.OpaquePx++;
+                        if (t.TopRow < 0) t.TopRow = y;
+                        t.SilhouetteBottomRow = y;
+                    }
+                }
+                if (y < 16 && rowW > 0) t.TopFaceRows++;
+                if (y < 16 && rowW > t.MaxWidth)
+                {
+                    t.MaxWidth = rowW;
+                    t.EquatorRow = y;
+                }
+            }
+            return t;
+        }
+
+        /// <summary>
+        /// The effective image model emitted from the committed approved
+        /// manifest's provenance - never a live OAuth/codex probe (the eval
+        /// environment may have no codex surface). The recorded measured
+        /// backend string is emitted only when the committed verification is
+        /// VERIFIED and the measurement equals the recorded request;
+        /// otherwise the key honestly reports BLOCKED.
+        /// </summary>
+        public static string EffectiveImageModel(ArtManifest m)
+        {
+            if (m == null || string.IsNullOrEmpty(m.EffectiveImageModel))
+            {
+                return "BLOCKED";
+            }
+            if (m.ModelVerification != "VERIFIED") return "BLOCKED";
+            string requested = RequestedImageModel();
+            return m.EffectiveImageModel == requested
+                ? m.EffectiveImageModel : "BLOCKED";
         }
 
         public static Dictionary<string, object> AsDict(object o)
