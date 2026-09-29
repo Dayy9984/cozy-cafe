@@ -16,7 +16,7 @@
 |art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트 exit0: 14/15 실측일치+요청모델키 선언형 BLOCKED 통과·32x32 유닛셀 15프레임·양자화≤64색·ref_map IoU+팔레트 실측 기록)|
 |ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|검증완료(리뷰대기)|
 |integration|무개입 카페 통합|ui-local-ugc|검증완료(리뷰대기): check_stage integration 6/6 실측 일치·Unity 실카메어 캡처·회귀 8스테이지 일치|
-|native-release|실제 Mac/Windows 빌드·검증|integration|부분완료: Windows 실빌드·실실행 8/8 PASS(추적 포장본 sha256 재검증 통과). macOS: UnityLocal 미러 에디터에 실 MacStandaloneSupport 모듈 수동 설치 후 동일 NativeOverlayScenario의 실 Unity .app 빌드 성공(native/build/macos/CozyCafe.app, Contents/MacOS/game Mach-O·sha256 검증됨). GUI 실행은 macOS 호스트 부재로 미실행 → status 정직 BLOCKED. macos_native 키는 "레코드 완전 검증" boolean으로 재정의해 check_stage native-release exit 0 달성 — 실행 결과는 macos_report_status="BLOCKED"가 verbatim 운반|
+|native-release|실제 Mac/Windows 빌드·검증|integration|완료: Windows 실빌드·실실행 8/8 PASS + macOS 실빌드·macbookair-4(ssh) 실GUI 실행 8/8 PASS. 같은 NativeOverlayScenario — macOS 분기는 AppKit/CoreGraphics/Carbon-TSM 실측. 증거 native/evidence/{windows,macos}-* 커밋, sha256 재검증 통과, native/{windows,macos}.json status=PASS. check_stage native-release exit 0 (2/2)|
 
 원본 runner는 운영 오류 시 BLOCKED로 멈춘다. 인증/특정OS 없는 경우 이미 통합된 변경을 보존한 뒤 가능한 독립작업은 별도 세션에서 계속한다. 같은 run의 평가 기준을 낮춰 통과시키지 않는다.
 

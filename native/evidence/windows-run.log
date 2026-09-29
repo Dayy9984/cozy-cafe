@@ -1,37 +1,42 @@
-﻿[T+0.05s] native overlay scenario starting; pid=16596 unity=6000.6.3f1 os=Windows 11  (10.0.26200) device=550XED (SAMSUNG ELECTRONICS CO., LTD.)
-[T+0.06s] SetProcessDpiAwarenessContext(PER_MONITOR_AWARE_V2)=False
-[T+0.11s] integration session booted: coins=0 layout furniture=7
-[T+0.13s] message window thread up: hwnd=0x320372
-[T+0.16s] cafe raster presented 520x360 over chroma background
-[T+0.16s] OnApplicationFocus(True)
-[T+2.20s] player hwnd=0xAB06F6
-[T+2.71s] window rect=80,80 560x400
-[T+2.72s] CASE dpi = PASS :: window_dpi=120 system_dpi=120 awareness_ctx_set + readback aware=2
-[T+3.56s] CASE transparency = PASS :: LWA_COLORKEY set=True readback key=0xFF00FF screen_px@letterbox=0xC4C4C4 (not chroma=True) cafe_art_visible=True
-[T+4.16s] CASE multi_monitor = PASS :: monitors=1 window_moved_and_identified=1
-[T+5.10s] CASE always_on_top = PASS :: WS_EX_TOPMOST set + z-order vs notepad hwnd=0x6605F6 above=True
-[T+5.10s] wndproc subclassed: old=0xFFFF08DD
+﻿[T+0.08s] native overlay scenario starting; pid=30016 unity=6000.6.3f1 os=Windows 11  (10.0.26200) device=550XED (SAMSUNG ELECTRONICS CO., LTD.)
+[T+0.08s] SetProcessDpiAwarenessContext(PER_MONITOR_AWARE_V2)=False
+[T+0.13s] integration session booted: coins=0 layout furniture=7
+[T+0.14s] message window thread up: hwnd=0x360714
+[T+0.17s] cafe raster presented 520x360 over chroma background
+[T+0.19s] OnApplicationFocus(True)
+[T+2.21s] player hwnd=0x660826
+[T+2.73s] window rect=80,80 560x400
+[T+2.73s] CASE dpi = PASS :: window_dpi=120 system_dpi=120 awareness_ctx_set + readback aware=2
+[T+3.58s] CASE transparency = PASS :: LWA_COLORKEY set=True readback key=0xFF00FF screen_px@letterbox=0xC4C4C4 (not chroma=True) cafe_art_visible=True
+[T+4.18s] CASE multi_monitor = PASS :: monitors=1 window_moved_and_identified=1
+[T+5.11s] CASE always_on_top = PASS :: WS_EX_TOPMOST set + z-order vs notepad hwnd=0x1908AC above=True
+[T+5.11s] wndproc subclassed: old=0xFFFF0857
 [watchdog] alive at 5s step=clickthrough:enable
-[T+6.44s] click-through probe: hittest=-1 window_under_point=0x5B0750 fg(before)=0x8203AE fg(after)=0x6605F6 notepad=0x6605F6
-[T+6.46s] recovery control toggled click-through -> OFF (requests=1)
+[T+6.46s] click-through probe: hittest=-1 window_under_point=0x107063E fg(before)=0x8203AE fg(after)=0x1908AC notepad=0x1908AC
+[T+6.48s] recovery control toggled click-through -> OFF (requests=1)
 [T+8.93s] recovery control toggled click-through -> OFF (requests=1)
 [watchdog] alive at 10s step=clickthrough:enable
 [T+10.44s] CASE click_through_recovery = PASS :: hittest=-1 click_reached_under_window=True hotkey_recovered=True tray_rect_ok=True tray_click_recovered=False tray_callback_recovered=True
 [T+11.26s] SetForegroundWindow worker returned=True
-[T+11.88s] CASE focus = PASS :: edge1 real click left us->notepad fg=0xnp edge2 regained fg=0xAB06F6 ours=0xAB06F6 click_focused_us=False api_fallback=True unity_focus_events lost=False gained=False
-[T+12.79s] ime step foreground=0xAB06F6
-[T+12.80s] IME layout: ko_hkl=0x4120412 current=0x4120412
+[T+11.88s] CASE focus = PASS :: edge1 real click left us->notepad fg=0xnp edge2 regained fg=0x660826 ours=0x660826 click_focused_us=False api_fallback=True unity_focus_events lost=False gained=False
+[T+12.81s] ime step foreground=0x660826
+[T+12.81s] IME layout: ko_hkl=0x4120412 current=0x4120412
 [watchdog] alive at 15s step=korean_ime:keys
-[T+16.76s] CASE korean_ime = PASS :: korean_layout=0x0412 composed_text='한글' composition=''
-[T+16.79s] PBT_APMSUSPEND: real checkpoint written (settlement s1@1790679165, utc=1790679165)
-[T+19.82s] PBT_APMRESUMEAUTOMATIC: settleOffline elapsed=3s coins_gained=0 duplicate=False
+[T+16.78s] CASE korean_ime = PASS :: korean_layout=0x0412 composed_text='한글
+' composition=''
+[T+16.80s] PBT_APMSUSPEND: real checkpoint written (settlement s1@1790692365, utc=1790692365)
+[T+19.83s] PBT_APMRESUMEAUTOMATIC: settleOffline elapsed=3s coins_gained=0 duplicate=False
 [watchdog] alive at 20s step=sleep
-[T+20.81s] CASE sleep = PASS :: suspend_broadcast->checkpoint=True resume_broadcast->settle=3s/+0c injected_via_postmessage(host suspend unavailable)
+[T+20.83s] CASE sleep = PASS :: suspend_broadcast->checkpoint=True resume_broadcast->settle=3s/+0c injected_via_postmessage(host suspend unavailable)
 [watchdog] alive at 25s step=sleep
-[T+27.00s] summary written: 8/8 cases PASS, frames=91
-[T+27.03s] recording written: C:\Users\dlgkr\cozy_cafe\run_devin_v2\work\builders\native-release\native\evidence\windows-recording.mp4 bytes=1924187
+[T+27.03s] summary written: 8/8 cases PASS, frames=91
+[T+27.04s] recording written: C:\Users\dlgkr\cozy_cafe\run_devin_v2\work\builders\native-release\native\evidence\windows-recording.mp4 bytes=1923499
 
 === orchestrator ===
-argv: /c/Users/dlgkr/cozy_cafe/run_devin_v2/work/builders/native-release/out/builds/windows/CozyCafe.exe -screen-fullscreen 0 -screen-width 560 -screen-height 400
+argv: /c/Users/dlgkr/cozy_cafe/run_devin_v2/work/builders/native-release/out/builds/windows/CozyCafe.exe
+ -screen-fullscreen 0 -screen-width 560 -screen-height 400
 build_sha256: 96b492cb271111251fe42b8646e65370a1b7b566773a1e35b34c3f2d1ae70873
-duration_s: 43.2 rc=0 timed_out=False
+player_log_span_s: 27.04 rc=0 timed_out=False
+note: rebuilt+rerecorded from the same tree after the macOS layer was
+added; rc observed from the subprocess exit, duration from the log
+

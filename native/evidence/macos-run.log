@@ -1,0 +1,39 @@
+﻿[T+0.00s] native overlay scenario starting; pid=78862 unity=6000.6.3f1 os=Mac OS X 26.2.0 device=Mac16,13
+[T+0.12s] integration session booted (macos): coins=0 layout furniture=7
+[T+0.13s] mac handler class registered obj=0x84D15CD60
+[T+0.22s] mac status item registered=True
+[T+0.22s] mac hotkey: InstallEventHandler=0 RegisterEventHotKey=0 ref=0x84FE40DC0
+[T+0.23s] mac workspace sleep/wake observers registered=True
+[T+0.24s] mac power assertion token=0x84CC3AB80
+[T+0.66s] mac cafe raster presented 520x360 over alpha-0 clear
+[T+0.67s] OnApplicationFocus(True)
+[T+2.21s]   window[0] class=PlayerWindow frame=280x232
+[T+2.21s]   window[1] class=NSStatusBarWindow frame=79x34
+[T+2.21s] mac player NSWindow=0x84CDB7700 cgwid=820469
+[T+2.72s] mac window frame 80,633 280x232
+[T+2.72s] CASE dpi = PASS :: window_backing_scale=2.0 screens=1 unity_Screen.dpi=266.0 (real NSScreen readback)
+[T+3.26s] mac own-window image 280x232 bpr=1152 alphaInfo=2 byteOrder=0x2000 alphaIdx=3
+[T+3.26s] CASE transparency = PASS :: window.isOpaque=0 bg_alpha=0 own_window_alpha letterbox_transparent=192/320 art_opaque=200/200 (CGWindowListCreateImage real window pixels)
+[T+3.92s] CASE multi_monitor = PASS :: monitors=1 window_moved_and_identified=1 (NSScreen.screens + window.screen readback)
+[T+4.83s] CASE always_on_top = PASS :: NSWindow.level=3 (floating) + CGWindowList z-order ours@18 first_other_normal@19 (Discord) above=True
+[T+5.13s] mac click-through: ignores=1 winAtCenter=797101 owner=Aside pid=19977
+[T+5.24s] mac recovery control toggled ignoresMouseEvents -> OFF (requests=1)
+[watchdog] alive at 6s step=mac:clickthrough
+[T+5.74s] CASE click_through_recovery = PASS :: ignoresMouseEvents readback=1 hit_test_window_below=797101 (Aside, other_pid=True) status_item_registered=True status_item_click_recovered=True hotkey_registered=True
+[T+7.44s] CASE focus = PASS :: edge1 finder_activated us_active=0 (frontmost_pid=44900) edge2 self_reactivated=True active=True keyWindow=True unity_focus lost=False gained=False (NSRunningApplication real transitions)
+[T+8.05s] mac IME: selected=com.apple.inputmethod.Korean.2SetKorean sel_rc=0 current=com.apple.inputmethod.Korean.2SetKorean
+[watchdog] alive at 11s step=mac:korean_ime
+[T+11.71s] mac TSMProcessRawKeyEvent code=5 rc=0
+[T+11.87s] mac TSMProcessRawKeyEvent code=40 rc=0
+[T+12.05s] mac TSMProcessRawKeyEvent code=1 rc=0
+[T+12.21s] mac TSMProcessRawKeyEvent code=15 rc=0
+[T+12.38s] mac TSMProcessRawKeyEvent code=46 rc=0
+[T+12.54s] mac TSMProcessRawKeyEvent code=3 rc=0
+[T+13.20s] CASE korean_ime = PASS :: input_source=com.apple.inputmethod.Korean.2SetKorean composed_text='한글' syllable_composed=True jamo_delivered=True delivery=tsm_raw_key_event (TIS select + real key events -> IMKit compose)
+[T+13.23s] PBT_APMSUSPEND: real checkpoint written (settlement s1@1790692043, utc=1790692043)
+[watchdog] alive at 16s step=mac:sleep
+[T+16.23s] PBT_APMRESUMEAUTOMATIC: settleOffline elapsed=3s coins_gained=0 duplicate=False
+[T+17.21s] CASE sleep = PASS :: will_sleep->checkpoint=True did_wake->settle=3s/+0c observers_registered=True injected_via_nsworkspace_notification_center(host sleep unavailable)
+[watchdog] alive at 21s step=mac:sleep
+[T+23.31s] summary written: 8/8 cases PASS, frames=54
+[T+23.32s] recording written: /tmp/cozycafe-native/macos-recording.mp4 bytes=891885

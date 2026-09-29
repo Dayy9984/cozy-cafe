@@ -367,3 +367,16 @@ DllNotFoundException — macOS 코드 경로(플랫폼 가드 + AppKit/Cocoa 상
 창 level/ignoresMouseEvents/투명도/포커스/입력 컨텍스트 등)를 구현하고 같은
 증거 로그+MP4+요약+sha256를 Mac에서 수집해 native/macos.json PASS로 기록할 것.
 증거 파일은 커밋되어 평가 워크트리에서 재현 가능해야 한다.
+
+## ENV 2026-09-29 — macOS 실행 완료 (native-release macos_native 실측 PASS)
+이전 BLOCKED 항목의 블로커(unguarded user32 P/Invoke + 호스트 미실행)를 실측으로 해소.
+- 구현: NativeOverlayScenario partial 분리 + NativeOverlayScenarioMac.cs.
+  AppKit/Cocoa(objc_msgSend)·CoreGraphics(dlsym CGWindowListCreateImage·
+  CGWindowList·CGEvent)·HIToolbox(TIS·Carbon Event·TSM)·NSWorkspace 경로.
+- SSH 직접 exec 환경 특성(실측으로 확인):
+  * runInBackground=false + 비활성 → 플레이어 루프 정지(코루틴 정지·watchdog 스레드만 동작). Application.runInBackground=true로 해소.
+  * Environment.Exit가 정지된 메인스레드와 데드록 → libc _exit 사용.
+  * open(1) 차단이어도 앱 활성화 자체는 가능 — Unity의 실 NSApp 이벤트 루프에서 activateWithOptions+makeKeyAndOrderFront로 active=True/keyWindow=True 실측.
+  * 합성 NSEvent(window=nil)·CGEvent tap 키는 비활성 문맥에서 IMKit 조합 미달 → CreateEvent(kEventClassKeyboard,kEventRawKeyDown)+TSMProcessRawKeyEvent 경로가 실 입력 메서드 파이프라인을 통과해 '한글' 합성 확인(rc=0×6).
+- 실행: tools/native_run.py macos = 로컬 Unity .app 빌드 → tar+scp → mac 호스트에서 chmod+직접 exec → GAUNTLET_NATIVE_* env로 run.log/mp4/summary 생성 → scp 회수 → 로컬 sha256 기록.
+- 증거(native/evidence/, 커밋): macos-run.log·macos-recording.mp4(891KB,54프레임)·macos-summary.json, windows-run.log·windows-recording.mp4·windows-summary.json. 양측 8/8 PASS, native/{windows,macos}.json status=PASS.

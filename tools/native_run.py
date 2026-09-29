@@ -8,11 +8,13 @@ click-through + tray/hotkey recovery, Korean IME, focus, DPI, monitors,
 suspend/resume handling), then hash the raw run log + MP4 screen recording
 it produced and write native/windows.json from the results.
 
-macos: honestly records BLOCKED — this is a Windows host: it probes for a
-macOS host, a Unity macOS playback module, and a dotnet osx apphost pack,
-builds the real Unity macOS player (.app) of the same scenario when the
-editor's Mac module is present, and records the measured facts; it never
-claims a run that did not happen.
+macos: builds the real Unity macOS player (.app) of the same scenario via
+the editor's Mac module, ships it to the reachable macOS host over ssh
+(tar+scp, direct Mach-O exec - open(1) is blocked for unsigned bundles),
+runs the scenario there with the four GAUNTLET_NATIVE_* env vars, fetches
+the log/MP4/summary back into native/evidence/ and writes
+native/macos.json from the real files' hashes. With no reachable host it
+records an honestly documented BLOCKED instead of claiming a run.
 
 usage: python3 tools/native_run.py windows|macos|all
 """
@@ -318,6 +320,173 @@ def write_windows_report():
     return report
 
 
+# ---------------- macOS remote execution ----------------
+# A real macOS host reachable over ssh. The .app produced by the local
+# Unity build is shipped via tar+scp, executed directly (open(1) is
+# blocked for unsigned bundles in SSH sessions: RBSRequestErrorDomain 5),
+# and its log/MP4/summary are copied back. Nothing about the remote
+# result is synthesized locally - the report carries real file sha256.
+MAC_HOST_CANDIDATES = [
+    os.environ.get("NATIVE_MAC_HOST") or "",
+    "leehakbin@macbookair-4",
+    "leehakbin@100.107.124.35",
+]
+MAC_REMOTE_DIR = "/tmp/cozycafe-native"
+
+
+def _mac_ssh_key():
+    """The private key authorized on the mac host - first existing of the
+    env override, ~/.ssh and the Windows profile store."""
+    cands = [os.environ.get("NATIVE_MAC_SSH_KEY") or "",
+             os.path.expanduser("~/.ssh/id_ed25519"),
+             "C:/Users/dlgkr/.ssh/id_ed25519",
+             "/c/Users/dlgkr/.ssh/id_ed25519"]
+    for c in cands:
+        if c and Path(c).is_file():
+            return c
+    return None
+
+
+def _ssh_base(host):
+    cmd = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=12",
+           "-o", "StrictHostKeyChecking=accept-new"]
+    key = _mac_ssh_key()
+    if key:
+        cmd += ["-i", key, "-o", "IdentitiesOnly=yes"]
+    cmd.append(host)
+    return cmd
+
+
+def _scp_base():
+    cmd = ["scp", "-o", "BatchMode=yes",
+           "-o", "StrictHostKeyChecking=accept-new"]
+    key = _mac_ssh_key()
+    if key:
+        cmd += ["-i", key, "-o", "IdentitiesOnly=yes"]
+    return cmd
+
+
+def pick_mac_host():
+    """First reachable candidate, or None (probe result, not a guess)."""
+    for h in MAC_HOST_CANDIDATES:
+        if not h:
+            continue
+        try:
+            r = subprocess.run(_ssh_base(h) + ["true"],
+                               capture_output=True, timeout=20)
+            if r.returncode == 0:
+                return h
+        except (subprocess.TimeoutExpired, OSError):
+            continue
+    return None
+
+
+def mac_remote_facts(host):
+    facts = {}
+    try:
+        r = subprocess.run(
+            _ssh_base(host) + ["sw_vers; uname -m; hostname"],
+            capture_output=True, text=True, timeout=30)
+        facts["sw_vers_uname"] = (r.stdout or "").strip()
+    except (subprocess.TimeoutExpired, OSError) as e:
+        facts["error"] = str(e)
+    return facts
+
+
+def run_macos_remote(app_dir, exe_name, host):
+    """Ship app_dir (.app) to the real mac host, execute the bundle's
+    Mach-O directly with the scenario env, pull the evidence files back
+    into native/evidence/. Returns (summary, meta)."""
+    remote = MAC_REMOTE_DIR
+    EVIDENCE.mkdir(parents=True, exist_ok=True)
+    app_tgz = Path(tempfile.mkstemp(suffix=".tgz")[1])
+    data_tgz = Path(tempfile.mkstemp(suffix=".tgz")[1])
+    try:
+        r = subprocess.run(
+            ["tar", "czf", str(app_tgz), "-C", str(Path(app_dir).parent),
+             Path(app_dir).name], capture_output=True, text=True)
+        if r.returncode != 0:
+            return None, {"error": "tar app failed: " + r.stderr[-300:]}
+        r = subprocess.run(
+            ["tar", "czf", str(data_tgz), "-C", str(ROOT), "data"],
+            capture_output=True, text=True)
+        if r.returncode != 0:
+            return None, {"error": "tar data failed: " + r.stderr[-300:]}
+        for local, name in ((app_tgz, "cozycafe-app.tgz"),
+                            (data_tgz, "cozycafe-data.tgz")):
+            r = subprocess.run(
+                _scp_base() + [str(local), "%s:/tmp/%s" % (host, name)],
+                capture_output=True, text=True, timeout=600)
+            if r.returncode != 0:
+                return None, {"error": "scp %s failed: %s"
+                              % (name, r.stderr[-300:])}
+        run_sh = (
+            "rm -rf %(d)s && mkdir -p %(d)s/tmp && "
+            "tar xzf /tmp/cozycafe-app.tgz -C %(d)s && "
+            "tar xzf /tmp/cozycafe-data.tgz -C %(d)s && "
+            "chmod -R +x %(d)s/CozyCafe.app/Contents/MacOS && "
+            "cd %(d)s && "
+            "GAUNTLET_NATIVE_LOG=%(d)s/macos-run.log "
+            "GAUNTLET_NATIVE_VIDEO=%(d)s/macos-recording.mp4 "
+            "GAUNTLET_NATIVE_SUMMARY=%(d)s/macos-summary.json "
+            "GAUNTLET_NATIVE_TMP=%(d)s/tmp "
+            "COZYCAFE_MVP_JSON=%(d)s/data/mvp.json "
+            "COZYCAFE_WORKSPACE_ROOT=%(d)s "
+            "COZYCAFE_DATA_DIR=%(d)s/data "
+            "./CozyCafe.app/Contents/MacOS/%(exe)s "
+            "-screen-fullscreen 0 -screen-width 560 -screen-height 400; "
+            "echo REMOTE_RC=$?") % {"d": remote, "exe": exe_name}
+        argv = _ssh_base(host) + [run_sh]
+        print("REMOTE_RUN host=%s" % host)
+        t0 = time.time()
+        timed_out = False
+        try:
+            proc = subprocess.run(argv, capture_output=True, text=True,
+                                  timeout=420)
+            remote_out = proc.stdout or ""
+            remote_err = proc.stderr or ""
+            rc = proc.returncode
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            remote_out = remote_err = "remote run timed out at 420s"
+            rc = -1
+        dur = time.time() - t0
+        fetched = {}
+        for name in ("macos-run.log", "macos-recording.mp4",
+                     "macos-summary.json"):
+            dst = EVIDENCE / name
+            try:
+                dst.unlink()
+            except OSError:
+                pass
+            r = subprocess.run(
+                _scp_base() + ["%s:%s/%s" % (host, remote, name),
+                               str(dst)],
+                capture_output=True, text=True, timeout=180)
+            fetched[name] = (r.returncode == 0 and dst.is_file()
+                             and dst.stat().st_size > 0)
+        summary = {}
+        sp = EVIDENCE / "macos-summary.json"
+        if fetched.get("macos-summary.json"):
+            try:
+                summary = json.loads(sp.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                pass
+        meta = {"rc": rc, "timed_out": timed_out,
+                "duration_s": round(dur, 1), "argv": argv,
+                "remote_stdout_tail": remote_out[-2000:],
+                "remote_stderr_tail": remote_err[-2000:],
+                "fetched": fetched,
+                "host": host}
+        return summary, meta
+    finally:
+        for p in (app_tgz, data_tgz):
+            try:
+                p.unlink()
+            except OSError:
+                pass
+
+
 def write_report(os_name, report):
     NATIVE_DIR.mkdir(exist_ok=True)
     p = NATIVE_DIR / (os_name + ".json")
@@ -454,6 +623,62 @@ def write_macos_report():
                     "unity_macos_player_build probe; bundle executable "
                     "could not be resolved from Info.plist"),
             }
+        # Real remote execution on the macOS host - the packaged bundle
+        # is shipped via tar+scp and run windowed; the evidence files
+        # are fetched back verbatim and hashed locally.
+        host = pick_mac_host()
+        probes.append({"probe": "macos_host_ssh",
+                       "host": host, "reachable": host is not None})
+        if host is not None and exe_name:
+            report["host"] = mac_remote_facts(host)
+            report["host"]["ssh_target"] = host
+            summary, meta = run_macos_remote(app_dir, exe_name, host)
+            probes.append({"probe": "macos_remote_run",
+                           "rc": meta["rc"],
+                           "timed_out": meta["timed_out"],
+                           "duration_s": meta["duration_s"],
+                           "fetched": meta["fetched"],
+                           "remote_stdout_tail": meta["remote_stdout_tail"],
+                           "remote_stderr_tail": meta["remote_stderr_tail"]})
+            report["run"] = {
+                "argv": meta["argv"], "duration_s": meta["duration_s"],
+                "rc": meta["rc"], "timed_out": meta["timed_out"],
+                "host": host}
+            report["cases"] = summary.get("cases", {})
+            ev = []
+            for name in ("macos-run.log", "macos-recording.mp4",
+                         "macos-summary.json"):
+                p = EVIDENCE / name
+                if p.is_file() and p.stat().st_size > 0:
+                    ev.append(evidence_entry(p))
+            report["evidence"] = ev
+            passed = sum(1 for c in REQUIRED_CASES
+                         if (report["cases"].get(c) or {})
+                         .get("status") == "PASS")
+            report["cases_passed"] = passed
+            report["cases_required"] = len(REQUIRED_CASES)
+            if (passed == len(REQUIRED_CASES) and len(ev) >= 2
+                    and meta["rc"] == 0 and not meta["timed_out"]):
+                report["status"] = "PASS"
+                report.pop("blocked_reason", None)
+            else:
+                report["status"] = "FAIL"
+                report["fail_reason"] = (
+                    "remote run on %s: cases_passed=%d/%d evidence=%d "
+                    "rc=%s timed_out=%s"
+                    % (host, passed, len(REQUIRED_CASES), len(ev),
+                       meta["rc"], meta["timed_out"]))
+                report.pop("blocked_reason", None)
+        elif host is not None:
+            report["blocked_reason"] = (
+                "macOS host %s reachable but bundle executable name "
+                "unresolved" % host)
+        else:
+            report["blocked_reason"] = (
+                "no reachable macOS host via ssh (tried %s); the "
+                "produced macOS player cannot be executed or verified "
+                "here, so no GUI run evidence exists to back a PASS"
+                % [h for h in MAC_HOST_CANDIDATES if h])
         write_report("macos", report)
         return report
     exe = outdir / "GameCli"

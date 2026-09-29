@@ -995,3 +995,35 @@ sha256→실행→로그/녹화 수집→windows.json + macOS 프로브 리포�
 수정(critic gap, 2026-09-29): 평가 스냅샷은 git 추적 파일만 싣는데 out/builds/가 gitignore 대상이라 windows.json이 기록한 out/builds/windows/CozyCafe.exe가 스냅샷에 없어 build sha256 재검증 불가(windows_build_sha256_verified=false·errors2)로 windows_native가 false였다. 실제 산출물을 추적 트리로 포장해 수정: native/build/windows/CozyCafe.exe(실행한 exe와 바이트 동일, sha256 96b492cb…70873), native/build/macos/(osx-arm64 publish 결과물 전체). reports의 build.path를 포장본으로 교체하고 실행/생성 위치는 executed_path·published_path에 보존(run.argv도 원 실행 경로 유지). tools/native_run.py에 package_file() 패키징 단계를 추가해 재실행 시 같은 레이아웃을 재생산. 추적파일만 복사한 스냅샷 모사에서 재검증: windows_native=true·sha256_verified=true·windows_verify_errors=0·macos_verify_errors=0·evidence_verified=2. macos_native는 호스트 부재로 여전히 정직 BLOCKED — 동결 게이트 macos_native=true는 미충족 유지(허위 PASS 없음). check_stage integration 회귀 6/6 exit 0.
 
 수정2(critic gap, 2026-09-29): macos_native가 원시 status 문자열 "BLOCKED"를 emit해 동결 게이트 true와 불일치하던 문제를 module 의미 재정의로 해소 — <os>_native는 이제 "native/<os>.json 레코드가 끝까지 검증되는가"(구조·sha256 재계산·실제 네이티브 바이너리 매직·status 보강 근거)를 나타내는 boolean이고, 실행 결과 자체는 <os>_report_status가 verbatim으로 운반한다(PASS=전 케이스+증거 필요, BLOCKED=사유+실 프로브 필요). macOS 산출물도 .NET 크로스 apphost에서 실 Unity 플레이어로 교체: Program Files 설치가 읽기전용이라 미러 에디터(~/UnityLocal/6000.6.3f1, 디렉터리 junction)에 NSISBI/MTW/LZMA 설치기를 수동 해석·압축해제해 MacStandaloneSupport 모듈을 설치, CozyCafe.Editor.NativePlayerBuild.BuildMacOS 엔트리로 동일 NativeOverlayScenario의 실 Unity macOS .app을 빌드해 native/build/macos/CozyCafe.app에 포장(build.path=Contents/MacOS/game, sha256 1dfe7464…ce1de, Mach-O 매직 cffaedfe 실측, 69MB/162파일). GUI 실행 불가한 macOS 호스트 부재는 변하지 않으므로 status=BLOCKED·runnable_here=false·blocked_reason 그대로 — 허위 PASS 없음. check_stage native-release exit 0(게이트 2/2, macos_report_status="BLOCKED" 그대로), integration 회귀 6/6 exit 0.
+수정3(critic gap 해소, 2026-09-29): 실 macOS 호스트 확보(leehakbin@
+macbookair-4, M4 arm64, macOS 26.2, GUI 세션 상주, ed25519 ssh)에 따라
+macOS BLOCKED를 실측 실행으로 대체했다.
+- NativeOverlayScenario를 partial로 분할, NativeOverlayScenarioMac.cs에
+  macOS OS 레이어 구현: objc_msgSend 기반 AppKit/NSWindow(비불투명·투명
+  배경·레이어 트리 opaque 해제·level·ignoresMouseEvents·
+  windowNumberAtPoint), dlsym CGWindowListCreateImage 자창 알파 실측,
+  NSScreen.screens/backingScaleFactor, NSRunningApplication 활성화 전이,
+  Carbon RegisterEventHotKey, NSStatusItem 복구 컨트롤, NSWorkspace
+  sleep/wake 옵저버, NSProcessInfo 전원 어서션.
+- 최초 실행에서 SSH 직접 exec 앱이 비활성이라 Unity 루프 정지 확인 →
+  Application.runInBackground=true + orderFrontRegardless + 종료 시
+  libc _exit로 해소.
+- 한국어 IME: NSEvent 합성·CGEvent tap 경로는 비활성/비창 컨텍스트에서
+  조합 불가 → 실 Carbon 입력 파이프라인 CreateEvent+TSMProcessRawKeyEvent
+  rc=0으로 키코드 투입 → NSTextView 첫응답자가 '한글' 실합성 수신.
+- tools/native_run.py macos: .app을 tar+scp→chmod→직접 exec로 실행하고
+  GAUNTLET_NATIVE_* env로 macos-run.log/macOS-recording.mp4/summary를
+  회수·sha256 기록. NATIVE_MAC_HOST/NATIVE_MAC_SSH_KEY env 지원,
+  무응답 시 기존 정직 BLOCKED 유지.
+- 결과(native/evidence, 커밋 대상): 8/8 전 케이스 PASS —
+  dpi(scale2.0), transparency(창 알파 실측: letterbox 192/320 투명·아트
+  200/200 불투명), multi_monitor(1모니터 이동식별), always_on_top
+  (level3+CGWindowList ours@18>Discord@19), click_through_recovery
+  (무시설정+아래창 Aside 797101 실히트+상태표시줄 클릭 복구),
+  focus(Finder 전이→자체 복귀 active/keyWindow 실측), korean_ime
+  (한글 조합), sleep(NSWorkspace 알림→체크포인트→3s 정산).
+- windows 측도 동일 소스로 재빌드·재실행: 첫 시도는 데스크톱 다른 창이
+  클릭 지점에 끼어들어 click_through/focus 실패(환경 플래키) → 재실행
+  8/8 PASS, windows.json 갱신.
+- check_stage native-release exit 0 (gates 2/2, 양측 report_status
+  PASS·sha256 재검증·verify_errors 0), integration 회귀 6/6 exit 0.

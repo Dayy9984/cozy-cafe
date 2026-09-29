@@ -1,7 +1,7 @@
 {
   "os": "windows",
   "status": "PASS",
-  "recorded_utc": 1790679132,
+  "recorded_utc": 1790692396,
   "host": {
     "os": "Windows_NT",
     "unity": "C:/Program Files/Unity/Hub/Editor/6000.6.3f1/Editor/Unity.exe",
@@ -25,9 +25,9 @@
       "-screen-height",
       "400"
     ],
-    "duration_s": 43.2,
     "rc": 0,
-    "timed_out": false
+    "timed_out": false,
+    "player_log_span_s": 27.04
   },
   "cases": {
     "dpi": {
@@ -44,7 +44,7 @@
     },
     "always_on_top": {
       "status": "PASS",
-      "detail": "WS_EX_TOPMOST set + z-order vs notepad hwnd=0x6605F6 above=True"
+      "detail": "WS_EX_TOPMOST set + z-order vs notepad hwnd=0x1908AC above=True"
     },
     "click_through_recovery": {
       "status": "PASS",
@@ -52,7 +52,7 @@
     },
     "focus": {
       "status": "PASS",
-      "detail": "edge1 real click left us->notepad fg=0xnp edge2 regained fg=0xAB06F6 ours=0xAB06F6 click_focused_us=False api_fallback=True unity_focus_events lost=False gained=False"
+      "detail": "edge1 real click left us->notepad fg=0xnp edge2 regained fg=0x660826 ours=0x660826 click_focused_us=False api_fallback=True unity_focus_events lost=False gained=False"
     },
     "korean_ime": {
       "status": "PASS",
@@ -66,13 +66,13 @@
   "evidence": [
     {
       "path": "native/evidence/windows-run.log",
-      "sha256": "42530b4e0ec46db3fbe21c5dce680e744a0e60e59c498ae0bba1c0bb10f7baaa",
-      "bytes": 2953
+      "sha256": "e8fc1e2af15ad38c6683e391e2202f5a1b00d2287022d9102a3af77ec3320c88",
+      "bytes": 3069
     },
     {
       "path": "native/evidence/windows-recording.mp4",
-      "sha256": "8b8ebf08c37ac63de049479aeac2829df82c1fc0951263b23dda18d73e0042c5",
-      "bytes": 1924187
+      "sha256": "b2398dac1296635ae48c6b74ae444adfbc5e73be0a970c6146675fb80daf1104",
+      "bytes": 1923499
     }
   ],
   "cases_passed": 8,

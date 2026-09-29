@@ -1,8 +1,7 @@
 {
   "os": "macos",
-  "status": "BLOCKED",
-  "recorded_utc": 1790684769,
-  "blocked_reason": "no macOS host on this Windows build machine; the produced macOS player cannot be executed or verified here, so no GUI run evidence exists to back a PASS",
+  "status": "PASS",
+  "recorded_utc": 1790692014,
   "probes": [
     {
       "probe": "host_os",
@@ -35,17 +34,113 @@
       "editor": "C:\\Users\\dlgkr/UnityLocal/6000.6.3f1/Editor/Unity.exe",
       "succeeded": true,
       "app_path": "out/builds/macos/CozyCafe.app",
-      "log_tail": "3808},{\"Utility\":2674262},{\"Curl\":2498},{\"PoolAlloc\":2168},{\"AI\":80},{\"TypeTree\":19589},{\"ScriptManager\":12656},{\"CodeReload\":448},{\"RuntimeInitializeOnLoadManager\":64},{\"Sprites\":102},{\"SpriteAtlas\":120},{\"GI\":7816},{\"Director\":8296},{\"CloudService\":7296},{\"WebRequest\":15778},{\"VR\":49650},{\"SceneManager\":608},{\"Video\":64},{\"LazyScriptCache\":32},{\"Camera\":729},{\"Secure\":2377},{\"Image\":65536},{\"SerializationCache\":9256},{\"APIUpdating\":10320},{\"Subsystems\":336},{\"VirtualTexturing\":57888},{\"StaticSafetyDebugInfo\":278528},{\"Analytics\":768},{\"Hierarchy\":1188},{\"UIElements\":40},{\"CoreStats\":14456},{\"Identifiers\":7152},{\"Gui\":128},{\"EditorUtility\":92876},{\"VersionControl\":8},{\"Undo\":931},{\"AssetDatabase\":396915},{\"AssetImporter\":40},{\"EditorGi\":328},{\"UnityConnect\":40441},{\"Upm\":1912},{\"UpmDiagnostics\":8},{\"AssetCompliance\":96},{\"DrivenProperties\":72},{\"LocalIPC\":260},{\"ProfilerEditor\":9746},{\"CoreBusinessMetrics\":3584},{\"Windowing\":456},{\"Licensing\":12757},{\"AssetReference\":32},{\"IPCStream\":32}]}\n~StackAllocator(ALLOC_TEMP_MAIN) m_LastAlloc not NULL. Did you forget to call FreeAllStackAllocations()? To get more information, run app with -diag-temp-memory-leak-validation cmd line argument"
+      "log_tail": "3808},{\"Utility\":2674262},{\"Curl\":2478},{\"PoolAlloc\":2168},{\"AI\":80},{\"TypeTree\":19589},{\"ScriptManager\":12656},{\"CodeReload\":448},{\"RuntimeInitializeOnLoadManager\":64},{\"Sprites\":102},{\"SpriteAtlas\":120},{\"GI\":7816},{\"Director\":8296},{\"CloudService\":7296},{\"WebRequest\":15814},{\"VR\":49650},{\"SceneManager\":608},{\"Video\":64},{\"LazyScriptCache\":32},{\"Camera\":729},{\"Secure\":2377},{\"Image\":65536},{\"SerializationCache\":9256},{\"APIUpdating\":10320},{\"Subsystems\":336},{\"VirtualTexturing\":57888},{\"StaticSafetyDebugInfo\":278528},{\"Analytics\":768},{\"Hierarchy\":1188},{\"UIElements\":40},{\"CoreStats\":14456},{\"Identifiers\":7152},{\"Gui\":128},{\"EditorUtility\":92876},{\"VersionControl\":8},{\"Undo\":931},{\"AssetDatabase\":396915},{\"AssetImporter\":40},{\"EditorGi\":328},{\"UnityConnect\":40441},{\"Upm\":1912},{\"UpmDiagnostics\":8},{\"AssetCompliance\":96},{\"DrivenProperties\":72},{\"LocalIPC\":260},{\"ProfilerEditor\":9746},{\"CoreBusinessMetrics\":3584},{\"Windowing\":456},{\"Licensing\":12757},{\"AssetReference\":32},{\"IPCStream\":32}]}\n~StackAllocator(ALLOC_TEMP_MAIN) m_LastAlloc not NULL. Did you forget to call FreeAllStackAllocations()? To get more information, run app with -diag-temp-memory-leak-validation cmd line argument"
+    },
+    {
+      "probe": "macos_host_ssh",
+      "host": "leehakbin@macbookair-4",
+      "reachable": true
+    },
+    {
+      "probe": "macos_remote_run",
+      "rc": 0,
+      "timed_out": false,
+      "duration_s": 31.5,
+      "fetched": {
+        "macos-run.log": true,
+        "macos-recording.mp4": true,
+        "macos-summary.json": true
+      },
+      "remote_stdout_tail": "[UnityMemory] Configuration Parameters - Can be set up in boot.config\n    \"memorysetup-temp-allocator-size-nav-mesh-worker=65536\"\n    \"memorysetup-temp-allocator-size-cloud-worker=32768\"\n    \"memorysetup-temp-allocator-size-audio-worker=65536\"\n    \"memorysetup-temp-allocator-size-preload-manager=262144\"\n    \"memorysetup-remapper-allocator-initial-capacity=32768\"\n    \"memorysetup-temp-allocator-size-gfx=262144\"\n    \"memorysetup-allocator-temp-initial-block-size-main=262144\"\n    \"memorysetup-allocator-temp-initial-block-size-worker=262144\"\n    \"memorysetup-temp-allocator-size-background-worker=32768\"\n    \"memorysetup-temp-allocator-size-job-worker=262144\"\n    \"memorysetup-bucket-allocator-granularity=16\"\n    \"memorysetup-bucket-allocator-bucket-count=8\"\n    \"memorysetup-bucket-allocator-block-size=4194304\"\n    \"memorysetup-bucket-allocator-block-count=1\"\n    \"memorysetup-main-allocator-block-size=16777216\"\n    \"memorysetup-thread-allocator-block-size=16777216\"\n    \"memorysetup-main-allocator-mimalloc-enabled=1\"\n    \"memorysetup-gfx-main-allocator-block-size=16777216\"\n    \"memorysetup-gfx-thread-allocator-block-size=16777216\"\n    \"memorysetup-cache-allocator-block-size=4194304\"\n    \"memorysetup-typetree-allocator-block-size=2097152\"\n    \"memorysetup-profiler-bucket-allocator-granularity=16\"\n    \"memorysetup-profiler-bucket-allocator-bucket-count=8\"\n    \"memorysetup-profiler-bucket-allocator-block-size=4194304\"\n    \"memorysetup-profiler-bucket-allocator-block-count=1\"\n    \"memorysetup-profiler-allocator-block-size=16777216\"\n    \"memorysetup-profiler-editor-allocator-block-size=1048576\"\n    \"memorysetup-temp-allocator-size-main=4194304\"\n    \"memorysetup-job-temp-allocator-block-size=2097152\"\n    \"memorysetup-job-temp-allocator-block-size-background=1048576\"\n    \"memorysetup-job-temp-allocator-reduction-small-platforms=262144\"\nREMOTE_RC=0\n",
+      "remote_stderr_tail": ""
     }
   ],
   "build": {
     "path": "native/build/macos/CozyCafe.app/Contents/MacOS/game",
-    "sha256": "1dfe746409eab5a34f618d63a208b97358b4101cd8554d19ec762d97b80ce1de",
+    "sha256": "81779698200ee657347353a790e8872411d3d44138c8c13c6a54e757f8d1979e",
     "bytes": 34168,
     "kind": "unity-standalone-osx-player",
     "mach_o_magic_verified": true,
     "runnable_here": false,
     "built_path": "out/builds/macos/CozyCafe.app",
     "packaged_note": "byte-identical copy of the Unity macOS player bundle produced by the recorded unity_macos_player_build probe; build.path is the bundle's real Mach-O executable (Contents/MacOS/game)"
-  }
+  },
+  "host": {
+    "sw_vers_uname": "ProductName:\t\tmacOS\nProductVersion:\t\t26.2\nBuildVersion:\t\t25C56\narm64\nihagbin-ui-MacBookAir.local",
+    "ssh_target": "leehakbin@macbookair-4"
+  },
+  "run": {
+    "argv": [
+      "ssh",
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "ConnectTimeout=12",
+      "-o",
+      "StrictHostKeyChecking=accept-new",
+      "-i",
+      "C:/Users/dlgkr/.ssh/id_ed25519",
+      "-o",
+      "IdentitiesOnly=yes",
+      "leehakbin@macbookair-4",
+      "rm -rf /tmp/cozycafe-native && mkdir -p /tmp/cozycafe-native/tmp && tar xzf /tmp/cozycafe-app.tgz -C /tmp/cozycafe-native && tar xzf /tmp/cozycafe-data.tgz -C /tmp/cozycafe-native && chmod -R +x /tmp/cozycafe-native/CozyCafe.app/Contents/MacOS && cd /tmp/cozycafe-native && GAUNTLET_NATIVE_LOG=/tmp/cozycafe-native/macos-run.log GAUNTLET_NATIVE_VIDEO=/tmp/cozycafe-native/macos-recording.mp4 GAUNTLET_NATIVE_SUMMARY=/tmp/cozycafe-native/macos-summary.json GAUNTLET_NATIVE_TMP=/tmp/cozycafe-native/tmp COZYCAFE_MVP_JSON=/tmp/cozycafe-native/data/mvp.json COZYCAFE_WORKSPACE_ROOT=/tmp/cozycafe-native COZYCAFE_DATA_DIR=/tmp/cozycafe-native/data ./CozyCafe.app/Contents/MacOS/game -screen-fullscreen 0 -screen-width 560 -screen-height 400; echo REMOTE_RC=$?"
+    ],
+    "duration_s": 31.5,
+    "rc": 0,
+    "timed_out": false,
+    "host": "leehakbin@macbookair-4"
+  },
+  "cases": {
+    "dpi": {
+      "status": "PASS",
+      "detail": "window_backing_scale=2.0 screens=1 unity_Screen.dpi=266.0 (real NSScreen readback)"
+    },
+    "transparency": {
+      "status": "PASS",
+      "detail": "window.isOpaque=0 bg_alpha=0 own_window_alpha letterbox_transparent=192/320 art_opaque=200/200 (CGWindowListCreateImage real window pixels)"
+    },
+    "multi_monitor": {
+      "status": "PASS",
+      "detail": "monitors=1 window_moved_and_identified=1 (NSScreen.screens + window.screen readback)"
+    },
+    "always_on_top": {
+      "status": "PASS",
+      "detail": "NSWindow.level=3 (floating) + CGWindowList z-order ours@18 first_other_normal@19 (Discord) above=True"
+    },
+    "click_through_recovery": {
+      "status": "PASS",
+      "detail": "ignoresMouseEvents readback=1 hit_test_window_below=797101 (Aside, other_pid=True) status_item_registered=True status_item_click_recovered=True hotkey_registered=True"
+    },
+    "focus": {
+      "status": "PASS",
+      "detail": "edge1 finder_activated us_active=0 (frontmost_pid=44900) edge2 self_reactivated=True active=True keyWindow=True unity_focus lost=False gained=False (NSRunningApplication real transitions)"
+    },
+    "korean_ime": {
+      "status": "PASS",
+      "detail": "input_source=com.apple.inputmethod.Korean.2SetKorean composed_text='한글' syllable_composed=True jamo_delivered=True delivery=tsm_raw_key_event (TIS select + real key events -> IMKit compose)"
+    },
+    "sleep": {
+      "status": "PASS",
+      "detail": "will_sleep->checkpoint=True did_wake->settle=3s/+0c observers_registered=True injected_via_nsworkspace_notification_center(host sleep unavailable)"
+    }
+  },
+  "evidence": [
+    {
+      "path": "native/evidence/macos-run.log",
+      "sha256": "c4d6dd537b784c63f082fa1c2f89fe2c020f1d218490026378392dcbc5a362c1",
+      "bytes": 3335
+    },
+    {
+      "path": "native/evidence/macos-recording.mp4",
+      "sha256": "281f3df24915b4ea2585d270048caaeb1803015dd63bd63976f33fbb40b36c2e",
+      "bytes": 891885
+    },
+    {
+      "path": "native/evidence/macos-summary.json",
+      "sha256": "f912c84b1daed2922061041f0c460feee68d4b200bf0580762438d07542e3e84",
+      "bytes": 1510
+    }
+  ],
+  "cases_passed": 8,
+  "cases_required": 8
 }

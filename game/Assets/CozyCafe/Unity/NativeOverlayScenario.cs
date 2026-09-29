@@ -25,7 +25,7 @@ namespace CozyCafe.Unity
     /// real composited screen to an MJPEG MP4. Nothing is simulated: each
     /// case entry is written only after its OS call readback confirms it.
     /// </summary>
-    public sealed class NativeOverlayScenario : MonoBehaviour
+    public sealed partial class NativeOverlayScenario : MonoBehaviour
     {
         // ---------------- scenario state ----------------
         private readonly Dictionary<string, CaseRecord> cases =
@@ -98,6 +98,13 @@ namespace CozyCafe.Unity
                 + " os=" + SystemInfo.operatingSystem
                 + " device=" + SystemInfo.deviceModel);
 
+            if (Application.platform == RuntimePlatform.OSXPlayer)
+            {
+                isMac = true;
+                AwakeMac();
+                return;
+            }
+
             // DPI awareness is a real process-level call, set before the
             // window style work reads DPI.
             bool dpiSet = SetProcessDpiAwarenessContext(
@@ -123,9 +130,17 @@ namespace CozyCafe.Unity
             Log("message window thread up: hwnd=0x"
                 + msg.Hwnd.ToString("X"));
 
-            // Watchdog: if the main thread ever stalls inside an OS call the
-            // heartbeat marks the exact step, then forces process exit so
-            // the harness gets the log instead of a silent timeout.
+            StartWatchdog();
+
+            BuildPresenters();
+            StartCoroutine(RunScenario());
+        }
+
+        /// Watchdog: if the main thread ever stalls inside an OS call the
+        /// heartbeat marks the exact step, then forces process exit so the
+        /// harness gets the log instead of a silent timeout.
+        private void StartWatchdog()
+        {
             watchdog = new Thread(delegate ()
             {
                 while (!done)
@@ -158,15 +173,13 @@ namespace CozyCafe.Unity
                             }
                         }
                         catch (Exception) { }
-                        Environment.Exit(2);
+                        if (isMac) Cocoa._exit(2);
+                        else Environment.Exit(2);
                     }
                 }
             });
             watchdog.IsBackground = true;
             watchdog.Start();
-
-            BuildPresenters();
-            StartCoroutine(RunScenario());
         }
 
         /// Live cafe raster composited over the chroma background — the
@@ -227,6 +240,7 @@ namespace CozyCafe.Unity
 
         private void Update()
         {
+            if (isMac) { UpdateMac(); return; }
             DrainGrabs();
             // Commit IME text as it arrives — real composition input.
             foreach (char c in Input.inputString) imeText.Append(c);
@@ -695,8 +709,11 @@ namespace CozyCafe.Unity
                 }
                 catch (Exception) { }
             }
-            try { msg.RemoveTrayIcon(); } catch (Exception) { }
-            try { msg.Stop(); } catch (Exception) { }
+            if (msg != null)
+            {
+                try { msg.RemoveTrayIcon(); } catch (Exception) { }
+                try { msg.Stop(); } catch (Exception) { }
+            }
             try
             {
                 if (notepad != null && !notepad.HasExited) notepad.Kill();
@@ -724,12 +741,14 @@ namespace CozyCafe.Unity
             Log("summary written: " + pass + "/" + Required.Length
                 + " cases PASS, frames=" + videoFrames.Count);
 
-            byte[] mp4 = MjpegMp4.Write(videoFrames, 4, 560, 400);
+                        byte[] mp4 = MjpegMp4.Write(videoFrames, 4,
+                vidW > 0 ? vidW : 560, vidH > 0 ? vidH : 400);
             File.WriteAllBytes(videoPath, mp4);
             Log("recording written: " + videoPath + " bytes="
                 + mp4.Length);
             log.Flush();
             log.Close();
+            if (isMac) Cocoa._exit(0);
             Application.Quit();
         }
 
