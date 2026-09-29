@@ -8,8 +8,8 @@
     "approved_cells": 1,
     "sheet_policy": "uniform_grid",
     "cell_asset_px": [
-      64,
-      64
+      32,
+      32
     ],
     "batch_group": "tile"
   },
@@ -22,8 +22,8 @@
     "approved_cells": 1,
     "sheet_policy": "uniform_grid",
     "cell_asset_px": [
-      64,
-      80
+      32,
+      32
     ],
     "batch_group": "character"
   },
@@ -33,11 +33,11 @@
     "prompt_file": "art/prompts/machine_espresso.txt",
     "raw_file": "art/generated/machine_espresso/raw.png",
     "approval": "APPROVED",
-    "approved_cells": 1,
+    "approved_cells": 2,
     "sheet_policy": "uniform_grid",
     "cell_asset_px": [
-      64,
-      64
+      32,
+      32
     ],
     "batch_group": "machine"
   },
@@ -50,8 +50,8 @@
     "approved_cells": 1,
     "sheet_policy": "uniform_grid",
     "cell_asset_px": [
-      64,
-      64
+      32,
+      32
     ],
     "batch_group": "ui"
   },
@@ -64,8 +64,8 @@
     "approved_cells": 8,
     "sheet_policy": "uniform_grid",
     "cell_asset_px": [
-      64,
-      64
+      32,
+      32
     ],
     "batch_group": "ui"
   },
@@ -78,8 +78,8 @@
     "approved_cells": 1,
     "sheet_policy": "uniform_grid",
     "cell_asset_px": [
-      64,
-      64
+      32,
+      32
     ],
     "batch_group": "furniture"
   },
@@ -92,8 +92,8 @@
     "approved_cells": 1,
     "sheet_policy": "uniform_grid",
     "cell_asset_px": [
-      64,
-      64
+      32,
+      32
     ],
     "batch_group": "furniture"
   }

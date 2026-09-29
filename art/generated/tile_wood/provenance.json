@@ -8,7 +8,7 @@
   },
   "model_verification": "NOT_VERIFIED",
   "raw_sha256": "14be4b20e3205f2bb485804b55174d8d24faaf3fd599444b503f0bc49d0ffc50",
-  "game_asset_approval": "PENDING",
+  "game_asset_approval": "APPROVED",
   "note": "Backend model measured from the PNG C2PA claim (OpenAI Media Service signature). Raw is not an atlas or approved asset.",
   "independent_verification": {
     "verified_at": "2026-09-29",
@@ -99,5 +99,54 @@
     "requested_image_model": "gpt-image-2.5-sunburst",
     "signed_model_matches_request": false
   },
-  "session_id": "01a0e5f9-ce8d-7ee0-a6e9-95a0f3770b1c"
+  "session_id": "01a0e5f9-ce8d-7ee0-a6e9-95a0f3770b1c",
+  "approved_cells": [
+    {
+      "frame": "tile_wood",
+      "unit_px": 32,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "ref_map": [
+        {
+          "src": [
+            240,
+            217,
+            1296,
+            746
+          ],
+          "dst": [
+            0,
+            0,
+            32,
+            16
+          ]
+        },
+        {
+          "src": [
+            240,
+            482,
+            1296,
+            787
+          ],
+          "dst": [
+            0,
+            16,
+            32,
+            2
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 1.0,
+        "ok": true
+      },
+      "unique_opaque_colors": 44
+    }
+  ],
+  "reference_conformance": {
+    "measured": true,
+    "min_silhouette_iou": 0.55,
+    "min_palette_match": 0.8,
+    "coverage_threshold": 0.25
+  }
 }

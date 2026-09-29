@@ -763,6 +763,72 @@ byte-identical(staged copy 실행).
 보고한다. 계정이 실제 sunburst 백엔드를 노출하면 동일 경로가 VERIFIED로
 전환되어 정상 일치한다.
 
+## 2026-09-29 — art-pipeline 32x32 유닛 계약 재구축 (critic gap 해소)
+
+(3) 하네스 소유자가 추가한 게이트 4키(atlas_frames_present·
+atlas_all_frames_32x32·pixel_art_quantized_cells·reference_conformance_ok)
+실측 구현. 기존 아틀라스는 64x64/64x80 프레임이었음 → 32x32 유닛
+셀 계약으로 전면 재생성.
+
+- tools/art_pipeline.py: bare LANCZOS 축소 폐기. 셀 생산 경로를
+  결정적 픽셀 경로로 교체 — raw PNG에서 커버리지>=0.25 블록 축출 +
+  중앙값 색상 + 클러스터 팔레트 양자화(셀당 불투명 색 <=64)로
+  pixel-snap된 32x32 셀 생성. 프레임별 ref_map(src→dst 맵)·
+  reference·reference_similarity(iou+palette)·unique_opaque_colors·
+  canvas_px를 매니페스트/provenance에 기록.
+- data/art_contract.json: reference_conformance에 min_palette_match·
+  coverage_threshold 명시(기존 min_silhouette_iou 0.55 유지).
+- ArtAssets.cs: 새 매니페스트 필드 파싱 + 실측 메서드 — 전 프레임
+  32x32 검사, PNG 디코드된 실제 불투명 색 계수, ref_map 기반 raw
+  참조 대조 IoU>=0.55 + 팔레트 매칭, 매니페스트 provenance에서
+  effective_image_model 추출(라이브 OAuth 프로브 제거).
+- StageCases.cs: 4키 CASE 방출 — 모두 커밋된 산출물에 대한 실측값.
+- SceneRenderer.cs: 콘택트시트 타일 가이드 32행 유닛셀 기준 수정.
+- 재생성 산출물: sprite_sheet_alpha.png(512x36, 15프레임 32x32)·
+  atlas_manifest.json(ref_map+similarity 기록)·qa_report/qa_contact·
+  jobs.json·7개 job provenance(reference_similarity 기록).
+
+검증(재실행): check_stage art-pipeline exit 0 — 14/15키 실측 일치 +
+effective_image_model BLOCKED_DECLARED(동일 증거 기반 선언 통과).
+character-rig 5/5·iso-grid 17/17·project-boot 2/2 회귀 일치.
+capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot
+실카메라 out/art_pipeline.png(1152x88) 재생성 — 15개 32x32 셀
+실물 픽셀아트 렌더 확인.
+
+남은 문제(불변): effective_image_model 라이브 검증은 계정 OAuth
+표면에서 sunburst 백엔드 미노출로 여전히 NOT_VERIFIED — 정직한
+BLOCKED 선언 통과 유지.
+
+## 2026-09-29 — art-pipeline 동기화 후 전면 재검증 (builder)
+
+변경 없이 커밋된 상태(8dd8ece)를 재검증했다. critic 지적 4항이 코드·
+산출물 모두에 이미 반영돼 있음을 실측으로 확인:
+
+- StageCases.ArtPipeline이 4키(atlas_frames_present·atlas_all_frames_32x32·
+  pixel_art_quantized_cells·reference_conformance_ok)를 실측 방출 — 전부
+  커밋된 PNG·manifest·raw 참조에 대한 디코드/계측 결과.
+- 승인 아틀라스 15프레임 전부 32x32 유닛 셀(512x36 시트), 셀당 불투명
+  고유색 <=64, pixel_snap 경로(block_decimate+median+cluster_quantize)
+  기록 — bare LANCZOS 없음.
+- effective_image_model은 manifest provenance(model_verification=
+  NOT_VERIFIED, 실측 백엔드 gpt-image)에서 방출 → 정직한 BLOCKED,
+  라이브 OAuth 프로브 없음 → 평가 환경에서 결정적으로 재생됨.
+- tools/art_pipeline.py qa 재실행으로 커밋 산출물 재측정 일치 확인.
+
+검증(재실행, DOTNET_BIN=C:/Users/dlgkr/dotnet/dotnet.exe):
+- check_stage art-pipeline exit 0 — 14/15키 실측 일치 + effective_
+  image_model BLOCKED_DECLARED(provider.json 프로브 기록·세션결합
+  provenance·서명 agent 증거로 선언 통과).
+- 회귀: character-rig 5/5·iso-grid 17/17·project-boot 2/2 전부 일치.
+- capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot
+  실카메라 1152x88 콘택트시트 생성 확인; GameCli render 폴백도 동일
+  크기 유효 PNG 생성 확인.
+- 머지 충돌 마커 없음, 작업트리 clean, art/·data/ 산출물 전부 추적됨.
+
+남은 문제(불변): 요청 모델 gpt-image-2.5-sunburst는 이 계정 OAuth
+표면에서 선택·검증 불가(image_gen 도구에 모델 다이얼 없음, 백엔드
+gpt-image 고정) — 증거 기반 선언형 BLOCKED 유지. 유료 API 전환 없음.
+
 ## ui-local-ugc — 공유 UI·로컬 창작툴 실구현
 구축: Core/Ui 신규(UiModule). UiText는 실제 문자열→픽셀 스트로크
 래스터라이저(초성·중성·종성 자모 결합+ASCII, scale 파라미터) —
@@ -801,3 +867,32 @@ focus 큐·입력 캐럿·크리에이터 프리뷰가 실제로 표시됨.
 수정: UiSkin.Render의 y축 코너 판정이 ch 대신 cw를 사용해 중앙행이
 붕괴하는 크기(h<테두리합)에서 범위 초과 — stage check 실실행으로
 발견 후 수정.
+
+## 2026-09-29 — ui-local-ugc 병합 해소 + 라틴 글리프 실구현 (builder)
+
+통합 병합 충돌(planning/05_Production_Board.md·progress.md)을 양쪽
+작업기록 보존으로 해소 — art-pipeline 32x32 재구축 기록과 ui-local-ugc
+실구현 기록이 모두 남는다.
+
+critic 잔여 gap 해소: UiText의 ASCII 표가 숫자·기호 몇 개뿐이라
+"역할: ui_panel_skin"·"앵커 (0.50, 0.50)" 같은 한글+라틴 혼합 문자열이
+플레이스홀더 상자로 그려지던 문제. Ascii 글리프 테이블에 라틴 대문자
+A-Z(캡 높이)·소문자 a-z(x-높이 몸통+실제 어센더/디센더, b/d/p/q/g는
+스트로크 링 볼)·괄호·쉼표·물음표 등 실UI 문장용 구두점을 추가 — 전부
+동일 런타임 스트로크 경로(이미지 굽기 아님). 장면 캡처에서
+"ui_panel_skin"·"(0.50, 0.50)"이 실제 자모형으로 판독됨을 픽셀 검사로
+확인(문자별 상이한 스트로크).
+
+검증(재실행, DOTNET_BIN=C:/Users/dlgkr/dotnet/dotnet.exe):
+- dotnet build Release 경고0·오류0.
+- check_stage ui-local-ugc exit 0 — 9키 CASE 전부 실측, 5/5 게이트 일치.
+- 회귀: desktop-tools 6/6·save-offline 6/6·project-boot 2/2·
+  art-pipeline exit 0(14/15 실측+effective_image_model 증거기반 선언
+  BLOCKED) — 병합된 sibling 4키 실측이 트리에 그대로 동작.
+- capture_game.py --stage ui-local-ugc → Unity 6000.6.3f1 CaptureShot
+  실카메라(스테이징 사본) out/captures/ui_local_ugc.png 520x360 재생성 —
+  수입 9-slice 스킨 패널·5상태 위젯·캐럿 입력·크리에이터 프리뷰·
+  런타임 한글+라틴 텍스트 실표시.
+
+남은 문제: 없음(이 스트림 범위). art-pipeline의 effective_image_model은
+계정 OAuth 표면 한계로 선언형 BLOCKED 유지 — 고정 기대값 불변.

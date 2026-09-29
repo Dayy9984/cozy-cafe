@@ -8,7 +8,7 @@
   },
   "model_verification": "NOT_VERIFIED",
   "raw_sha256": "32488a3e4ad5338c805a66e33fdab4fd25cfdd55ca9400394cfffb3f0a43e0fa",
-  "game_asset_approval": "PENDING",
+  "game_asset_approval": "APPROVED",
   "note": "Read actual tool/provider metadata before claiming Sunburst. Raw is not an atlas or approved asset.",
   "independent_verification": {
     "verified_at": "2026-09-29",
@@ -99,5 +99,67 @@
     "requested_image_model": "gpt-image-2.5-sunburst",
     "signed_model_matches_request": false
   },
-  "session_id": "01a0e5fc-5cf8-7a11-9b00-7c0776e5b1fb"
+  "session_id": "01a0e5fc-5cf8-7a11-9b00-7c0776e5b1fb",
+  "approved_cells": [
+    {
+      "frame": "machine_espresso_0",
+      "unit_px": 32,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "ref_map": [
+        {
+          "src": [
+            282,
+            103,
+            798,
+            782
+          ],
+          "dst": [
+            5,
+            2,
+            21,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.996,
+        "ok": true
+      },
+      "unique_opaque_colors": 55
+    },
+    {
+      "frame": "machine_espresso_1",
+      "unit_px": 32,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "ref_map": [
+        {
+          "src": [
+            975,
+            103,
+            1492,
+            782
+          ],
+          "dst": [
+            5,
+            2,
+            21,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.991,
+        "ok": true
+      },
+      "unique_opaque_colors": 34
+    }
+  ],
+  "reference_conformance": {
+    "measured": true,
+    "min_silhouette_iou": 0.55,
+    "min_palette_match": 0.8,
+    "coverage_threshold": 0.25
+  }
 }

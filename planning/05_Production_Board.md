@@ -13,7 +13,7 @@
 |research-staff|연구·메뉴·직원|idle-economy|READY|
 |save-offline|저장·복귀·시간경계|research-staff,layout-editor|검증완료(리뷰대기)|
 |character-rig|소수 파츠·팔레트·랜덤 손님|iso-grid,research-staff|READY|
-|art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트 exit0: 10/11 실측일치+요청모델키 선언형 BLOCKED 통과·서명C2PA+세션sha256 결합검증 완료)|
+|art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트 exit0: 14/15 실측일치+요청모델키 선언형 BLOCKED 통과·32x32 유닛셀 15프레임·양자화≤64색·ref_map IoU+팔레트 실측 기록)|
 |ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|검증완료(리뷰대기)|
 |integration|무개입 카페 통합|ui-local-ugc|READY|
 |native-release|실제 Mac/Windows 빌드·검증|integration|READY|
@@ -63,6 +63,7 @@ v0.8.2 save-offline 통합본 재검증: merge 17fd7d4(integration→HEAD, .cs 0
 build 경고0·save-offline 6/6·research-staff 8/8·idle-economy 8/8·
 layout-editor 22/22·project-boot 2/2·desktop-tools 6/6·character-rig 5/5.
 iso-grid는 iso/art 스트림 미착수 SPEC_CHANGE로 실측 FAIL 유지(소유 외).
+v0.8.8 art-pipeline 32×32 유닛 계약 재구축 (2026-09-29): critic gap(4키 미방출·64x64/64x80 프레임 위반) 해소. 셀 생산을 결정적 픽셀 경로(커버리지≥0.25 블록축출+중앙값색+≤64색 클러스터 양자화)로 교체, bare LANCZOS 폐기. 전 15프레임 32×32 재생성 + ref_map/reference_similarity/unique_opaque_colors를 manifest·provenance에 기록. C# 체크 경로가 PngReader로 승인·raw PNG를 직접 디코드해 4키 실측(프레임 존재·32×32·≤64색·IoU≥0.55+팔레트). effective_image_model은 manifest provenance에서 방출(라이브 프로브 제거). check exit 0(14/15 실측+1 선언통과), 3스테이지 회귀 일치, Unity 실카메라 콘택트시트 재캡처(1152×88).
 
 v0.8.8 ui-local-ugc 실구현 (2026-09-29): Core/Ui(런타임 한글 스트로크
 래스터라이저 UiText·9-slice UiSkin·위젯 5상태·실제 텍스트입력)·Core/Ugc
@@ -74,3 +75,10 @@ desktop-tools 6/6·save-offline 6/6·art-pipeline 10/11+선언BLOCKED·
 project-boot 2/2 회귀 유지. Unity CaptureShot 실카메라
 out/captures/ui_local_ugc.png(520×360) — 수입 스킨 패널·런타임 한글
 텍스트·상태 큐·프리뷰 실표시.
+
+v0.8.9 ui-local-ugc 병합 해소+라틴 글리프 (2026-09-29): 양쪽 충돌 기록 보존
+해소, UiText에 라틴 대/소문자+문장 구두점 실스트로크 글리프 추가 — 혼합
+문자열이 상자 대신 판독 가능. check ui-local-ugc 5/5·desktop-tools 6/6·
+save-offline 6/6·project-boot 2/2·art-pipeline 14/15+선언BLOCKED 전부
+exit 0, Unity 실카메라 캡처 재생성(520×360).
+
