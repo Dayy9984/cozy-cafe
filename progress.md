@@ -798,3 +798,33 @@ capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot
 남은 문제(불변): effective_image_model 라이브 검증은 계정 OAuth
 표면에서 sunburst 백엔드 미노출로 여전히 NOT_VERIFIED — 정직한
 BLOCKED 선언 통과 유지.
+
+## 2026-09-29 — art-pipeline 동기화 후 전면 재검증 (builder)
+
+변경 없이 커밋된 상태(8dd8ece)를 재검증했다. critic 지적 4항이 코드·
+산출물 모두에 이미 반영돼 있음을 실측으로 확인:
+
+- StageCases.ArtPipeline이 4키(atlas_frames_present·atlas_all_frames_32x32·
+  pixel_art_quantized_cells·reference_conformance_ok)를 실측 방출 — 전부
+  커밋된 PNG·manifest·raw 참조에 대한 디코드/계측 결과.
+- 승인 아틀라스 15프레임 전부 32x32 유닛 셀(512x36 시트), 셀당 불투명
+  고유색 <=64, pixel_snap 경로(block_decimate+median+cluster_quantize)
+  기록 — bare LANCZOS 없음.
+- effective_image_model은 manifest provenance(model_verification=
+  NOT_VERIFIED, 실측 백엔드 gpt-image)에서 방출 → 정직한 BLOCKED,
+  라이브 OAuth 프로브 없음 → 평가 환경에서 결정적으로 재생됨.
+- tools/art_pipeline.py qa 재실행으로 커밋 산출물 재측정 일치 확인.
+
+검증(재실행, DOTNET_BIN=C:/Users/dlgkr/dotnet/dotnet.exe):
+- check_stage art-pipeline exit 0 — 14/15키 실측 일치 + effective_
+  image_model BLOCKED_DECLARED(provider.json 프로브 기록·세션결합
+  provenance·서명 agent 증거로 선언 통과).
+- 회귀: character-rig 5/5·iso-grid 17/17·project-boot 2/2 전부 일치.
+- capture_game.py --stage art-pipeline → Unity 6000.6.3f1 CaptureShot
+  실카메라 1152x88 콘택트시트 생성 확인; GameCli render 폴백도 동일
+  크기 유효 PNG 생성 확인.
+- 머지 충돌 마커 없음, 작업트리 clean, art/·data/ 산출물 전부 추적됨.
+
+남은 문제(불변): 요청 모델 gpt-image-2.5-sunburst는 이 계정 OAuth
+표면에서 선택·검증 불가(image_gen 도구에 모델 다이얼 없음, 백엔드
+gpt-image 고정) — 증거 기반 선언형 BLOCKED 유지. 유료 API 전환 없음.
