@@ -896,3 +896,51 @@ A-Z(캡 높이)·소문자 a-z(x-높이 몸통+실제 어센더/디센더, b/d/p
 
 남은 문제: 없음(이 스트림 범위). art-pipeline의 effective_image_model은
 계정 OAuth 표면 한계로 선언형 BLOCKED 유지 — 고정 기대값 불변.
+
+## integration — 무개입 카페 통합 실구현 (2026-09-29)
+
+구축: Core/Integration 신규(IntegrationModule). CafeSession 하나에 실제
+배선 — 부팅(LayoutModule 실검증 배치: 벽면 문·테이블/의자 쌍·2카운터 바+
+머신 마운트)→개업(Staff.OpenHirePanel/실제 고용, R01·R02 연구 예약,
+Tools 메모/할일/타이머/음악 실상태, UGC counter 스킨을 PNG 인코딩→
+import→assign→preview→validate→save→apply 실체인)→무개입 운영
+(RunUnattended/Until은 Advance(0.5s)만 호출 — 타임라인을 움직이는
+유일한 호출, 상태는 읽기만)→저장/복귀(WriteCheckpoint→외국 세션
+RestoreThroughStore→SettleOffline). BuildView()는 세션 자체의
+GameScene에 실릭 합성 캐릭터 2개(직원 프리셋+시드 손님)·살아있는
+ToolsPanel·고정뷰포트를 얹어 반환 — 캡처 경로가 그리는 동일 객체.
+배선: StageCases "integration" 케이스(6게이트키+증거키), StageScenes
+"integration" 실가동 장면(600s 무개입 운영 후 뷰), GameBootstrap
+레지스트리 등록(Probe가 실제 boot→배치→60s 운영→실렌더 실행).
+수정(캡처 선결): capture_game.py try_unity env에 COZYCAFE_DATA_DIR
+추가 — Unity 배치모드는 cwd를 staged 사본으로 잡아 data/art_contract·
+character_presets의 상위검색이 실패하던 문제(rc=2 FileNotFoundException).
+코어가 이미 지원하는 환경 오버라이드를 연결한 것이며 계약·게이트 불변.
+
+검증(재실행, DOTNET_BIN=C:/Users/dlgkr/dotnet/dotnet.exe):
+- dotnet build -c Release 경고0·오류0.
+- check_stage integration exit 0 — 6/6 게이트키 실측 일치:
+  idle_session_25m_without_input(Advance 전용 1500s·코인+1443·
+  판매132건·지갑음수0), menu_research_chain_works(ice 완료 순간 M03만
+  개방·M04 닫힘 중간게이트 → R02 완료 후 M04 실개방+실판매,
+  r02_at=843s·menus4), first_session_replay(동일 시드 2회 지문일치·
+  diff0 + checkpoint→restore→offline 600s 후 외국세션 diff0),
+  visual_offsets_leave_economy_unchanged(렌더 전후 econ/lab/staff/
+  layout 세이브레코드+클럭 byte-identical·오프셋 해석 실증),
+  visual_review_actual_build(실렌더 93290 잉크px·PNG 라운드트립·
+  바닥/탁자/의자/카운터/머신/도어매트/도구패널 색 계수+캐릭터 스프라이트
+  잉크 실측), table_chair_visual_alignment_reviewed(렌더 버퍼에서
+  상판 색 중심 실측: table lift -8.95px·chair -8.5px, 계약 기대 -8·
+  허용±1.5 — 단일 -8px 보정 확인).
+- 회귀: ui-local-ugc 5/5·iso-grid 17/17·layout-editor 22/22·
+  idle-economy 8/8·research-staff 8/8·save-offline 6/6·
+  character-rig 5/5 전부 일치.
+- capture_game.py --stage integration → Unity 6000.6.3f1 CaptureShot.Run
+  실카메라(staged copy)로 out/captures/integration.png 520×460 생성 —
+  실가동 카페: iso 바닥·리프트된 가구·마운트 머신 2종·직원/손님 스프라이트·
+  도구패널(메모·할일 체크·타이머 24:15·음악) 실표시.
+- tools/check_packet.py·tests/는 이 워크스페이스에 없음(NOT_RUN).
+
+남은 문제: 없음(이 스트림 범위). Unity 호스트는 환경 오버라이드 보수 후
+실카메라 경로로 캡처 성공. art-pipeline effective_image_model은
+별도 스트림의 계정 표면 한계로 선언형 BLOCKED 유지 — 본 스트림 변경 없음.

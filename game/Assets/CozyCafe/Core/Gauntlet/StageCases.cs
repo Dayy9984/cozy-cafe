@@ -4,6 +4,7 @@ using System.IO;
 using CozyCafe.Core.Art;
 using CozyCafe.Core.Character;
 using CozyCafe.Core.Economy;
+using CozyCafe.Core.Integration;
 using CozyCafe.Core.Iso;
 using CozyCafe.Core.Layout;
 using CozyCafe.Core.Render;
@@ -60,6 +61,8 @@ namespace CozyCafe.Core.Gauntlet
                     return DesktopTools();
                 case "ui-local-ugc":
                     return UiLocalUgc();
+                case "integration":
+                    return Integration();
                 default:
                     return null;
             }
@@ -1486,6 +1489,369 @@ namespace CozyCafe.Core.Gauntlet
         /// Fresh startup state funded through the idle-sale path, then the
         /// named research reserved in order and run to completion on the lab
         /// clock. Returns the economy+lab pair for gate inspection.
+        /// <summary>
+        /// Whole-cafe integration on one real session: boot -> layout ->
+        /// staff -> research -> tools -> UGC, then a 25-minute run in which
+        /// Advance() alone drives the timeline; the research -> menu AND
+        /// chain opening real menus on that same timeline; a deterministic
+        /// first-session replay plus checkpoint/restore/offline-settle that
+        /// must land field-identical; and the render review computed on the
+        /// pixels the real renderer produced — the table/chair lift measured
+        /// at exactly the contract's -8 px offset while the economy record
+        /// stays byte-identical before and after the render path runs.
+        /// </summary>
+        private static List<CaseResult> Integration()
+        {
+            var cases = new List<CaseResult>();
+            var data = MvpData.Load();
+            var m03 = data.FindMenu("M03");
+            var m04 = data.FindMenu("M04");
+            var m05 = data.FindMenu("M05");
+            if (m03 == null || m04 == null || m05 == null)
+            {
+                throw new InvalidOperationException("mvp.json missing M03/M04/M05");
+            }
+            const long T0 = 1700000000L;
+            string tmpDir = Path.Combine(Directory.GetCurrentDirectory(),
+                "out", "integration-tmp");
+            if (Directory.Exists(tmpDir)) Directory.Delete(tmpDir, true);
+            Directory.CreateDirectory(tmpDir);
+            try
+            {
+                // -------- boot -> layout -> staff -> research -> tools -> ugc
+                var cafe = IntegrationModule.Boot(data, 20260929, 6, 5,
+                    Path.Combine(tmpDir, "ugc"));
+                var econ = cafe.Session.Econ;
+                bool wired = cafe.OpenForBusiness(
+                        IntegrationModule.BuildCounterSkinPng())
+                    && cafe.Session.Staff.Roster.Count == 1
+                    && cafe.Session.Lab.Active == null
+                    && cafe.Session.Lab.Queue.Count == 2
+                    && cafe.Ugc.AppearanceOf("furniture:counter") != null
+                    && cafe.Tools.Memos.Count == 1
+                    && cafe.Tools.Todos.Count == 2;
+                cases.Add(new CaseResult("boot_wired_all_modules", wired));
+
+                // -------- the 25-minute run: Advance() only ---------------
+                long coins0 = econ.Coins;
+                long sales0 = cafe.SettledSaleCount();
+                double clock0 = cafe.Session.RuntimeClock;
+                // The run stays Advance-only end to end. The first leg polls
+                // the lab between frames until the ice research lands so the
+                // AND-gate gets sampled at its exact boundary — state reads
+                // are what the game's own UI does per frame; only Advance
+                // ever moves the timeline.
+                double r01At = cafe.RunUnattendedUntil(
+                    delegate { return econ.CompletedResearch.Contains("R01"); },
+                    1500.0);
+                // The AND-gate mid-state, sampled the instant R01 lands:
+                // the ice machine alone opens M03 while M04 — which also
+                // needs R02 — must still be closed.
+                bool midGate = r01At >= 0
+                    && econ.OwnedMachines.Contains("ice")
+                    && econ.Owns(m03) && econ.Lines.ContainsKey("M03")
+                    && !econ.Owns(m04) && !econ.Lines.ContainsKey("M04")
+                    && !econ.CompletedResearch.Contains("R02")
+                    && !cafe.Session.Lab.InventoryItems.Contains("ice");
+                double left = 1500.0 - (cafe.Session.RuntimeClock - clock0);
+                if (left > 0) cafe.RunUnattended(left);
+                bool idleOk = wired
+                    && cafe.Session.RuntimeClock == clock0 + 1500.0
+                    && econ.Coins > coins0
+                    && cafe.SettledSaleCount() > sales0
+                    && !econ.WalletWentNegative;
+                cases.Add(new CaseResult("idle_session_25m_without_input", idleOk));
+                cases.Add(new CaseResult("coins_earned_25m", econ.Coins - coins0));
+                cases.Add(new CaseResult("sales_settled_25m",
+                    cafe.SettledSaleCount() - sales0));
+                cases.Add(new CaseResult("ice_gate_mid_state_held", midGate));
+
+                // -------- research -> menu AND chain, same timeline -------
+                // R02 (milk) was queued at open; the cafe keeps running
+                // unattended until the funds gate lets it start and finish.
+                double r02At = cafe.RunUnattendedUntil(
+                    delegate { return econ.CompletedResearch.Contains("R02"); },
+                    40000.0);
+                MenuLine m04line;
+                bool m04Open = econ.Lines.TryGetValue("M04", out m04line);
+                bool opened = r02At >= 0 && m04Open && econ.Owns(m04)
+                    && cafe.Session.Lab.UnlockedFlags.Contains("milk")
+                    && !cafe.Session.Lab.InventoryItems.Contains("milk")
+                    && !econ.Owns(m05) && !econ.Lines.ContainsKey("M05")
+                    && !econ.OwnedMachines.Contains("steam");
+                // The opened line must actually sell on its own cycle.
+                double m04Next0 = m04Open ? m04line.NextSaleAt : 0;
+                cafe.RunUnattended(m04.CycleSeconds + 5.0);
+                bool m04Sells = m04Open && m04line.NextSaleAt > m04Next0;
+                cases.Add(new CaseResult("menu_research_chain_works",
+                    wired && midGate && opened && m04Sells));
+                cases.Add(new CaseResult("menus_open_after_chain",
+                    econ.Lines.Count));
+                cases.Add(new CaseResult("m04_first_sale_fired", m04Sells));
+                cases.Add(new CaseResult("r02_completed_at_runtime_s", r02At));
+
+                // -------- deterministic first-session replay --------------
+                // The identical scripted first session run twice must land
+                // byte-identical, and a checkpoint written to disk must
+                // restore into a foreign session and settle the next window
+                // exactly as continuous play does.
+                var replayA = IntegrationModule.Boot(data, 20260929, 6, 5,
+                    Path.Combine(tmpDir, "ugc-a"));
+                replayA.OpenForBusiness(IntegrationModule.BuildCounterSkinPng());
+                replayA.RunUnattended(1500.0);
+                var replayB = IntegrationModule.Boot(data, 20260929, 6, 5,
+                    Path.Combine(tmpDir, "ugc-b"));
+                replayB.OpenForBusiness(IntegrationModule.BuildCounterSkinPng());
+                replayB.RunUnattended(1500.0);
+                string fpA = replayA.StateFingerprint(T0);
+                string fpB = replayB.StateFingerprint(T0);
+                long replayDiff = replayA.Session.StateDifference(replayB.Session);
+                cases.Add(new CaseResult("replay_fingerprint_equal", fpA == fpB));
+                cases.Add(new CaseResult("replay_state_diff", replayDiff));
+
+                var store = new SaveStore(Path.Combine(tmpDir, "cafe", "save.json"),
+                    SaveDocument.IsValidJson);
+                var doc = cafe.Session.WriteCheckpoint(store, T0);
+                var resumed = CafeSession.CreateStartup(data, 555, 2, 2);
+                var src = resumed.RestoreThroughStore(store);
+                long restoreDiff = resumed.StateDifference(cafe.Session);
+                var res = resumed.SettleOffline(doc, T0 + 600);
+                cafe.Session.Advance(600);
+                long offlineDiff = resumed.StateDifference(cafe.Session);
+                cases.Add(new CaseResult("checkpoint_restore_diff", restoreDiff));
+                cases.Add(new CaseResult("offline_settle_diff", offlineDiff));
+                bool replayOk = fpA == fpB && replayDiff == 0
+                    && src == SaveStore.LoadSource.Primary && restoreDiff == 0
+                    && res.Seconds == 600 && offlineDiff == 0;
+                cases.Add(new CaseResult("first_session_replay", replayOk));
+
+                // -------- visual-offset invariance around the real render -
+                // Snapshot every economy-side record, then run the whole
+                // render path — view build, offset resolution, raster — and
+                // require the records byte-identical afterwards.
+                string econBefore = MiniJson.ToJson(econ.SaveState());
+                string labBefore = MiniJson.ToJson(cafe.Session.Lab.SaveState());
+                string staffBefore = MiniJson.ToJson(cafe.Session.Staff.SaveState());
+                string layoutBefore = cafe.Session.Layout.SaveLayout();
+                double clockBefore = cafe.Session.RuntimeClock;
+                var view = cafe.BuildView(520, 460, 260, 130);
+                int rw, rh;
+                byte[] rgba = SceneRenderer.RenderPixels(view, view.Zoom,
+                    out rw, out rh);
+                byte[] png = SceneRenderer.RenderPng(view, view.Zoom);
+                bool economyUntouched =
+                    MiniJson.ToJson(econ.SaveState()) == econBefore
+                    && MiniJson.ToJson(cafe.Session.Lab.SaveState()) == labBefore
+                    && MiniJson.ToJson(cafe.Session.Staff.SaveState()) == staffBefore
+                    && cafe.Session.Layout.SaveLayout() == layoutBefore
+                    && cafe.Session.RuntimeClock == clockBefore;
+                // Prove the offset pipeline really ran in this render: the
+                // table's draw anchor resolved (ground + (0,-8)) * zoom.
+                Furniture table = null, chair = null;
+                foreach (var f in view.Furniture)
+                {
+                    if (f.Kind == FurnitureKind.Table && table == null) table = f;
+                    if (f.Kind == FurnitureKind.Chair && chair == null) chair = f;
+                }
+                bool liftApplied = false;
+                double tox = 0, toy = 0;
+                if (table != null)
+                {
+                    double tgx, tgy, tdx, tdy;
+                    RenderContract.GroundAnchor(table.CellX, table.CellY,
+                        out tgx, out tgy);
+                    RenderContract.DrawAnchorResolved(table,
+                        new Func<int, Furniture>(cafe.Session.Layout.LookupHost),
+                        view.Zoom, out tdx, out tdy);
+                    RenderContract.TargetOffset(table.Kind, out tox, out toy);
+                    liftApplied = toy == -8.0
+                        && tdx == (tgx + tox) * view.Zoom
+                        && tdy == (tgy + toy) * view.Zoom;
+                }
+                cases.Add(new CaseResult("visual_offsets_leave_economy_unchanged",
+                    liftApplied && economyUntouched && rw > 0 && rgba.Length > 0));
+
+                // -------- visual review on the rendered build -------------
+                // The live scene the module handed to the renderer must be
+                // the session's own loaded scene, round-trip as a real PNG,
+                // and carry every composed element: wood floor, lifted
+                // table/chair/counter tops, the mounted espresso machine,
+                // both rig sprites and the live tools panel — all measured
+                // from pixels, not flags.
+                SoftwareCanvas decoded;
+                bool pngOk = png.Length > 64
+                    && PngReader.TryDecode(png, out decoded)
+                    && decoded.Width == rw && decoded.Height == rh
+                    && BytesEqual(decoded.Pixels, rgba);
+                int ink = CountNonBackground(rgba);
+                bool colorsOk = CountColor(rgba, 160, 102, 64) >= 200
+                    && CountColor(rgba, 176, 116, 74) >= 60
+                    && CountColor(rgba, 196, 148, 100) >= 40
+                    && CountColor(rgba, 204, 208, 218) >= 20
+                    && CountColor(rgba, 88, 128, 92) >= 10
+                    && CountColor(rgba, 34, 30, 40) >= 1000
+                    && CountColor(rgba, 176, 124, 78)
+                        + CountColor(rgba, 160, 112, 70) >= 1000;
+                bool charsOk = CharacterInkVisible(view, rgba, rw, rh);
+                bool visualReview = pngOk && view.IsLoaded
+                    && ReferenceEquals(view, cafe.Session.Layout.Scene)
+                    && rw == view.ViewportW && rh == view.ViewportH
+                    && ink > 20000 && colorsOk && charsOk
+                    && view.Furniture.Count >= 6 && view.Characters.Count == 2;
+                cases.Add(new CaseResult("visual_review_actual_build", visualReview));
+                cases.Add(new CaseResult("render_ink_px", ink));
+                cases.Add(new CaseResult("render_png_bytes", png.Length));
+
+                // -------- table/chair -8px alignment on the same render ---
+                // Expected lift is read off the contract, not hardcoded.
+                double tLift = double.NaN, cLift = double.NaN;
+                double tSkew = double.NaN, cSkew = double.NaN;
+                double cox, coy;
+                RenderContract.TargetOffset(FurnitureKind.Chair, out cox, out coy);
+                bool align = table != null && chair != null
+                    && MeasureLift(view, cafe.Session.Layout, rgba, rw, rh,
+                        table, 160, 102, 64, 200, out tLift, out tSkew)
+                    && MeasureLift(view, cafe.Session.Layout, rgba, rw, rh,
+                        chair, 176, 116, 74, 60, out cLift, out cSkew)
+                    && toy == -8.0 && coy == -8.0
+                    && Math.Abs(tLift - toy * view.Zoom) <= 1.5
+                    && Math.Abs(cLift - coy * view.Zoom) <= 1.5
+                    && Math.Abs(tSkew) <= 1.5 && Math.Abs(cSkew) <= 1.5;
+                cases.Add(new CaseResult("table_chair_visual_alignment_reviewed",
+                    align));
+                cases.Add(new CaseResult("table_lift_measured_px", tLift));
+                cases.Add(new CaseResult("chair_lift_measured_px", cLift));
+            }
+            finally
+            {
+                try { Directory.Delete(tmpDir, true); }
+                catch (Exception) { }
+            }
+            return cases;
+        }
+
+        /// <summary>
+        /// Measures where a furniture kind's top-face ink actually landed:
+        /// the centroid of its exact top color in the rendered buffer minus
+        /// the unshifted logical ground anchor in device px. For the (0,-8)
+        /// contract kinds that is -8*zoom when the offset was applied once.
+        /// The blob must also contain the contract-resolved draw anchor as
+        /// its center pixel, so a rendered-but-misplaced top still fails.
+        /// </summary>
+        private static bool MeasureLift(GameScene view, LayoutModule ed,
+            byte[] px, int w, int h, Furniture f, byte r, byte g, byte b,
+            int minInk, out double liftY, out double skewX)
+        {
+            liftY = double.NaN;
+            skewX = double.NaN;
+            double sx = 0, sy = 0;
+            int n = 0;
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    int i = (y * w + x) * 4;
+                    if (px[i] == r && px[i + 1] == g && px[i + 2] == b
+                        && px[i + 3] == 255)
+                    {
+                        sx += x;
+                        sy += y;
+                        n++;
+                    }
+                }
+            }
+            if (n < minInk) return false;
+            double cx = sx / n;
+            double cy = sy / n;
+            double gx, gy, dx, dy;
+            RenderContract.GroundAnchor(f.CellX, f.CellY, out gx, out gy);
+            RenderContract.DrawAnchorResolved(f,
+                new Func<int, Furniture>(ed.LookupHost), view.Zoom,
+                out dx, out dy);
+            liftY = cy - (view.AnchorY + gy * view.Zoom);
+            skewX = cx - (view.AnchorX + gx * view.Zoom);
+            int ax = (int)Math.Round(view.AnchorX + dx);
+            int ay = (int)Math.Round(view.AnchorY + dy);
+            int ii = (ay * w + ax) * 4;
+            return px[ii] == r && px[ii + 1] == g && px[ii + 2] == b;
+        }
+
+        /// <summary>
+        /// Non-flat-scenery ink inside each composited character's screen
+        /// rect — proof the real rig sprite pixels made it into the render.
+        /// </summary>
+        private static bool CharacterInkVisible(GameScene view, byte[] px,
+            int w, int h)
+        {
+            foreach (var ch in view.Characters)
+            {
+                double cx, cy;
+                IsoMath.Project(ch.GridX, ch.GridY, out cx, out cy);
+                int fx = (int)Math.Round(view.AnchorX + cx * view.Zoom);
+                int fy = (int)Math.Round(view.AnchorY + cy * view.Zoom);
+                int x0 = fx - ch.AnchorX * view.Zoom;
+                int y0 = fy - ch.AnchorY * view.Zoom;
+                int sw = ch.Sprite.Width * view.Zoom;
+                int sh = ch.Sprite.Height * view.Zoom;
+                int found = 0;
+                for (int y = Math.Max(0, y0); y < y0 + sh && y < h; y++)
+                {
+                    for (int x = Math.Max(0, x0); x < x0 + sw && x < w; x++)
+                    {
+                        int i = (y * w + x) * 4;
+                        if (!IsFlatScenery(px[i], px[i + 1], px[i + 2])) found++;
+                    }
+                }
+                if (found < 500) return false;
+            }
+            return true;
+        }
+
+        /// Exact flat scenery palette: background, the two wood planks,
+        /// the floor seam, and the two 4px side shades — the only colors a
+        /// bare floor is allowed to contain after rendering.
+        private static bool IsFlatScenery(byte r, byte g, byte b)
+        {
+            return (r == 28 && g == 26 && b == 32)
+                || (r == 176 && g == 124 && b == 78)
+                || (r == 160 && g == 112 && b == 70)
+                || (r == 44 && g == 44 && b == 50)
+                || (r == 140 && g == 96 && b == 58)
+                || (r == 120 && g == 82 && b == 48);
+        }
+
+        /// Pixels matching an exact solid RGB color at full alpha.
+        private static int CountColor(byte[] px, byte r, byte g, byte b)
+        {
+            int n = 0;
+            for (int i = 0; i + 3 < px.Length; i += 4)
+            {
+                if (px[i] == r && px[i + 1] == g && px[i + 2] == b
+                    && px[i + 3] == 255)
+                {
+                    n++;
+                }
+            }
+            return n;
+        }
+
+        private static int CountNonBackground(byte[] px)
+        {
+            int n = 0;
+            for (int i = 0; i + 3 < px.Length; i += 4)
+            {
+                if (!(px[i] == 28 && px[i + 1] == 26 && px[i + 2] == 32)) n++;
+            }
+            return n;
+        }
+
+        private static bool BytesEqual(byte[] a, byte[] b)
+        {
+            if (a == null || b == null || a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
+            return true;
+        }
+
         private sealed class ResearchScenario
         {
             public EconomyModule Econ;

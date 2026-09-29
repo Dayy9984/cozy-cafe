@@ -75,6 +75,9 @@ def try_unity(stage, output):
     # art/provider.json (approved atlas + provenance) fails.
     env["COZYCAFE_MVP_JSON"] = native_path(ROOT / "data" / "mvp.json")
     env["COZYCAFE_WORKSPACE_ROOT"] = native_path(ROOT)
+    # CharacterModule resolves the rig contract/presets via COZYCAFE_DATA_DIR
+    # (or per-file overrides) — the staged copy's cwd ancestors have no data/.
+    env["COZYCAFE_DATA_DIR"] = native_path(ROOT / "data")
     fd, log_path = tempfile.mkstemp(prefix="gauntlet-capture-log-", suffix=".txt")
     os.close(fd)
     cmd = [engine, "-batchmode", "-projectPath", native_path(staged_game),

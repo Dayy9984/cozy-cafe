@@ -1,5 +1,6 @@
 using CozyCafe.Core.Character;
 using CozyCafe.Core.Economy;
+using CozyCafe.Core.Integration;
 using CozyCafe.Core.Layout;
 using CozyCafe.Core.Modules;
 using CozyCafe.Core.Research;
@@ -83,6 +84,7 @@ namespace CozyCafe.Core
             r.Register(econ);
             r.Register(new ResearchModule(econ));
             r.Register(new StaffModule(econ, 1));
+            r.Register(new IntegrationModule());
             return r;
         }
     }

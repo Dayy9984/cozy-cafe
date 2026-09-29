@@ -1,0 +1,1 @@
+{"preset_version":1,"kind":"ugc_package","name":"counter-skin","assets":[{"asset_id":"asset_1","role":"furniture_skin","anchor_x":0.5,"anchor_y":0.5,"direction":"","width":24,"height":24,"sha256":"6f6cab4271e8b840d10d37d3ce7afad347c9e06e01be864cf85374eaf8efa89e"}],"placements":[],"appearances":[{"target":"furniture:counter","asset":"asset_1"}]}

@@ -2,6 +2,8 @@ using System.IO;
 using CozyCafe.Core.Art;
 using CozyCafe.Core.Layout;
 using CozyCafe.Core.Character;
+using CozyCafe.Core.Economy;
+using CozyCafe.Core.Integration;
 using CozyCafe.Core.Render;
 using CozyCafe.Core.Scene;
 using CozyCafe.Core.Tools;
@@ -34,6 +36,8 @@ namespace CozyCafe.Core.Gauntlet
                     return DesktopToolsMini();
                 case "ui-local-ugc":
                     return UiLocalUgc();
+                case "integration":
+                    return RunningCafe();
                 default:
                     return DefaultBoot();
             }
@@ -252,6 +256,26 @@ namespace CozyCafe.Core.Gauntlet
         /// The PNG the creator imports for this scene: a 36x36 9-slice
         /// panel skin in a cool palette so the imported skin is plainly
         /// visible next to the default furniture art.
+        /// <summary>
+        /// The running unattended cafe for the integration capture: a real
+        /// IntegrationModule boots the session, opens for business — staff
+        /// hired, R01/R02 queued, tools live, a UGC counter skin installed
+        /// through the real import pipeline — and the timeline runs
+        /// unattended for ten real minutes so the docked tools panel and
+        /// room are live. The session's own scene is what the renderer
+        /// receives; nothing here paints fake content.
+        /// </summary>
+        private static GameScene RunningCafe()
+        {
+            var data = MvpData.Load();
+            var cafe = IntegrationModule.Boot(data, 20260929, 6, 5,
+                Path.Combine(Directory.GetCurrentDirectory(), "out",
+                    "integration-ugc"));
+            cafe.OpenForBusiness(IntegrationModule.BuildCounterSkinPng());
+            cafe.RunUnattended(600.0);
+            return cafe.BuildView(520, 460, 260, 130);
+        }
+
         private static byte[] BuildUgcPanelPng()
         {
             var c = new SoftwareCanvas(36, 36);

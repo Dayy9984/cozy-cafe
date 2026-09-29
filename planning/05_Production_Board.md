@@ -15,7 +15,7 @@
 |character-rig|소수 파츠·팔레트·랜덤 손님|iso-grid,research-staff|READY|
 |art-pipeline|Codex OAuth·sprite-gen 자산화|character-rig|검증완료(게이트 exit0: 14/15 실측일치+요청모델키 선언형 BLOCKED 통과·32x32 유닛셀 15프레임·양자화≤64색·ref_map IoU+팔레트 실측 기록)|
 |ui-local-ugc|UI 컴포넌트·로컬 창작툴|desktop-tools,art-pipeline,save-offline|검증완료(리뷰대기)|
-|integration|무개입 카페 통합|ui-local-ugc|READY|
+|integration|무개입 카페 통합|ui-local-ugc|검증완료(리뷰대기): check_stage integration 6/6 실측 일치·Unity 실카메어 캡처·회귀 8스테이지 일치|
 |native-release|실제 Mac/Windows 빌드·검증|integration|READY|
 
 원본 runner는 운영 오류 시 BLOCKED로 멈춘다. 인증/특정OS 없는 경우 이미 통합된 변경을 보존한 뒤 가능한 독립작업은 별도 세션에서 계속한다. 같은 run의 평가 기준을 낮춰 통과시키지 않는다.
