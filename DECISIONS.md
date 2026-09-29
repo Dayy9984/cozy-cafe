@@ -323,3 +323,47 @@ IoU·팔레트·색 수·프레임 치수를 실측 — eval 워크트리에서 
 프로브 없이 결정론적으로 재현된다.
 불변: gates.json 기대값·64x32 top/64x64 canvas 계약·OAuth only·
 codex 전용·provider.json 기록.
+
+## ENV 2026-09-29 — macOS 네이티브 호스트 확보 (macos_native 증거 경로)
+사유: native-release 게이트는 macos_native=true 실증을 요구. Windows 호스트에서
+macOS 바이너리 실행은 불가 — 사용자가 실제 Mac 호스트 사용을 확정했다.
+호스트: leehakbin@macbookair-4 (100.107.124.35, Tailscale) — Apple M4 arm64,
+macOS 26.2, GUI console 세션 상주. 인증: 이 Windows 머신의
+C:\Users\dlgkr\.ssh\id_ed25519 (MSYS: /c/Users/dlgkr/.ssh/id_ed25519)가
+authorized_keys에 등록되어 있음 — BatchMode SSH·scp 동작 확인.
+검증된 실행 경로 (2026-09-29 실측):
+1) .app 전송: tar czf로 압축 → scp /tmp → tar xzf — exec bit이 Windows tar에서
+   유실되므로 반드시 chmod -R +x Contents/MacOS 할 것.
+2) open 명령은 launchd RBSRequestErrorDomain Code=5로 막힘(미서명+SSH 세션) —
+   Contents/MacOS/game 바이너리를 직접 exec할 것. GUI 생성 정상(Metal
+   surface 3420x2146 생성 확인, console 사용자 세션 존재).
+3) 시나리오 필수 env: GAUNTLET_NATIVE_LOG / GAUNTLET_NATIVE_VIDEO /
+   GAUNTLET_NATIVE_SUMMARY / GAUNTLET_NATIVE_TMP. 미설정 시 Awake에서
+   ArgumentNullException(path).
+현재 블로커: NativeOverlayScenario가 user32 P/Invoke를 무가드 호출해
+DllNotFoundException — macOS 코드 경로(플랫폼 가드 + AppKit/Cocoa 상응 구현:
+창 level/ignoresMouseEvents/투명도/포커스/입력 컨텍스트 등)를 구현하고 같은
+증거 로그+MP4+요약+sha256를 Mac에서 수집해 native/macos.json PASS로 기록할 것.
+증거 파일은 커밋되어 평가 워크트리에서 재현 가능해야 한다.
+
+## ENV 2026-09-29 — macOS 네이티브 호스트 확보 (macos_native 증거 경로)
+사유: native-release 게이트는 macos_native=true 실증을 요구. Windows 호스트에서
+macOS 바이너리 실행은 불가 — 사용자가 실제 Mac 호스트 사용을 확정했다.
+호스트: leehakbin@macbookair-4 (100.107.124.35, Tailscale) — Apple M4 arm64,
+macOS 26.2, GUI console 세션 상주. 인증: 이 Windows 머신의
+C:\Users\dlgkr\.ssh\id_ed25519 (MSYS: /c/Users/dlgkr/.ssh/id_ed25519)가
+authorized_keys에 등록되어 있음 — BatchMode SSH·scp 동작 확인.
+검증된 실행 경로 (2026-09-29 실측):
+1) .app 전송: tar czf로 압축 → scp /tmp → tar xzf — exec bit이 Windows tar에서
+   유실되므로 반드시 chmod -R +x Contents/MacOS 할 것.
+2) open 명령은 launchd RBSRequestErrorDomain Code=5로 막힘(미서명+SSH 세션) —
+   Contents/MacOS/game 바이너리를 직접 exec할 것. GUI 생성 정상(Metal
+   surface 3420x2146 생성 확인, console 사용자 세션 존재).
+3) 시나리오 필수 env: GAUNTLET_NATIVE_LOG / GAUNTLET_NATIVE_VIDEO /
+   GAUNTLET_NATIVE_SUMMARY / GAUNTLET_NATIVE_TMP. 미설정 시 Awake에서
+   ArgumentNullException(path).
+현재 블로커: NativeOverlayScenario가 user32 P/Invoke를 무가드 호출해
+DllNotFoundException — macOS 코드 경로(플랫폼 가드 + AppKit/Cocoa 상응 구현:
+창 level/ignoresMouseEvents/투명도/포커스/입력 컨텍스트 등)를 구현하고 같은
+증거 로그+MP4+요약+sha256를 Mac에서 수집해 native/macos.json PASS로 기록할 것.
+증거 파일은 커밋되어 평가 워크트리에서 재현 가능해야 한다.
