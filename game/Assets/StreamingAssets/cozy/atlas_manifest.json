@@ -1,0 +1,845 @@
+{
+  "kind": "cozy-cafe-atlas",
+  "version": "0.8.3-unit32",
+  "sheet": "sprite_sheet_alpha.png",
+  "sheet_size": [
+    512,
+    36
+  ],
+  "encoding": "RGBA8/filter0/zlib-stored (canonical PngWriter format)",
+  "cell_unit_px": 32,
+  "physical_thickness": 0,
+  "thickness_mode": "visual_only",
+  "provider": "codex",
+  "requested_image_model": "gpt-image-2.5-sunburst",
+  "effective_image_model": "gpt-image",
+  "model_verification": "NOT_VERIFIED",
+  "signed_claim_software_agent": "ChatGPT/gpt-image",
+  "provenance_binding": "verified",
+  "palette_variants_generated": 0,
+  "pixel_quality": {
+    "max_unique_colors_per_cell": 64,
+    "path": "pixel_snap+cluster_quantize (deterministic, no LANCZOS)"
+  },
+  "reference_conformance": {
+    "min_silhouette_iou": 0.55,
+    "min_palette_match": 0.8,
+    "coverage_threshold": 0.25,
+    "recorded_field": "reference_similarity"
+  },
+  "frames": [
+    {
+      "id": "tile_wood",
+      "rect": {
+        "x": 2,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 8
+      },
+      "fps": 0,
+      "loop": false,
+      "physical_thickness": 0,
+      "job": "tile_wood",
+      "category": "tile",
+      "asset": "floor_wood",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/tile_wood/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            240,
+            217,
+            1296,
+            746
+          ],
+          "dst": [
+            0,
+            0,
+            32,
+            16
+          ]
+        },
+        {
+          "src": [
+            240,
+            482,
+            1296,
+            787
+          ],
+          "dst": [
+            0,
+            16,
+            32,
+            2
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 1.0,
+        "ok": true
+      },
+      "unique_opaque_colors": 44,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        0,
+        0,
+        32,
+        18
+      ]
+    },
+    {
+      "id": "body_anchor",
+      "rect": {
+        "x": 36,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 15,
+        "y": 29
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "body_anchor",
+      "category": "character",
+      "asset": "human_body_01",
+      "canvas_px": [
+        64,
+        80
+      ],
+      "reference": "art/generated/body_anchor/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            426,
+            239,
+            819,
+            1090
+          ],
+          "dst": [
+            9,
+            2,
+            13,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.996,
+        "ok": true
+      },
+      "unique_opaque_colors": 59,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        9,
+        2,
+        22,
+        30
+      ]
+    },
+    {
+      "id": "machine_espresso_0",
+      "rect": {
+        "x": 70,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 15,
+        "y": 29
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "machine_espresso",
+      "category": "machine",
+      "asset": "machine_espresso",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/machine_espresso/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            282,
+            103,
+            798,
+            782
+          ],
+          "dst": [
+            5,
+            2,
+            21,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.996,
+        "ok": true
+      },
+      "unique_opaque_colors": 55,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        5,
+        2,
+        26,
+        30
+      ]
+    },
+    {
+      "id": "machine_espresso_1",
+      "rect": {
+        "x": 104,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 15,
+        "y": 29
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "machine_espresso",
+      "category": "machine",
+      "asset": "machine_espresso",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/machine_espresso/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            975,
+            103,
+            1492,
+            782
+          ],
+          "dst": [
+            5,
+            2,
+            21,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.991,
+        "ok": true
+      },
+      "unique_opaque_colors": 34,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        5,
+        2,
+        26,
+        30
+      ]
+    },
+    {
+      "id": "ui_style",
+      "rect": {
+        "x": 138,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_style",
+      "category": "ui_skin",
+      "asset": "ui_panel",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/ui_style/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            46,
+            173,
+            2126,
+            484
+          ],
+          "dst": [
+            2,
+            14,
+            28,
+            4
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.969,
+        "ok": true
+      },
+      "unique_opaque_colors": 52,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        2,
+        14,
+        30,
+        18
+      ]
+    },
+    {
+      "id": "ui_icons_0",
+      "rect": {
+        "x": 172,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "asset": "ui_button",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/ui_icons/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            40,
+            219,
+            529,
+            494
+          ],
+          "dst": [
+            2,
+            8,
+            28,
+            16
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.996,
+        "ok": true
+      },
+      "unique_opaque_colors": 39,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        2,
+        8,
+        30,
+        24
+      ]
+    },
+    {
+      "id": "ui_icons_1",
+      "rect": {
+        "x": 206,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "asset": "ui_button",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/ui_icons/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            583,
+            265,
+            759,
+            457
+          ],
+          "dst": [
+            3,
+            2,
+            26,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 1.0,
+        "ok": true
+      },
+      "unique_opaque_colors": 47,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        3,
+        2,
+        29,
+        30
+      ]
+    },
+    {
+      "id": "ui_icons_2",
+      "rect": {
+        "x": 240,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "asset": "ui_button",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/ui_icons/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            813,
+            279,
+            982,
+            453
+          ],
+          "dst": [
+            2,
+            2,
+            27,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.995,
+        "ok": true
+      },
+      "unique_opaque_colors": 53,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        2,
+        2,
+        29,
+        30
+      ]
+    },
+    {
+      "id": "ui_icons_3",
+      "rect": {
+        "x": 274,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "asset": "ui_button",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/ui_icons/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            1039,
+            280,
+            1207,
+            452
+          ],
+          "dst": [
+            2,
+            2,
+            27,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.997,
+        "ok": true
+      },
+      "unique_opaque_colors": 60,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        2,
+        2,
+        29,
+        30
+      ]
+    },
+    {
+      "id": "ui_icons_4",
+      "rect": {
+        "x": 308,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "asset": "ui_button",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/ui_icons/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            1238,
+            243,
+            1449,
+            489
+          ],
+          "dst": [
+            4,
+            2,
+            24,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.988,
+        "ok": true
+      },
+      "unique_opaque_colors": 60,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        4,
+        2,
+        28,
+        30
+      ]
+    },
+    {
+      "id": "ui_icons_5",
+      "rect": {
+        "x": 342,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "asset": "ui_button",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/ui_icons/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            1504,
+            224,
+            1661,
+            489
+          ],
+          "dst": [
+            7,
+            2,
+            17,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 1.0,
+        "ok": true
+      },
+      "unique_opaque_colors": 41,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        7,
+        2,
+        24,
+        30
+      ]
+    },
+    {
+      "id": "ui_icons_6",
+      "rect": {
+        "x": 376,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "asset": "ui_button",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/ui_icons/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            1716,
+            260,
+            1902,
+            488
+          ],
+          "dst": [
+            4,
+            2,
+            23,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 0.982,
+        "ok": true
+      },
+      "unique_opaque_colors": 41,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        4,
+        2,
+        27,
+        30
+      ]
+    },
+    {
+      "id": "ui_icons_7",
+      "rect": {
+        "x": 410,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "fps": 0,
+      "loop": false,
+      "job": "ui_icons",
+      "category": "ui_skin",
+      "asset": "ui_button",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/ui_icons/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            1958,
+            249,
+            2136,
+            482
+          ],
+          "dst": [
+            5,
+            2,
+            21,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 1.0,
+        "ok": true
+      },
+      "unique_opaque_colors": 42,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        5,
+        2,
+        26,
+        30
+      ]
+    },
+    {
+      "id": "table_square",
+      "rect": {
+        "x": 444,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 29
+      },
+      "fps": 0,
+      "loop": false,
+      "render_offset_px": [
+        0,
+        -8
+      ],
+      "baked_alignment_offset_px": [
+        0,
+        0
+      ],
+      "render_offset_owner": "renderer",
+      "job": "table_square",
+      "category": "furniture",
+      "asset": "table_square",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/table_square/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            274,
+            298,
+            979,
+            997
+          ],
+          "dst": [
+            2,
+            2,
+            28,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 1.0,
+        "ok": true
+      },
+      "unique_opaque_colors": 40,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        2,
+        2,
+        30,
+        30
+      ]
+    },
+    {
+      "id": "chair",
+      "rect": {
+        "x": 478,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      },
+      "origin": {
+        "x": 16,
+        "y": 29
+      },
+      "fps": 0,
+      "loop": false,
+      "render_offset_px": [
+        0,
+        -8
+      ],
+      "baked_alignment_offset_px": [
+        0,
+        0
+      ],
+      "render_offset_owner": "renderer",
+      "job": "chair",
+      "category": "furniture",
+      "asset": "chair",
+      "canvas_px": [
+        64,
+        64
+      ],
+      "reference": "art/generated/chair/raw.png",
+      "ref_map": [
+        {
+          "src": [
+            375,
+            166,
+            922,
+            1104
+          ],
+          "dst": [
+            8,
+            2,
+            16,
+            28
+          ]
+        }
+      ],
+      "reference_similarity": {
+        "iou": 1.0,
+        "palette": 1.0,
+        "ok": true
+      },
+      "unique_opaque_colors": 58,
+      "pixel_path": "pixel_snap:block_decimate(cover>=0.25)+median_color+cluster_quantize(<=64)",
+      "content_bounds": [
+        8,
+        2,
+        24,
+        30
+      ]
+    }
+  ]
+}

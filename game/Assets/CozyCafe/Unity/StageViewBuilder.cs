@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
 using CozyCafe.Core.Iso;
 using CozyCafe.Core.Layout;
 using CozyCafe.Core.Scene;
@@ -11,12 +13,89 @@ namespace CozyCafe.Unity
     /// captures and runtime views draw the actual game, not a mock. One pixel
     /// maps to one world unit; screen Y is flipped into Unity's up axis.
     /// Render offsets come from the core contract and apply to the sprite
-    /// transform only — logical state is untouched.
+    /// transform only — logical state is untouched. When the approved atlas
+    /// (StreamingAssets/cozy) is present its 32x32 cells are drawn at PPU 0.5
+    /// so they land on the 64px iso pitch; procedural diamonds remain the
+    /// fallback for kinds with no approved frame.
     /// </summary>
     public static class StageViewBuilder
     {
         private static readonly Dictionary<string, Sprite> spriteCache =
             new Dictionary<string, Sprite>();
+        private static Texture2D atlasTex;
+        private static bool atlasTried;
+        private static readonly Dictionary<string, int[]> atlasRects =
+            new Dictionary<string, int[]>();
+        private static readonly Dictionary<string, int[]> atlasOrigins =
+            new Dictionary<string, int[]>();
+
+        public static Sprite AtlasSprite(string id)
+        {
+            LoadAtlas();
+            if (atlasTex == null || !atlasRects.ContainsKey(id)) return null;
+            Sprite s;
+            if (spriteCache.TryGetValue("atlas_" + id, out s)) return s;
+            var r = atlasRects[id];
+            var o = atlasOrigins[id];
+            // Unity texture Y runs bottom-up; manifest rect Y is top-down.
+            int texY = atlasTex.height - r[1] - r[3];
+            var pivot = new Vector2(o[0] / 32f, 1f - o[1] / 32f);
+            s = Sprite.Create(atlasTex,
+                new Rect(r[0], texY, r[2], r[3]), pivot, 0.5f,
+                0, SpriteMeshType.FullRect);
+            s.name = "atlas_" + id;
+            spriteCache[id] = s;
+            spriteCache["atlas_" + id] = s;
+            return s;
+        }
+
+        private static void LoadAtlas()
+        {
+            if (atlasTried) return;
+            atlasTried = true;
+            try
+            {
+                string dir = Path.Combine(
+                    Application.streamingAssetsPath, "cozy");
+                string png = Path.Combine(dir, "sprite_sheet_alpha.png");
+                string man = Path.Combine(dir, "atlas_manifest.json");
+                if (!File.Exists(png) || !File.Exists(man)) return;
+                var t = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!t.LoadImage(File.ReadAllBytes(png))) return;
+                t.filterMode = FilterMode.Point;
+                t.Apply();
+                atlasTex = t;
+                string json = File.ReadAllText(man);
+                foreach (Match m in Regex.Matches(json,
+                    "\\{\\s*\"id\"\\s*:\\s*\"([^\"]+)\".*?\"rect\"\\s*:\\s*\\{\\s*\"x\"\\s*:\\s*(\\d+),\\s*\"y\"\\s*:\\s*(\\d+),\\s*\"w\"\\s*:\\s*(\\d+),\\s*\"h\"\\s*:\\s*(\\d+)\\s*\\}.*?\"origin\"\\s*:\\s*\\{\\s*\"x\"\\s*:\\s*(\\d+),\\s*\"y\"\\s*:\\s*(\\d+)\\s*\\}",
+                    RegexOptions.Singleline))
+                {
+                    atlasRects[m.Groups[1].Value] = new[]
+                    {
+                        int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
+                        int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value)
+                    };
+                    atlasOrigins[m.Groups[1].Value] = new[]
+                    {
+                        int.Parse(m.Groups[6].Value), int.Parse(m.Groups[7].Value)
+                    };
+                }
+            }
+            catch { atlasTex = null; }
+        }
+
+        private static Sprite FurnitureSprite(FurnitureKind kind)
+        {
+            switch (kind)
+            {
+                case FurnitureKind.Table: return AtlasSprite("table_square");
+                case FurnitureKind.Chair:
+                case FurnitureKind.Stool: return AtlasSprite("chair");
+                case FurnitureKind.EspressoMachine:
+                    return AtlasSprite("machine_espresso_0");
+                default: return null;
+            }
+        }
 
         public static GameObject Build(GameScene scene)
         {
@@ -32,10 +111,15 @@ namespace CozyCafe.Unity
                     var go = new GameObject("tile_" + x + "_" + y);
                     go.transform.SetParent(root.transform, false);
                     var sr = go.AddComponent<SpriteRenderer>();
-                    bool odd = ((x + y) & 1) == 1;
-                    sr.sprite = DiamondSprite(
-                        IsoMath.TileTopWidthPx, IsoMath.TileTopHeightPx,
-                        odd ? new Color(0.737f, 0.545f, 0.337f) : new Color(0.792f, 0.596f, 0.376f));
+                    var art = AtlasSprite("tile_wood");
+                    if (art != null) sr.sprite = art;
+                    else
+                    {
+                        bool odd = ((x + y) & 1) == 1;
+                        sr.sprite = DiamondSprite(
+                            IsoMath.TileTopWidthPx, IsoMath.TileTopHeightPx,
+                            odd ? new Color(0.737f, 0.545f, 0.337f) : new Color(0.792f, 0.596f, 0.376f));
+                    }
                     double sx, sy;
                     IsoMath.Project(x + 0.5, y + 0.5, out sx, out sy);
                     go.transform.position = new Vector3((float)sx, (float)-sy, 0f);
@@ -90,7 +174,10 @@ namespace CozyCafe.Unity
             var go = new GameObject("furn_" + f.Kind + "_" + f.CellX + "_" + f.CellY);
             go.transform.SetParent(root.transform, false);
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = DiamondSprite(40, 19, FurnitureColor(f.Kind));
+            var art = FurnitureSprite(f.Kind);
+            sr.sprite = art != null
+                ? art
+                : DiamondSprite(40, 19, FurnitureColor(f.Kind));
             // Same render contract as the core rasterizer: (ground + target)
             // once for floor pieces, host mount resolution for children.
             double dx, dy;
@@ -110,8 +197,19 @@ namespace CozyCafe.Unity
             var go = new GameObject("agent_" + a.Name);
             go.transform.SetParent(root.transform, false);
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = DiamondSprite(12, 18,
-                a.IsStaff ? new Color(0.36f, 0.56f, 0.88f) : new Color(0.89f, 0.57f, 0.36f));
+            var art = AtlasSprite("body_anchor");
+            if (art != null)
+            {
+                sr.sprite = art;
+                sr.color = a.IsStaff
+                    ? new Color(0.75f, 0.85f, 1f)
+                    : new Color(1f, 0.85f, 0.7f);
+            }
+            else
+            {
+                sr.sprite = DiamondSprite(12, 18,
+                    a.IsStaff ? new Color(0.36f, 0.56f, 0.88f) : new Color(0.89f, 0.57f, 0.36f));
+            }
             double gx, gy;
             IsoMath.Project(a.GridX, a.GridY, out gx, out gy);
             go.transform.position = new Vector3((float)gx, (float)-(gy - 9), 0f);
