@@ -259,6 +259,18 @@ namespace CozyCafe.Unity
             if (!stf.PanelOpen) stf.OpenHirePanel();
             r.Add("staff_candidates=" + stf.Candidates.Count);
             r.Add("staff_hire_panel=" + stf.PanelOpen);
+            // research queue: reserve, reorder, cancel — real calls
+            var lab = session.Lab;
+            if (econ.Data != null && econ.Data.Research.Count >= 2)
+            {
+                string id0 = econ.Data.Research[0].Id;
+                string id1 = econ.Data.Research[1].Id;
+                r.Add("resv0=" + lab.Reserve(id0));
+                r.Add("resv1=" + lab.Reserve(id1));
+                if (lab.Queue.Count >= 2)
+                    r.Add("reorder=" + lab.Reorder(id1, 0));
+                r.Add("cancel=" + lab.CancelQueued(id0));
+            }
             r.Add("research_defs=" + (econ.Data != null ? econ.Data.Research.Count : 0));
             r.Add("coins=" + econ.Coins);
             r.Add("sales=" + integ.SettledSaleCount());
@@ -371,6 +383,8 @@ namespace CozyCafe.Unity
             UpdateGhost();
         }
 
+        private int rectAx = -1, rectAy = -1;
+
         private void HandleInput()
         {
             if (!UiBlocked())
@@ -381,12 +395,22 @@ namespace CozyCafe.Unity
                     else if (pendingKind == -2) TryRemoveHere();
                     else if (pendingKind == -3 || pendingKind == -4)
                         TryPaintTile(pendingKind == -3);
+                    else if (pendingKind == -5) Eyedrop();
+                    else if (pendingKind == -6) { rectAx = hoverX; rectAy = hoverY; }
+                    else if (pendingKind == -7) TryFill();
                     else SelectOrMove();
                 }
                 if (Input.GetMouseButton(0) &&
                     (pendingKind == -3 || pendingKind == -4))
                 {
                     if (hoverX >= 0) TryPaintTile(pendingKind == -3);
+                }
+                if (Input.GetMouseButtonUp(0) && pendingKind == -6
+                    && rectAx >= 0 && hoverX >= 0)
+                {
+                    FillRect(rectAx, rectAy, hoverX, hoverY,
+                        !Input.GetKey(KeyCode.LeftShift));
+                    rectAx = rectAy = -1;
                 }
                 if (Input.GetMouseButtonDown(1)) { pendingKind = -1; selectedId = -1; }
             }
@@ -473,6 +497,70 @@ namespace CozyCafe.Unity
                 var end = layout.EndCommand();
                 if (end == PlacementReject.None) { RebuildView(); status = "타일 편집"; }
             }
+        }
+
+        private void Eyedrop()
+        {
+            var f = layout.OccupyingAt(hoverX, hoverY);
+            if (f != null)
+            {
+                pendingKind = (int)f.Kind;
+                status = "스포이드: " + f.Kind;
+            }
+            else
+            {
+                pendingKind = scene.Room.HasCell(hoverX, hoverY) ? -4 : -3;
+                status = "스포이드: 타일 " +
+                    (scene.Room.HasCell(hoverX, hoverY) ? "삭제" : "추가");
+            }
+        }
+
+        private void FillRect(int ax, int ay, int bx, int by, bool add)
+        {
+            layout.BeginCommand();
+            int x0 = Mathf.Min(ax, bx), x1 = Mathf.Max(ax, bx);
+            int y0 = Mathf.Min(ay, by), y1 = Mathf.Max(ay, by);
+            for (int y = y0; y <= y1; y++)
+                for (int x = x0; x <= x1; x++)
+                    layout.PaintTile(x, y, add);
+            var end = layout.EndCommand();
+            tileEdits++;
+            if (end == PlacementReject.None)
+            {
+                RebuildView();
+                status = "영역 " + (add ? "추가" : "제거") +
+                    " " + (x1 - x0 + 1) + "x" + (y1 - y0 + 1);
+            }
+            else status = RejectText(end);
+        }
+
+        private void TryFill()
+        {
+            bool target = !scene.Room.HasCell(hoverX, hoverY);
+            var seen = new HashSet<int>();
+            var stack = new Stack<int>();
+            layout.BeginCommand();
+            stack.Push(hoverY * scene.Room.Width + hoverX);
+            while (stack.Count > 0)
+            {
+                int c = stack.Pop();
+                if (!seen.Add(c)) continue;
+                int x = c % scene.Room.Width, y = c / scene.Room.Width;
+                if (!scene.Room.InBounds(x, y)) continue;
+                if (scene.Room.HasCell(x, y) == target) continue;
+                layout.PaintTile(x, y, target);
+                stack.Push(c + 1); stack.Push(c - 1);
+                stack.Push(c + scene.Room.Width);
+                stack.Push(c - scene.Room.Width);
+            }
+            var end = layout.EndCommand();
+            tileEdits++;
+            if (end == PlacementReject.None)
+            {
+                RebuildView();
+                status = "채우기 " + seen.Count + "셀";
+            }
+            else status = RejectText(end);
         }
 
         private static string RejectText(PlacementReject r)
@@ -1064,6 +1152,12 @@ namespace CozyCafe.Unity
                 GUILayout.Width(52))) pendingKind = -3;
             if (GUILayout.Button("타일-", Btn(pendingKind == -4),
                 GUILayout.Width(52))) pendingKind = -4;
+            if (GUILayout.Button("영역", Btn(pendingKind == -6),
+                GUILayout.Width(44))) pendingKind = -6;
+            if (GUILayout.Button("채우기", Btn(pendingKind == -7),
+                GUILayout.Width(50))) pendingKind = -7;
+            if (GUILayout.Button("스포이드", Btn(pendingKind == -5),
+                GUILayout.Width(60))) pendingKind = -5;
             GUILayout.Space(8);
             if (GUILayout.Button("상점(B)", Btn(shopOpen), GUILayout.Width(60)))
                 shopOpen = !shopOpen;
@@ -1269,6 +1363,23 @@ namespace CozyCafe.Unity
                     GUILayout.Label("진행: " + lab.Active.Name + " " +
                         TimeSpan.FromSeconds(lab.ActiveRemainingWork)
                             .ToString(@"mm\:ss"), labelStyle);
+                for (int qi = 0; qi < lab.Queue.Count; qi++)
+                {
+                    var q = lab.Queue[qi];
+                    int idx = qi;
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(q.Name, labelStyle, GUILayout.Width(120));
+                    if (GUILayout.Button("↑", btnStyle, GUILayout.Width(26)))
+                        lab.Reorder(q.Id, idx - 1);
+                    if (GUILayout.Button("↓", btnStyle, GUILayout.Width(26)))
+                        lab.Reorder(q.Id, idx + 1);
+                    if (GUILayout.Button("취소", btnStyle, GUILayout.Width(46)))
+                    {
+                        status = lab.CancelQueued(q.Id)
+                            ? "연구 취소: " + q.Name : "취소 불가";
+                    }
+                    GUILayout.EndHorizontal();
+                }
                 foreach (var r in econ.Data.Research)
                 {
                     if (lab.IsCompleted(r))
