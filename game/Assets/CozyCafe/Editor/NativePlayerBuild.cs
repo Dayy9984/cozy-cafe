@@ -34,8 +34,22 @@ namespace CozyCafe.Editor
                 BuildTarget.StandaloneOSX);
         }
 
+        /// Playable build: the real game scene (CozyCafeBootstrap view +
+        /// framing camera) instead of the native-verification scenario.
+        public static void BuildMacOSGame()
+        {
+            BuildPlayer("GAUNTLET_NATIVE_BUILD_APP",
+                BuildTarget.StandaloneOSX, playable: true);
+        }
+
+        public static void BuildWindowsGame()
+        {
+            BuildPlayer("GAUNTLET_NATIVE_BUILD_EXE",
+                BuildTarget.StandaloneWindows64, playable: true);
+        }
+
         private static void BuildPlayer(string outEnvVar,
-            BuildTarget target)
+            BuildTarget target, bool playable = false)
         {
             int exitCode = 2;
             string scenePath = null;
@@ -56,9 +70,14 @@ namespace CozyCafe.Editor
 
                 var scene = EditorSceneManager.NewScene(
                     NewSceneSetup.EmptyScene, NewSceneMode.Single);
-                var go = new GameObject("NativeOverlay");
-                go.AddComponent<NativeOverlayScenario>();
-                scenePath = "Assets/__native_overlay.unity";
+                var go = new GameObject(
+                    playable ? "CozyCafePlayable" : "NativeOverlay");
+                if (playable)
+                    go.AddComponent<CozyCafePlayable>();
+                else
+                    go.AddComponent<NativeOverlayScenario>();
+                scenePath = playable
+                    ? "Assets/__playable.unity" : "Assets/__native_overlay.unity";
                 EditorSceneManager.SaveScene(scene, scenePath);
                 AssetDatabase.SaveAssets();
 
